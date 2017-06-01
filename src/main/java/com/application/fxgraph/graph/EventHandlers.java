@@ -179,7 +179,7 @@ public class EventHandlers {
                                     ")\n" +
                                     "= 0\n";
 
-                            System.out.println("Sql: " + sql);
+                            // System.out.println("Sql: " + sql);
                             int ctId = -2;
                             try (ResultSet resultSet = ps.executeQuery(sql)) {
                                 if (resultSet.next()) {

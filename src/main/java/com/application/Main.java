@@ -64,7 +64,7 @@ public class Main extends Application {
         Menu file = new Menu("File");
         MenuItem demoOne = new MenuItem("Load Demo 1");
         MenuItem demoTwo = new MenuItem("Load Demo 2");
-        MenuItem demoThree = new MenuItem("Load Demo 2");
+        MenuItem demoThree = new MenuItem("Load Demo 3");
 
         file.getItems().addAll(demoOne, demoTwo, demoThree);
         mb.getMenus().add(file);
