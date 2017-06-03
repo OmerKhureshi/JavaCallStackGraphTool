@@ -131,6 +131,10 @@ public class Main extends Application {
         });
 
         addGraphCellComponents();
+        String firstThreadID = (String)threadsObsList.get(0).split(" ")[1];
+        System.out.println(">>>>> " + firstThreadID);
+        showThread(firstThreadID);
+        threadListView.getSelectionModel().select(0);
     }
 
     private void addGraphCellComponents() {
