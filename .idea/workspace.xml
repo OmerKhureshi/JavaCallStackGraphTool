@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="2de0260d-7cec-4894-a7a4-4c49dba5120d" name="Default" comment="">
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.gitignore" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/DB/log/log2.dat" afterPath="" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/DB/seg0/c1060.dat" afterPath="" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/DB/seg0/c1070.dat" afterPath="" />
@@ -24,31 +25,7 @@
       <change type="DELETED" beforePath="$PROJECT_DIR$/DB/seg0/dd60.dat" afterPath="" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/DB/seg0/dd70.dat" afterPath="" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/DB/seg0/dd81.dat" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DB/db.lck" afterPath="$PROJECT_DIR$/DB/db.lck" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DB/log/log.ctrl" afterPath="$PROJECT_DIR$/DB/log/log.ctrl" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DB/log/logmirror.ctrl" afterPath="$PROJECT_DIR$/DB/log/logmirror.ctrl" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DB/seg0/c101.dat" afterPath="$PROJECT_DIR$/DB/seg0/c101.dat" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DB/seg0/c111.dat" afterPath="$PROJECT_DIR$/DB/seg0/c111.dat" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DB/seg0/c121.dat" afterPath="$PROJECT_DIR$/DB/seg0/c121.dat" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DB/seg0/c130.dat" afterPath="$PROJECT_DIR$/DB/seg0/c130.dat" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DB/seg0/c141.dat" afterPath="$PROJECT_DIR$/DB/seg0/c141.dat" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DB/seg0/c20.dat" afterPath="$PROJECT_DIR$/DB/seg0/c20.dat" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DB/seg0/c31.dat" afterPath="$PROJECT_DIR$/DB/seg0/c31.dat" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DB/seg0/c400.dat" afterPath="$PROJECT_DIR$/DB/seg0/c400.dat" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DB/seg0/c41.dat" afterPath="$PROJECT_DIR$/DB/seg0/c41.dat" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DB/seg0/c411.dat" afterPath="$PROJECT_DIR$/DB/seg0/c411.dat" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DB/seg0/c421.dat" afterPath="$PROJECT_DIR$/DB/seg0/c421.dat" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DB/seg0/c51.dat" afterPath="$PROJECT_DIR$/DB/seg0/c51.dat" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DB/seg0/c60.dat" afterPath="$PROJECT_DIR$/DB/seg0/c60.dat" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DB/seg0/c71.dat" afterPath="$PROJECT_DIR$/DB/seg0/c71.dat" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DB/seg0/c81.dat" afterPath="$PROJECT_DIR$/DB/seg0/c81.dat" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DB/seg0/c90.dat" afterPath="$PROJECT_DIR$/DB/seg0/c90.dat" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DB/seg0/ca1.dat" afterPath="$PROJECT_DIR$/DB/seg0/ca1.dat" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DB/seg0/cb1.dat" afterPath="$PROJECT_DIR$/DB/seg0/cb1.dat" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DB/seg0/cf0.dat" afterPath="$PROJECT_DIR$/DB/seg0/cf0.dat" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/derby.log" afterPath="$PROJECT_DIR$/derby.log" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/com/application/fxgraph/graph/EventHandlers.java" afterPath="$PROJECT_DIR$/src/main/java/com/application/fxgraph/graph/EventHandlers.java" />
     </list>
     <ignored path="$PROJECT_DIR$/target/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -76,7 +53,7 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="EventHandlers.java" pinned="false" current-in-tab="true">
+      <file leaf-file-name="EventHandlers.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/com/application/fxgraph/graph/EventHandlers.java">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="368">
@@ -87,6 +64,16 @@
                 <marker date="1496517858489" expanded="true" signature="9697:10393" ph="SELECT * FRO... CALL_TRACE" />
                 <marker date="1496517858489" expanded="true" signature="9992:10387" ph="SELECT count... CALL_TRACE" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name=".gitignore" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/.gitignore">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="0">
+              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -114,6 +101,7 @@
       <list>
         <option value="$PROJECT_DIR$/src/main/java/com/application/Main.java" />
         <option value="$PROJECT_DIR$/src/main/java/com/application/fxgraph/graph/EventHandlers.java" />
+        <option value="$PROJECT_DIR$/.gitignore" />
       </list>
     </option>
   </component>
@@ -242,112 +230,6 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="application" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="CSVFull" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="CSVFull" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="main" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="java" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="com" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="application" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="threads" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="CSVFull" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="CSVFull" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="main" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="java" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="com" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="application" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="fxgraph" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="CSVFull" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="CSVFull" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="main" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="java" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="com" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="application" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="fxgraph" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="graph" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -808,12 +690,12 @@
       <workItem from="1496185042789" duration="237000" />
       <workItem from="1496332637520" duration="424000" />
       <workItem from="1496377270124" duration="1332000" />
-      <workItem from="1496353645754" duration="5619000" />
+      <workItem from="1496353645754" duration="5878000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="7612000" />
+    <option name="totallyTimeSpent" value="7871000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1382" height="754" extended-state="6" />
@@ -838,7 +720,7 @@
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4579288" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Coverage" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32980332" sideWeight="0.5" order="-1" side_tool="true" content_ui="tabs" />
-      <window_info id="Terminal" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.67313915" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.7491909" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.25340393" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Run with VisualVM" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Theme Preview" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -909,6 +791,14 @@
             <marker date="1496517858489" expanded="true" signature="9697:10393" ph="SELECT * FRO... CALL_TRACE" />
             <marker date="1496517858489" expanded="true" signature="9992:10387" ph="SELECT count... CALL_TRACE" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
