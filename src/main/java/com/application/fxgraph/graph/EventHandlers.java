@@ -39,8 +39,12 @@ public class EventHandlers {
         // node.addEventFilter(MouseEvent.ANY, onMouseHoverToShowInfoEventHandler);
         // node.addEventFilter(MouseEvent.ANY, event -> System.out.println(event));
 
+        // *****************
+        // Click on an element to collapse the subtree rooted at clicked element.
+        // node.setOnMousePressed(onMousePressedToCollapseTree);
+        // *****************
 
-        node.setOnMousePressed(onMousePressedToCollapseTree);
+        // Show popup to display element details on mouse hover on an element.
         node.setOnMouseEntered(onMouseHoverToShowInfoEventHandler);
 
         // *****************
@@ -61,6 +65,8 @@ public class EventHandlers {
 
         @Override
         public void handle(MouseEvent event) {
+            if (popOver != null)
+                popOver.hide();
 
             Node node = (Node) event.getSource();
             CircleCell cell = (CircleCell) node;
