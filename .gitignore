@@ -1,0 +1,8 @@
+# Database
+/DB/
+
+# Database logs
+*.log
+
+# Target classes
+target/
