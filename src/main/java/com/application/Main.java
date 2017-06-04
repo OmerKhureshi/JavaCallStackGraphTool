@@ -14,14 +14,24 @@ import com.application.logs.fileIntegrity.CheckFileIntegrity;
 import com.application.logs.parsers.ParseCallTrace;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableBooleanValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
+import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.text.Text;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
+import java.io.File;
 import java.net.URI;
 import java.net.URL;
 import java.sql.ResultSet;
@@ -39,6 +49,12 @@ public class Main extends Application {
     Label statusBarLabel = new Label();
     static ListView<String> threadListView;
     ObservableList<String> threadsObsList;
+    boolean methodDefnFileSet;
+    boolean callTraceFileSet;
+    MenuItem runAnalysis;
+    Text selectMethodDefn = new Text("");
+    Text selectCallTrace = new Text("");
+    FlowPane instructionsNode;
 
     ConvertDBtoElementTree convertDBtoElementTree;
 
@@ -62,35 +78,48 @@ public class Main extends Application {
 
         MenuBar mb = new MenuBar();
         Menu file = new Menu("File");
-        MenuItem demoOne = new MenuItem("Load Demo 1");
-        MenuItem demoTwo = new MenuItem("Load Demo 2");
-        MenuItem demoThree = new MenuItem("Load Demo 3");
+        MenuItem chooseMethodDefn = new MenuItem("Select Method Definition log file");
+        MenuItem chooseCallTrace = new MenuItem("Select Call Trace log file");
 
-        file.getItems().addAll(demoOne, demoTwo, demoThree);
-        mb.getMenus().add(file);
+        Menu run = new Menu("Run");
+        MenuItem reset = new MenuItem("Reset");
 
-        demoOne.setOnAction(event -> {
+        runAnalysis = new MenuItem("Run");
+        runAnalysis.setDisable(true);
+
+        file.getItems().addAll(chooseMethodDefn, chooseCallTrace);
+        run.getItems().addAll(runAnalysis, reset);
+
+        mb.getMenus().addAll(file, run);
+
+        populateInstructions();
+
+        chooseMethodDefn.setOnAction(event -> {
             DatabaseUtil.resetDB();
+            File methodDefnFile = chooseLogFile("MethodDefinition");
+            if (methodDefnFile != null) {
+                MethodDefinitionLogFile.setFile(methodDefnFile);
+                selectMethodDefn.setText("");
+                changeBool("methodDefnFileSet", true);
+            }
+        });
 
-            CallTraceLogFile.setFileName("logs/L-Instrumentation_call_trace_Demo_1.txt");
-            MethodDefinitionLogFile.setFileName("logs/L-Instrumentation_method_definitions_Demo_1.txt");
+        chooseCallTrace.setOnAction(event -> {
+            DatabaseUtil.resetDB();
+            File callTraceFile = chooseLogFile("CallTrace");
+            if (callTraceFile != null) {
+                CallTraceLogFile.setFile(callTraceFile);
+                selectCallTrace.setText("");
+                changeBool("callTraceFileSet", true);
+            }
+        });
+
+        runAnalysis.setOnAction(event -> {
             reload();
         });
 
-        demoTwo.setOnAction(event -> {
-            DatabaseUtil.resetDB();
-
-            CallTraceLogFile.setFileName("logs/L-Instrumentation_call_trace_Demo_2.txt");
-            MethodDefinitionLogFile.setFileName("logs/L-Instrumentation_method_definitions_Demo_2.txt");
-            reload();
-        });
-
-        demoThree.setOnAction(event -> {
-            DatabaseUtil.resetDB();
-
-            CallTraceLogFile.setFileName("logs/L-Instrumentation_call_trace_Demo_3.txt");
-            MethodDefinitionLogFile.setFileName("logs/L-Instrumentation_method_definitions_Demo_3.txt");
-            reload();
+        reset.setOnAction(event -> {
+            reset();
         });
 
         root.setTop(mb);
@@ -110,7 +139,21 @@ public class Main extends Application {
 
     }
 
+    public void reset() {
+        root.setCenter(null);
+        root.setLeft(null);
+        runAnalysis.setDisable(true);
+        changeBool("methodDefnFileSet", false);
+        changeBool("callTraceFileSet", false);
+        populateInstructions();
+
+    }
+
     public void reload() {
+
+        if (!methodDefnFileSet || !callTraceFileSet) {
+            return;
+        }
         // Layout Center
         graph = new Graph();
         root.setCenter(null);
@@ -132,7 +175,6 @@ public class Main extends Application {
 
         addGraphCellComponents();
         String firstThreadID = (String)threadsObsList.get(0).split(" ")[1];
-        System.out.println(">>>>> " + firstThreadID);
         showThread(firstThreadID);
         threadListView.getSelectionModel().select(0);
     }
@@ -243,6 +285,7 @@ public class Main extends Application {
         convertDBtoElementTree.removeFromCellLayer();
         onScrollingScrollPane();
     }
+
     public void onScrollingScrollPane() {
         if (convertDBtoElementTree!= null && graph != null) {
             convertDBtoElementTree.getCirclesToLoadIntoViewPort(graph);
@@ -297,6 +340,44 @@ public class Main extends Application {
 
     public static void makeSelection(String threadId) {
         Platform.runLater(() -> threadListView.getSelectionModel().select("Thread: " + threadId));
+    }
 
+    public File chooseLogFile(String logType) {
+        FileChooser fileChooser = new FileChooser();
+
+        if (logType.equalsIgnoreCase("CallTrace")) {
+            fileChooser.setTitle("Choose call trace log file.");
+        } else {
+            fileChooser.setTitle("Choose method definition log file.");
+        }
+
+        File logFile = fileChooser.showOpenDialog(primaryStage);
+        if (logFile != null) {
+            return logFile;
+        }
+
+        return null;
+    }
+
+    public void changeBool(String type, boolean val) {
+        if (type.equalsIgnoreCase("methodDefnFileSet")) methodDefnFileSet = val;
+        else if (type.equalsIgnoreCase("callTraceFileSet")) callTraceFileSet = val;
+
+        if (methodDefnFileSet && callTraceFileSet) {
+            runAnalysis.setDisable(false);
+            selectMethodDefn.setText("Click Run.");
+        }
+    }
+
+    public void populateInstructions() {
+        instructionsNode = new FlowPane();
+        root.setCenter(instructionsNode);
+        selectMethodDefn.setText("Select Method Definition log file.");
+        selectCallTrace.setText("Select Call Trace log file.");
+        instructionsNode.getChildren().addAll(selectMethodDefn, selectCallTrace);
+        instructionsNode.setAlignment(Pos.CENTER);
+        instructionsNode.setOrientation(Orientation.VERTICAL);
+        instructionsNode.setPadding(new Insets(5,5,5,5));
+        instructionsNode.setVgap(10);
     }
 }

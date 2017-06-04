@@ -4,7 +4,8 @@ import java.io.File;
 
 public class MethodDefinitionLogFile {
     // private static String fileName = "L-Instrumentation_method_definitions.txt";
-    private static String fileName = "logs/L-Instrumentation_method_definitions_Demo_2.txt";
+    // private static String fileName = "logs/L-Instrumentation_method_definitions_Demo_2.txt";
+    private static String fileName = "";
     MethodDefinitionLogFile() {
         // Get the resources
         // http://stackoverflow.com/a/21722773/3690248
