@@ -1,4 +1,4 @@
-package com.application.threads;
+package test.tests;
 
 /**
  * Main thread create a new thread, b, and waits while thread b executes a task and notifies the main thread.
