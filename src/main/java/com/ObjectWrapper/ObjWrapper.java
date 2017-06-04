@@ -1,4 +1,4 @@
-package com.application.threads;
+package com.ObjectWrapper;
 
 import com.itool.Constants;
 import com.itool.Logger;
@@ -7,7 +7,7 @@ import com.itool.exception.LoggerException;
 
 import java.lang.reflect.Method;
 
-public class ObjWrapper {
+public class ObjWrapper     {
 
     public static void wait(Object obj) throws InterruptedException {
         Logger logger = LoggerFactory.getLogger();

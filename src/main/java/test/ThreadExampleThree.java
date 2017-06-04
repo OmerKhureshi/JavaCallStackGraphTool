@@ -1,4 +1,4 @@
-package com.application.threads;
+package test;
 
 public class ThreadExampleThree {
     public static void main(String[] args) {

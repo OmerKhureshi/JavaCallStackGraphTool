@@ -66,14 +66,13 @@ public abstract class Logger {
         builder.append(getThreadId());
         builder.append(Constants.separator);
 		builder.append(Constants.EVENT_EXIT);
-		System.out.println(builder.toString());
 		printWriterCallTrace.println(builder.toString());
 		printWriterCallTrace.flush();
 	}
 
 	// wait-enter Method
 	synchronized public void logCustom(Method method, String message) throws LoggerException {
-		addToMethodDefinition(method);
+//		addToMethodDefinition(method);
 		StringBuilder builder = new StringBuilder();
         builder.append(getCurrentTimestamp());
         builder.append(Constants.separator);
@@ -89,20 +88,19 @@ public abstract class Logger {
 	// Method m = Local.class.getEnclosingMethod();
 	synchronized public void logEnter(Method method, String[] actParamters) throws LoggerException {
 
-		// methodId | packageName | methodName | return type and arguments
-		// 1 |android.app.Activity|findViewById|(I)Landroid/view/View; - method
-		// definition
 		addToMethodDefinition(method);
 
 		StringBuilder builder = new StringBuilder();
-        builder.append(getCurrentTimestamp());
-        builder.append(Constants.separator);
-        builder.append(getProcessId());
-        builder.append(Constants.separator);
-        builder.append(getThreadId());
-        builder.append(Constants.separator);
-        builder.append(Constants.EVENT_ENTER);
-        builder.append(Constants.separator);
+		builder.append(getCurrentTimestamp());
+		builder.append(Constants.separator);
+		builder.append(getProcessId());
+		builder.append(Constants.separator);
+		builder.append(getThreadId());
+		builder.append(Constants.separator);
+		builder.append(Constants.EVENT_ENTER);
+		builder.append(Constants.separator);
+		builder.append(methodMap.get(method));
+		builder.append(Constants.separator);
         builder.append(Constants.OPEN_BRACKET);
 
 		for (int i = 0; i < actParamters.length; i++) {
@@ -112,7 +110,6 @@ public abstract class Logger {
 			}
 		}
 		builder.append(Constants.CLOSE_BRACKET);
-		System.out.println(builder.toString());
 		printWriterCallTrace.println(builder.toString());
 		printWriterCallTrace.flush();
 	}
@@ -124,7 +121,6 @@ public abstract class Logger {
 	private synchronized void addToMethodDefinition(Method method) {
 		if (!methodMap.containsKey(method)) {
 			String methodDef = getMethodDefinition(method);
-			System.out.println(methodDef);
 			printWriterDefinition.println(methodDef);
 			printWriterDefinition.flush();
 			methodMap.put(method, methodCount);

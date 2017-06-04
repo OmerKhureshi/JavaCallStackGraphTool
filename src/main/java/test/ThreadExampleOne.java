@@ -1,4 +1,6 @@
-package test.tests;
+package test;
+
+import com.ObjectWrapper.ObjWrapper;
 
 /**
  * Main thread create a new thread, b, and waits while thread b executes a task and notifies the main thread.
@@ -25,7 +27,6 @@ class ThreadExampleOne {
  */
 class ThreadB extends Thread {
     int total  = 0;
-    boolean isNotified = false;
     public void run() {
         synchronized(this) {
             try {

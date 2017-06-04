@@ -1,4 +1,6 @@
-package com.application.threads;
+package test;
+
+import com.ObjectWrapper.ObjWrapper;
 
 public class ThreadExampleTwo {
     public class Lock {
