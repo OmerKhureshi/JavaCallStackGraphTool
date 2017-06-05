@@ -151,6 +151,7 @@ public class Main extends Application {
 
     public void reload() {
 
+        statusBarLabel.setText("Loading. Please wait.");
         if (!methodDefnFileSet || !callTraceFileSet) {
             return;
         }
@@ -184,7 +185,6 @@ public class Main extends Application {
         CheckFileIntegrity.checkFile(CallTraceLogFile.getFile());
 
         DatabaseUtil.resetDB();
-        statusBarLabel.setText("Loading log file.");
 
         // Parse method definition file and insert into database.
         new ParseCallTrace().readFile(MethodDefinitionLogFile.getFile(), MethodDefnDAOImpl::insert);
@@ -204,7 +204,6 @@ public class Main extends Application {
         convertDBtoElementTree.calculateElementProperties();
         Graph.drawPlaceHolderLines();
 
-        statusBarLabel.setText("Populating database.");
 
         convertDBtoElementTree.recursivelyInsertElementsIntoDB(ConvertDBtoElementTree.greatGrandParent);
         convertDBtoElementTree.recursivelyInsertEdgeElementsIntoDB(convertDBtoElementTree.greatGrandParent);
@@ -226,7 +225,6 @@ public class Main extends Application {
                 });
 
         onScrollingScrollPane();
-        statusBarLabel.setText("Ready.");
     }
 
     private void createCircleCellsRecursively(Element root, Model model) {
@@ -287,6 +285,7 @@ public class Main extends Application {
     }
 
     public void onScrollingScrollPane() {
+        statusBarLabel.setText("Ready.");
         if (convertDBtoElementTree!= null && graph != null) {
             convertDBtoElementTree.getCirclesToLoadIntoViewPort(graph);
             graph.myEndUpdate();
