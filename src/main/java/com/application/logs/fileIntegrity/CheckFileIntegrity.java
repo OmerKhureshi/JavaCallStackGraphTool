@@ -46,8 +46,8 @@ public class CheckFileIntegrity {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
-            e.printStackTrace();
         } catch (NoSuchElementException e) {
+            e.printStackTrace();
             throw new NoSuchElementException("Error occurred in line due to mismatch in count of enters and exits. " +
                     "Error at line: " + linesRead + "; Line is: " + line);
         } finally {

@@ -36,7 +36,7 @@ public class Element {
     private BoundBox boundBox = new BoundBox();
 
     private int coordMultiplier = 1;
-
+;
     public Element(Element parent) {
 
         elementId = count.incrementAndGet();
@@ -286,19 +286,19 @@ public class Element {
         this.setBoundBoxOnAll(root);
     }
 
-    @Override
-    public String toString() {
-        return "Element{" +
-//                "parent levelCount=" + parent.getLevelCount() +
-//                ", children size=" + Optional.ofNullable(children).; +
-                ", indexInParent=" + indexInParent +
-                ", leafCount=" + leafCount +
-                ", isLeafCountSet=" + isLeafCountSet +
-                ", levelCount=" + levelCount +
-                ", boundBox=" + boundBox +
-                ", coordMultiplier=" + coordMultiplier +
-                '}';
-    }
+//    @Override
+//    public String toString() {
+//        return "Element{" +
+////                "parent levelCount=" + parent.getLevelCount() +
+////                ", children size=" + Optional.ofNullable(children).; +
+//                ", indexInParent=" + indexInParent +
+//                ", leafCount=" + leafCount +
+//                ", isLeafCountSet=" + isLeafCountSet +
+//                ", levelCount=" + levelCount +
+//                ", boundBox=" + boundBox +
+//                ", coordMultiplier=" + coordMultiplier +
+//                '}';
+//    }
 
     public int getCoordMultiplier() {
         return coordMultiplier;

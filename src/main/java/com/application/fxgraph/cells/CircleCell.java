@@ -19,7 +19,7 @@ public class CircleCell extends Cell {
         Circle circle = new Circle(20);
         label = new Label("This is a long string");
         methodName = new Label("");
-        circle.setStroke(Color.RED);
+        circle.setStroke(Color.GRAY);
         circle.setFill(Color.RED);
         circle.relocate(0,0);
 
@@ -59,7 +59,7 @@ public class CircleCell extends Cell {
 
         // Center the method name label below the circle.
         this.methodName.setMinWidth(this.methodName.getText().length()*2);
-        this.methodName.relocate(-this.methodName.getMinWidth()/2, 40);
+        this.methodName.relocate(-this.methodName.getMinWidth()/2, 40);//-this.methodName.getMinHeight()/2);
 
     }
 }

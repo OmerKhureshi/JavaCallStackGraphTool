@@ -22,6 +22,9 @@ public class ParseCallTrace implements FileParser {
             }
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            br = null;
+            line = null;
         }
     }
 

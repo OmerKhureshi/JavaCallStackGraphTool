@@ -19,19 +19,24 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Scene;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.control.*;
+import javafx.scene.image.WritableImage;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
+import javax.imageio.ImageIO;
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.sql.ResultSet;
@@ -46,17 +51,32 @@ public class Main extends Application {
     BorderPane root;
     Scene scene;
     public Stage primaryStage;
-    Label statusBarLabel = new Label();
     static ListView<String> threadListView;
     ObservableList<String> threadsObsList;
     boolean methodDefnFileSet;
     boolean callTraceFileSet;
-    MenuItem runAnalysis;
     Text selectMethodDefn = new Text("");
     Text selectCallTrace = new Text("");
     FlowPane instructionsNode;
-
     ConvertDBtoElementTree convertDBtoElementTree;
+
+    // Menu bar
+    MenuBar mb;
+
+    Menu file; // File menu button
+    MenuItem chooseMethodDefn;
+    MenuItem chooseCallTrace;
+
+    Menu run;  // Run menu button
+    MenuItem runAnalysis;
+    MenuItem reset;
+
+    Menu saveImageMenu;  // Save Image menu button
+    MenuItem saveImage;
+
+    // Status bar
+    Group statusBar;
+    Label statusBarLabel = new Label();
 
     @Override
     public void start(Stage primaryStage) {
@@ -64,8 +84,6 @@ public class Main extends Application {
         graph = new Graph();
         root = new BorderPane();
         EventHandlers.saveRef(this);
-
-        reload();
 
         // Original.
         // addGraphComponents();
@@ -76,26 +94,52 @@ public class Main extends Application {
         System.out.println("Free memory: " + Runtime.getRuntime().freeMemory() / 1000000);
         System.out.println("Total memory: " + Runtime.getRuntime().totalMemory() / 1000000);
 
-        MenuBar mb = new MenuBar();
-        Menu file = new Menu("File");
-        MenuItem chooseMethodDefn = new MenuItem("Select Method Definition log file");
-        MenuItem chooseCallTrace = new MenuItem("Select Call Trace log file");
+        // Create Menu Bar
+        setUpMenu();
 
-        Menu run = new Menu("Run");
-        MenuItem reset = new MenuItem("Reset");
+        // Create Status Bar
+        setUpStatusBar();
 
+        scene = new Scene(root, 1000, 300);
+
+//        URL url = getClass().getClassLoader().getResource("css/application.css");
+//        String css = url.toExternalForm();
+//        scene.getStylesheets().add(css);
+//        scene.getStylesheets().add(getClass().getResource("css/application.css").toExternalForm());
+
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+    public void setUpMenu() {
+        mb = new MenuBar();
+
+        file = new Menu("File");
+        chooseMethodDefn = new MenuItem("Select Method Definition log file");
+        chooseCallTrace = new MenuItem("Select Call Trace log file");
+        file.getItems().addAll(chooseMethodDefn, chooseCallTrace);
+
+        run = new Menu("Run");
+        reset = new MenuItem("Reset");
         runAnalysis = new MenuItem("Run");
         runAnalysis.setDisable(true);
-
-        file.getItems().addAll(chooseMethodDefn, chooseCallTrace);
         run.getItems().addAll(runAnalysis, reset);
 
-        mb.getMenus().addAll(file, run);
+        saveImageMenu = new Menu("Save Image");
+        saveImage = new MenuItem("Save Image");
+        saveImageMenu.getItems().add(saveImage);
+
+        mb.getMenus().addAll(file, run, saveImageMenu);
 
         populateInstructions();
+        setMenuActions();
 
+        root.setTop(mb);
+    }
+
+    public void setMenuActions() {
         chooseMethodDefn.setOnAction(event -> {
-            DatabaseUtil.resetDB();
+//            DatabaseUtil.resetDB();
             File methodDefnFile = chooseLogFile("MethodDefinition");
             if (methodDefnFile != null) {
                 MethodDefinitionLogFile.setFile(methodDefnFile);
@@ -105,7 +149,7 @@ public class Main extends Application {
         });
 
         chooseCallTrace.setOnAction(event -> {
-            DatabaseUtil.resetDB();
+//            DatabaseUtil.resetDB();
             File callTraceFile = chooseLogFile("CallTrace");
             if (callTraceFile != null) {
                 CallTraceLogFile.setFile(callTraceFile);
@@ -122,21 +166,17 @@ public class Main extends Application {
             reset();
         });
 
-        root.setTop(mb);
+        // Capture and save the currently loaded UI tree.
+        saveImage.setOnAction(event -> {
+            saveUIImage();
+        });
+    }
 
-        Group statusBar = new Group();
-        statusBarLabel.setText("Done Loading into Database. Application ready.");
+    public void setUpStatusBar() {
+        statusBar = new Group();
+        statusBarLabel.setText("Application ready.");
         statusBar.getChildren().add(statusBarLabel);
         root.setBottom(statusBar);
-        scene = new Scene(root, 1000, 300);
-        URL url = getClass().getClassLoader().getResource("css/application.css");
-        String css = url.toExternalForm();
-        scene.getStylesheets().add(css);
-        // scene.getStylesheets().add(getClass().getResource("css/application.css").toExternalForm());
-
-        primaryStage.setScene(scene);
-        primaryStage.show();
-
     }
 
     public void reset() {
@@ -150,12 +190,15 @@ public class Main extends Application {
     }
 
     public void reload() {
+        // statusBarLabel.setText("Loading. Please wait.");
 
-        statusBarLabel.setText("Loading. Please wait.");
         if (!methodDefnFileSet || !callTraceFileSet) {
+            System.out.println("Returning without effect");
             return;
         }
+
         // Layout Center
+        graph = null;
         graph = new Graph();
         root.setCenter(null);
         root.setCenter(graph.getScrollPane());
@@ -163,6 +206,7 @@ public class Main extends Application {
 
         // Layout Left
         // threadListView = new ListView<>();
+
         threadsObsList = FXCollections.observableArrayList();
         threadListView = new ListView<>();
         threadListView.setItems(threadsObsList);
@@ -174,23 +218,51 @@ public class Main extends Application {
             showThread(threadId);
         });
 
+        System.out.printf("Checkpoint 1: Before calling addGraphCellComponents()");
         addGraphCellComponents();
-        String firstThreadID = (String)threadsObsList.get(0).split(" ")[1];
+        System.out.printf("Checkpoint 1: After returning from addGraphCellComponents()");
+        String firstThreadID = threadsObsList.get(0).split(" ")[1];
         showThread(firstThreadID);
         threadListView.getSelectionModel().select(0);
     }
 
+    public void setUpThreadsView() {
+
+    }
+
+    public void saveUIImage() {
+        System.out.println("In saveUIImage.");
+        ScrollPane scrollPane = graph.getScrollPane();
+        WritableImage image = scrollPane.snapshot(new SnapshotParameters(), null);
+
+        File file = new File("chart.png");
+
+        try {
+            ImageIO.write(SwingFXUtils.fromFXImage(image, null), "png", file);
+        } catch (IOException e) {
+            System.out.println("saveUIImage exception");
+        }
+    }
+
     private void addGraphCellComponents() {
         // Check log file integrity.
+//        System.out.printf("Checkpoint 1: Before calling checkFile()");
         CheckFileIntegrity.checkFile(CallTraceLogFile.getFile());
+//        System.out.printf("Checkpoint 1: After returning from checkFile()");
 
         DatabaseUtil.resetDB();
 
+        long startTime = System.currentTimeMillis();
+        System.out.println("Checkpoint 1: Before calling readFile() on method definition");
         // Parse method definition file and insert into database.
         new ParseCallTrace().readFile(MethodDefinitionLogFile.getFile(), MethodDefnDAOImpl::insert);
+        long elapsed = System.currentTimeMillis() - startTime;
+        System.out.println("Checkpoint 1: After returning readFile() on method definition. Took: " + elapsed);
 
         convertDBtoElementTree = new ConvertDBtoElementTree();
 
+        startTime = System.currentTimeMillis();
+        System.out.println("Checkpoint 1: Before calling readFile() on call trace");
         new ParseCallTrace().readFile(CallTraceLogFile.getFile(),
                 parsedLineList -> {
                     try {
@@ -200,16 +272,29 @@ public class Main extends Application {
                         e.printStackTrace();
                     }
                 });
+        elapsed = System.currentTimeMillis() - startTime;
+        System.out.println("Checkpoint 1: After returning from readFile() on call trace. Took: " + elapsed);
 
+        startTime = System.currentTimeMillis();
         convertDBtoElementTree.calculateElementProperties();
+        elapsed = System.currentTimeMillis() - startTime;
+        System.out.println("Checkpoint 1: After returning from calculateElementProperties. Took: " + elapsed);
+
         Graph.drawPlaceHolderLines();
 
-
+        startTime = System.currentTimeMillis();
         convertDBtoElementTree.recursivelyInsertElementsIntoDB(ConvertDBtoElementTree.greatGrandParent);
+        elapsed = System.currentTimeMillis() - startTime;
+        System.out.println("Checkpoint 1: After returning from recursivelyInsertElementsIntoDB. Took: " + elapsed);
+
+        startTime = System.currentTimeMillis();
         convertDBtoElementTree.recursivelyInsertEdgeElementsIntoDB(convertDBtoElementTree.greatGrandParent);
+        elapsed = System.currentTimeMillis() - startTime;
+        System.out.println("Checkpoint 1: After returning from recursivelyInsertEdgeElementsIntoDB. Took: " + elapsed);
 
         // Get thread list and populate
         threadsObsList.clear();
+
         ConvertDBtoElementTree.greatGrandParent.getChildren().stream()
                 .forEach(element -> {
                     Element child = element.getChildren().get(0);
@@ -224,7 +309,9 @@ public class Main extends Application {
                     }
                 });
 
+        System.out.println("Checkpoint 1: Before calling onScrollingScrollPane");
         onScrollingScrollPane();
+        System.out.println("Checkpoint 1: After returning from onScrollingScrollPane");
     }
 
     private void createCircleCellsRecursively(Element root, Model model) {
@@ -277,7 +364,6 @@ public class Main extends Application {
         return resMap;
     }
 
-
     public void showThread(String threadId) {
         convertDBtoElementTree.setCurrentThreadId(threadId);
         convertDBtoElementTree.removeFromCellLayer();
@@ -285,7 +371,7 @@ public class Main extends Application {
     }
 
     public void onScrollingScrollPane() {
-        statusBarLabel.setText("Ready.");
+//        statusBarLabel.setText("Ready.");
         if (convertDBtoElementTree!= null && graph != null) {
             convertDBtoElementTree.getCirclesToLoadIntoViewPort(graph);
             graph.myEndUpdate();
@@ -336,7 +422,6 @@ public class Main extends Application {
         launch(args);
     }
 
-
     public static void makeSelection(String threadId) {
         Platform.runLater(() -> threadListView.getSelectionModel().select("Thread: " + threadId));
     }
@@ -359,8 +444,10 @@ public class Main extends Application {
     }
 
     public void changeBool(String type, boolean val) {
-        if (type.equalsIgnoreCase("methodDefnFileSet")) methodDefnFileSet = val;
-        else if (type.equalsIgnoreCase("callTraceFileSet")) callTraceFileSet = val;
+        if (type.equalsIgnoreCase("methodDefnFileSet"))
+            methodDefnFileSet = val;
+        else if (type.equalsIgnoreCase("callTraceFileSet"))
+            callTraceFileSet = val;
 
         if (methodDefnFileSet && callTraceFileSet) {
             runAnalysis.setDisable(false);

@@ -19,21 +19,21 @@ public class BoundBox {
     public float xCoordinate;
     public float yCoordinate;
 
-    @Override
-    public String toString() {
-        return "BoundBox{" +
-                "xTopLeft=" + xTopLeft +
-                ", yTopLeft=" + yTopLeft +
-                ", xTopRight=" + xTopRight +
-                ", yTopRight=" + yTopRight +
-                ", xBottomRight=" + xBottomRight +
-                ", yBottomRight=" + yBottomRight +
-                ", xBottomLeft=" + xBottomLeft +
-                ", yBottomLeft=" + yBottomLeft +
-                ", unitWidthFactor=" + unitWidthFactor +
-                ", unitHeightFactor=" + unitHeightFactor +
-                ", xCoordinate=" + xCoordinate +
-                ", yCoordinate=" + yCoordinate +
-                '}';
-    }
+//    @Override
+//    public String toString() {
+//        return "BoundBox{" +
+//                "xTopLeft=" + xTopLeft +
+//                ", yTopLeft=" + yTopLeft +
+//                ", xTopRight=" + xTopRight +
+//                ", yTopRight=" + yTopRight +
+//                ", xBottomRight=" + xBottomRight +
+//                ", yBottomRight=" + yBottomRight +
+//                ", xBottomLeft=" + xBottomLeft +
+//                ", yBottomLeft=" + yBottomLeft +
+//                ", unitWidthFactor=" + unitWidthFactor +
+//                ", unitHeightFactor=" + unitHeightFactor +
+//                ", xCoordinate=" + xCoordinate +
+//                ", yCoordinate=" + yCoordinate +
+//                '}';
+//    }
 }

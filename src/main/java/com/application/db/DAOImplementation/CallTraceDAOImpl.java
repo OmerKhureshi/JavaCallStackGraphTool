@@ -35,7 +35,7 @@ public class CallTraceDAOImpl {
                         "thread_id INTEGER, " +
                         "method_id INTEGER, " +
                         "message VARCHAR(20), " +
-                        "parameters VARCHAR(200), " +
+                        "parameters VARCHAR(800), " +
                         "lockObjId VARCHAR(50), " +
                         // "time_instant VARCHAR(24)" +
                         "time_instant TIMESTAMP" +

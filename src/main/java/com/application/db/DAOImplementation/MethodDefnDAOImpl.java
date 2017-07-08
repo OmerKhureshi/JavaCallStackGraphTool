@@ -48,10 +48,9 @@ public class MethodDefnDAOImpl {
     }
 
     public static void insert(List<String> vals) {
-        //        System.out.println("starting insert");
-        //        System.out.println("MethodDefnDAOImpl:insert: " + isTableCreated());
         if (!isTableCreated())
             createTable();
+
         int methodID = Integer.parseInt(vals.get(0));
         String packageName = vals.get(1);
         String methodName = vals.get(2);
@@ -65,12 +64,10 @@ public class MethodDefnDAOImpl {
                     arguments + "'" +
                     ")";
             ps.execute(sql);
-            // System.out.println(TableNames.ELEMENT_TABLE + ": Inserted: " + sql);
         } catch (SQLException e) {
             System.out.println(" Exception caused by: " + sql);
             e.printStackTrace();
         }
-        // System.out.println("ending insert");
     }
 
     public static void dropTable() {
