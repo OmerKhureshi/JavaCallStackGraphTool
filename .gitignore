@@ -9,3 +9,6 @@ target/
 
 # intelliJ
 .idea
+
+# UI Images
+*.png
