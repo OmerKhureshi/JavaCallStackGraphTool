@@ -1,5 +1,6 @@
 package com.application.fxgraph.ElementHelpers;
 
+import com.application.Main;
 import com.application.db.DAOImplementation.EdgeDAOImpl;
 import com.application.db.DAOImplementation.ElementDAOImpl;
 import com.application.db.DAOImplementation.ElementToChildDAOImpl;
@@ -133,19 +134,29 @@ public class ConvertDBtoElementTree {
 
     }
 
-    public void recursivelyInsertElementsIntoDB(Element root) {
-        if (root == null)
-            return;
-        ElementDAOImpl.insert(root);
-        ElementToChildDAOImpl.insert(
-                root.getParent() == null? -1 : root.getParent().getElementId(),
-                root.getElementId());
-        // // Create and insert Edges.
-        // Edge edge = new Edge(root.getParent(), root);
-        // edge.setStartX();
-
-        if (root.getChildren() != null)
-            root.getChildren().stream().forEachOrdered(this::recursivelyInsertElementsIntoDB);
+    public void recursivelyInsertElementsIntoDB(Element root, Main.LinesInserted linesInserted) {
+//        if (root == null)
+//            return;
+//
+//        Queue<Element> queue = new LinkedList<>();
+//        queue.add(root);
+//
+//        Element element;
+//        while ((element = queue.poll()) != null) {
+//            linesInserted.insertedSoFar++;
+//            System.out.println("here:  "  + linesInserted.insertedSoFar);
+//            ElementDAOImpl.insert(element);
+//            ElementToChildDAOImpl.insert(
+//                    element.getParent() == null? -1 : element.getParent().getElementId(),
+//                    element.getElementId());
+//
+//            if (element.getChildren() != null)
+//                element.getChildren().stream().forEachOrdered(queue::add);
+//
+//        }
+//
+////        if (root.getChildren() != null)
+////            root.getChildren().stream().forEachOrdered(this::recursivelyInsertElementsIntoDB);
     }
 
     public void recursivelyInsertEdgeElementsIntoDB(Element root) {

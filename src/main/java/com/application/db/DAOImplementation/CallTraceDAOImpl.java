@@ -53,12 +53,12 @@ public class CallTraceDAOImpl {
             throws SQLException, ClassNotFoundException, InstantiationException, IllegalAccessException{
 
         int autoIncrementedId = -1;
-        // int processID = Integer.parseInt(val.get(0));
-        // int threadID = Integer.parseInt(val.get(1));
-        // int methodID = Integer.parseInt(val.get(2));
-        // String eventType = val.get(3);
-        // String parameters = val.get(4);
-        // String time_instant = val.get(5);
+        // int processID = Integer.parseInt(readSoFar.get(0));
+        // int threadID = Integer.parseInt(readSoFar.get(1));
+        // int methodID = Integer.parseInt(readSoFar.get(2));
+        // String eventType = readSoFar.get(3);
+        // String parameters = readSoFar.get(4);
+        // String time_instant = readSoFar.get(5);
 
         // TimeStamp       | ProcessID | ThreadID |  EventType |LockObjectID
         // utc time format | 40948     |    9     | Wait-Enter |3986916
@@ -84,7 +84,7 @@ public class CallTraceDAOImpl {
             methodID = Integer.parseInt(val.get(4));
             parameters = val.get(5);
         // } else if (eventType.equalsIgnoreCase("EXIT")) {
-        //     methodID = Integer.parseInt(val.get(4));
+        //     methodID = Integer.parseInt(readSoFar.get(4));
         } else if (eventType.equalsIgnoreCase("WAIT-ENTER") || eventType.equalsIgnoreCase("WAIT-EXIT") ||
                 eventType.equalsIgnoreCase("NOTIFY-ENTER") || eventType.equalsIgnoreCase("NOTIFY-EXIT") ||
                 eventType.equalsIgnoreCase("NOTIFYALL-ENTER") || eventType.equalsIgnoreCase("NOTIFYALL-EXIT")) {

@@ -32,7 +32,7 @@ public class ZoomableScrollPane extends ScrollPane {
 
         viewportBoundsProperty().addListener((observable, oldValue, newValue) -> {
             if (main != null) {
-                // System.out.println("view port size changed.");
+                System.out.println("view port size changed.");
                 main.onScrollingScrollPane();
             }
         });

@@ -2,6 +2,7 @@ package com.application;
 
 import com.application.db.DAOImplementation.CallTraceDAOImpl;
 import com.application.db.DAOImplementation.ElementDAOImpl;
+import com.application.db.DAOImplementation.ElementToChildDAOImpl;
 import com.application.db.DAOImplementation.MethodDefnDAOImpl;
 import com.application.db.DatabaseUtil;
 import com.application.fxgraph.ElementHelpers.ConvertDBtoElementTree;
@@ -11,14 +12,13 @@ import com.application.fxgraph.graph.*;
 import com.application.logs.fileHandler.CallTraceLogFile;
 import com.application.logs.fileHandler.MethodDefinitionLogFile;
 import com.application.logs.fileIntegrity.CheckFileIntegrity;
+import com.application.logs.parsers.FileParser;
 import com.application.logs.parsers.ParseCallTrace;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.InvalidationListener;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableBooleanValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
@@ -30,19 +30,22 @@ import javafx.scene.control.*;
 import javafx.scene.image.WritableImage;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Queue;
 
 
 public class Main extends Application {
@@ -51,8 +54,7 @@ public class Main extends Application {
     BorderPane root;
     Scene scene;
     public Stage primaryStage;
-    static ListView<String> threadListView;
-    ObservableList<String> threadsObsList;
+
     boolean methodDefnFileSet;
     boolean callTraceFileSet;
     Text selectMethodDefn = new Text("");
@@ -78,10 +80,27 @@ public class Main extends Application {
     Group statusBar;
     Label statusBarLabel = new Label();
 
+    // Thread list panel on left.
+    static ListView<String> threadListView;
+    ObservableList<String> threadsObsList;
+
+    // Progress bar
+    Stage pStage;
+    Scene pScene;
+    ProgressBar progressBar;
+    VBox pVBox;
+    Label title;
+    Label progressText;
+    private static final int PROGRESS_BAR_WIDTH = 676;
+
+
+    // Background tasks
+    Task task;
+
     @Override
     public void start(Stage primaryStage) {
         this.primaryStage = primaryStage;
-        graph = new Graph();
+//        graph = new Graph();
         root = new BorderPane();
         EventHandlers.saveRef(this);
 
@@ -159,7 +178,9 @@ public class Main extends Application {
         });
 
         runAnalysis.setOnAction(event -> {
+            setUpProgressBar();
             reload();
+            selectMethodDefn.setText("Sit tight. We are working hard dumping logs into the DB.");
         });
 
         reset.setOnAction(event -> {
@@ -197,16 +218,23 @@ public class Main extends Application {
             return;
         }
 
+        System.out.println("Checkpoint 1: Before calling addGraphCellComponents()");
+        addGraphCellComponents();
+        System.out.println("Checkpoint 1: After returning from addGraphCellComponents()");
+    }
+
+    public void resetCenterLayout() {
         // Layout Center
         graph = null;
-        graph = new Graph();
         root.setCenter(null);
+
+        graph = new Graph();
         root.setCenter(graph.getScrollPane());
         ((ZoomableScrollPane) graph.getScrollPane()).saveRef(this);
+    }
 
+    public void setUpThreadsView() {
         // Layout Left
-        // threadListView = new ListView<>();
-
         threadsObsList = FXCollections.observableArrayList();
         threadListView = new ListView<>();
         threadListView.setItems(threadsObsList);
@@ -217,17 +245,6 @@ public class Main extends Application {
             String threadId = selectedItem.split(" ")[1];
             showThread(threadId);
         });
-
-        System.out.printf("Checkpoint 1: Before calling addGraphCellComponents()");
-        addGraphCellComponents();
-        System.out.printf("Checkpoint 1: After returning from addGraphCellComponents()");
-        String firstThreadID = threadsObsList.get(0).split(" ")[1];
-        showThread(firstThreadID);
-        threadListView.getSelectionModel().select(0);
-    }
-
-    public void setUpThreadsView() {
-
     }
 
     public void saveUIImage() {
@@ -247,50 +264,148 @@ public class Main extends Application {
     private void addGraphCellComponents() {
         // Check log file integrity.
 //        System.out.printf("Checkpoint 1: Before calling checkFile()");
-        CheckFileIntegrity.checkFile(CallTraceLogFile.getFile());
 //        System.out.printf("Checkpoint 1: After returning from checkFile()");
 
-        DatabaseUtil.resetDB();
 
         long startTime = System.currentTimeMillis();
         System.out.println("Checkpoint 1: Before calling readFile() on method definition");
-        // Parse method definition file and insert into database.
-        new ParseCallTrace().readFile(MethodDefinitionLogFile.getFile(), MethodDefnDAOImpl::insert);
-        long elapsed = System.currentTimeMillis() - startTime;
-        System.out.println("Checkpoint 1: After returning readFile() on method definition. Took: " + elapsed);
+       // Parse method definition file and insert into database.
+
 
         convertDBtoElementTree = new ConvertDBtoElementTree();
 
-        startTime = System.currentTimeMillis();
-        System.out.println("Checkpoint 1: Before calling readFile() on call trace");
-        new ParseCallTrace().readFile(CallTraceLogFile.getFile(),
-                parsedLineList -> {
-                    try {
-                        int autoIncrementedId = CallTraceDAOImpl.insert(parsedLineList);
-                        convertDBtoElementTree.StringToElementList(parsedLineList, autoIncrementedId);
-                    } catch (SQLException | ClassNotFoundException | IllegalAccessException | InstantiationException e) {  // Todo Create a custom exception class and clean this.
-                        e.printStackTrace();
+        task = new Task<Void>(){
+            @Override
+            protected Void call() throws Exception {
+                // Reset Database
+                updateTitle("Resetting the Database.");
+                DatabaseUtil.resetDB();
+                System.out.println("Reset Database");
+
+
+                // Check file integrity.
+                BytesRead bytesRead = new BytesRead(
+                        0,
+                        MethodDefinitionLogFile.getFile().length() + 2*CallTraceLogFile.getFile().length()
+                );
+                updateTitle("Checking call trace file for errors.");
+                updateMessage("Please wait... total Bytes: " + bytesRead.total + " bytes processed: " + bytesRead.readSoFar);
+                updateProgress(bytesRead.readSoFar, bytesRead.total);
+                CheckFileIntegrity.checkFile(CallTraceLogFile.getFile(), bytesRead);
+                System.out.println("Check file integrity.");
+
+
+                // Parse Log files.
+                new ParseCallTrace().readFile(MethodDefinitionLogFile.getFile(), bytesRead, MethodDefnDAOImpl::insert);
+                updateTitle("Parsing log files.");
+                new ParseCallTrace().readFile(CallTraceLogFile.getFile(), bytesRead,
+                        parsedLineList -> {
+                            try {
+                                int autoIncrementedId = CallTraceDAOImpl.insert(parsedLineList);
+                                convertDBtoElementTree.StringToElementList(parsedLineList, autoIncrementedId);
+                                updateMessage("Please wait... total Bytes: " + bytesRead.total + " bytes processed: " + bytesRead.readSoFar);
+                                updateProgress(bytesRead.readSoFar, bytesRead.total);
+                                Main.this.updateProgress(bytesRead);
+                            } catch (SQLException | ClassNotFoundException | IllegalAccessException | InstantiationException e) {  // Todo Create a custom exception class and clean this.
+                                e.printStackTrace();
+                            }
+                        });
+                System.out.println("Parse Log files.");
+
+
+
+                // Inserting into Database.
+                LinesInserted linesInserted = new LinesInserted(
+                        0,
+                        2 * ParseCallTrace.countNumberOfLines(CallTraceLogFile.getFile())
+                );
+
+//                progressBar.setProgress(0);
+                updateTitle("Writing to DB.");
+                updateMessage("Please wait... total records" + linesInserted.total + " records processed: " + linesInserted.insertedSoFar);
+                updateProgress(linesInserted.insertedSoFar, linesInserted.total);
+                convertDBtoElementTree.calculateElementProperties();
+
+                Element root = convertDBtoElementTree.greatGrandParent;
+                if (root == null)
+                    return null;
+
+                Queue<Element> queue = new LinkedList<>();
+                queue.add(root);
+
+                Element element;
+
+                while ((element = queue.poll()) != null) {
+                    ElementDAOImpl.insert(element);
+                    ElementToChildDAOImpl.insert(
+                            element.getParent() == null? -1 : element.getParent().getElementId(),
+                            element.getElementId());
+
+                    if (element.getChildren() != null) {
+                        element.getChildren().stream().forEachOrdered(queue::add);
                     }
-                });
-        elapsed = System.currentTimeMillis() - startTime;
+
+                    linesInserted.insertedSoFar++;
+                    updateMessage("Please wait... total records" + linesInserted.total + " records processed: " + linesInserted.insertedSoFar);
+                    updateProgress(linesInserted.insertedSoFar, linesInserted.total);
+                }
+
+
+                convertDBtoElementTree.recursivelyInsertEdgeElementsIntoDB(convertDBtoElementTree.greatGrandParent);
+                System.out.println("Inserting into Database.");
+                return null;
+            }
+
+            @Override
+            protected void succeeded() {
+                super.succeeded();
+                pStage.close();
+                System.out.println("Successfully loaded.");
+                postDatabaseLoad();
+            }
+        };
+
+        long elapsed = System.currentTimeMillis() - startTime;
+
+//        System.out.println("Checkpoint 1: After returning readFile() on method definition. Took: " + elapsed);
+//        startTime = System.currentTimeMillis();
+//        System.out.println("Checkpoint 1: Before calling readFile() on call trace");
+//        elapsed = System.currentTimeMillis() - startTime;
+//
         System.out.println("Checkpoint 1: After returning from readFile() on call trace. Took: " + elapsed);
+        progressBar.progressProperty().bind(task.progressProperty());
+        title.textProperty().bind(task.titleProperty());
+        progressText.textProperty().bind(task.messageProperty());
+        new Thread(task).start();
+    }
 
-        startTime = System.currentTimeMillis();
-        convertDBtoElementTree.calculateElementProperties();
-        elapsed = System.currentTimeMillis() - startTime;
-        System.out.println("Checkpoint 1: After returning from calculateElementProperties. Took: " + elapsed);
+    public void setUpProgressBar() {
+        progressBar = new ProgressBar();
+        progressBar.setPrefWidth(PROGRESS_BAR_WIDTH);
 
+        pStage = new Stage();
+        pStage.initModality(Modality.APPLICATION_MODAL);
+        pStage.initOwner(null);
+
+        title = new Label("");
+        progressText = new Label("");
+
+        pVBox = new VBox();
+        pVBox.getChildren().addAll(title, progressText, progressBar);
+        pVBox.setAlignment(Pos.CENTER);
+
+        pScene = new Scene(pVBox);
+        pStage.setScene(pScene);
+        pStage.show();
+    }
+
+    public void updateProgress(BytesRead bytesRead) {
+    }
+
+    public void postDatabaseLoad(){
+        resetCenterLayout();
+        setUpThreadsView();
         Graph.drawPlaceHolderLines();
-
-        startTime = System.currentTimeMillis();
-        convertDBtoElementTree.recursivelyInsertElementsIntoDB(ConvertDBtoElementTree.greatGrandParent);
-        elapsed = System.currentTimeMillis() - startTime;
-        System.out.println("Checkpoint 1: After returning from recursivelyInsertElementsIntoDB. Took: " + elapsed);
-
-        startTime = System.currentTimeMillis();
-        convertDBtoElementTree.recursivelyInsertEdgeElementsIntoDB(convertDBtoElementTree.greatGrandParent);
-        elapsed = System.currentTimeMillis() - startTime;
-        System.out.println("Checkpoint 1: After returning from recursivelyInsertEdgeElementsIntoDB. Took: " + elapsed);
 
         // Get thread list and populate
         threadsObsList.clear();
@@ -312,6 +427,10 @@ public class Main extends Application {
         System.out.println("Checkpoint 1: Before calling onScrollingScrollPane");
         onScrollingScrollPane();
         System.out.println("Checkpoint 1: After returning from onScrollingScrollPane");
+
+        String firstThreadID = threadsObsList.get(0).split(" ")[1];
+        showThread(firstThreadID);
+        threadListView.getSelectionModel().select(0);
     }
 
     private void createCircleCellsRecursively(Element root, Model model) {
@@ -466,4 +585,25 @@ public class Main extends Application {
         instructionsNode.setPadding(new Insets(5,5,5,5));
         instructionsNode.setVgap(10);
     }
+
+    public class BytesRead {
+        public long readSoFar = 0;
+        public long total = 0;
+
+        BytesRead(long readSoFar, long totalBytes) {
+            this.readSoFar = readSoFar;
+            this.total = totalBytes;
+        }
+    }
+
+    public class LinesInserted {
+        public long insertedSoFar = 0;
+        public long total = 0;
+
+        LinesInserted(long insertedSoFar, long totalBytes) {
+            this.insertedSoFar = insertedSoFar;
+            this.total = totalBytes;
+        }
+    }
+
 }

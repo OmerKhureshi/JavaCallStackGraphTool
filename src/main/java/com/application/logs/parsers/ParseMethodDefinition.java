@@ -1,5 +1,7 @@
 package com.application.logs.parsers;
 
+import com.application.Main;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -36,7 +38,7 @@ public class ParseMethodDefinition implements FileParser {
     // }
 
     @Override
-    public void readFile(File logFile, Consumer<List<String>> cmd) {
+    public void readFile(File logFile, Main.BytesRead bytesRead, Consumer<List<String>> cmd) {
         try {
             br = new BufferedReader(new FileReader(logFile));
             // ToDo Look into streams to perform buffered read and insert.

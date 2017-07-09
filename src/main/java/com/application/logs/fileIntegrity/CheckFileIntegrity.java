@@ -1,5 +1,7 @@
 package com.application.logs.fileIntegrity;
 
+import com.application.Main;
+
 import java.io.*;
 import java.util.Deque;
 import java.util.LinkedList;
@@ -8,7 +10,7 @@ import java.util.NoSuchElementException;
 public class CheckFileIntegrity {
 
 
-    public static void checkFile (File file) {
+    public static void checkFile (File file, Main.BytesRead bytesRead) {
         String line = null;
         Deque<Integer> stack;
         int linesRead = 0;
@@ -17,6 +19,7 @@ public class CheckFileIntegrity {
         try {
             BufferedReader br = new BufferedReader(new FileReader(file));
             while((line = br.readLine()) != null) {
+                bytesRead.readSoFar += line.length();
                 String msg = line.split("\\|")[3];
                     switch (msg.toUpperCase()) {
                         case "WAIT-ENTER":
