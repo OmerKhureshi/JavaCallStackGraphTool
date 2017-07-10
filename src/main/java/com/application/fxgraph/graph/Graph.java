@@ -50,11 +50,11 @@ public class Graph {
 
     public static void drawPlaceHolderLines(int height, int width) {
         Line hPlaceHolderLine = new Line(0, 0, (width + 2) * BoundBox.unitWidthFactor, 0);
-        hPlaceHolderLine.setStrokeWidth(0.001);
+        hPlaceHolderLine.setStrokeWidth(10);
         cellLayer.getChildren().add(hPlaceHolderLine);
 
         Line vPlaceHolderLine = new Line(0, 0, 0, height * BoundBox.unitHeightFactor);
-        vPlaceHolderLine.setStrokeWidth(0.001);
+        vPlaceHolderLine.setStrokeWidth(10);
         cellLayer.getChildren().add(vPlaceHolderLine);
     }
 
@@ -141,13 +141,12 @@ public class Graph {
         double minY = vValue * (scaledContentHeight - scaledViewportHeight);
 
         // System.out.println("Scale: " + scale);
-        // System.out.println("Content height: " + scaledContentHeight + " : width: " + scaledContentWidth
-        //         + " actuals: height: " + scaledContentHeight / scale + " : width: " + scaledContentWidth / scale);
-        //
-        // System.out.println("Scrollpane height: " + scaledViewportHeight + " : width: " + scaledViewportWidth
-        //         + " actuals: height: " + scaledViewportHeight * scale + " : width: " + scaledViewportWidth * scale);
+//        System.out.println("vValue: " + vValue + " : hValue: " + hValue);
+//        System.out.println("Content height: " + scaledContentHeight + " : width: " + scaledContentWidth);
+//        System.out.println("Viewport height: " + scaledViewportHeight + " : width: " + scaledViewportWidth);
+//        System.out.println("minY: " + minY + " : minX: " + minX);
+//        System.out.println();
 
-        BoundingBox boundingBox = new BoundingBox(minX, minY, scaledViewportWidth, scaledViewportHeight);
-        return boundingBox;
+        return new BoundingBox(minX, minY, scaledViewportWidth, scaledViewportHeight);
     }
 }

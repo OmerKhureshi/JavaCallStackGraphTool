@@ -1,6 +1,8 @@
 package com.application.fxgraph.graph;
 
 import com.application.Main;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
 import javafx.scene.Group;
 import javafx.scene.Node;
@@ -27,8 +29,26 @@ public class ZoomableScrollPane extends ScrollPane {
         zoomGroup.getTransforms().add(scaleTransform);
         zoomGroup.setOnScroll(new ZoomHandler());
 
-        hvalueProperty().addListener((observable, oldValue, newValue) -> main.onScrollingScrollPane());
-        vvalueProperty().addListener((observable, oldValue, newValue) -> main.onScrollingScrollPane());
+//        hvalueProperty().addListener((observable, oldValue, newValue) -> main.onScrollingScrollPane());
+//        vvalueProperty().addListener((observable, oldValue, newValue) -> main.onScrollingScrollPane());
+
+
+        hvalueProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+//                System.out.println("new value "+newValue.doubleValue());
+//                System.out.println("old value "+oldValue.doubleValue());
+//                System.out.println("Change: " + (newValue.doubleValue() - oldValue.doubleValue()));
+                main.onScrollingScrollPane();
+            }
+        });
+        vvalueProperty().addListener((observable, oldValue, newValue) -> {
+//            System.out.println("new value "+newValue.doubleValue());
+//            System.out.println("old value "+oldValue.doubleValue());
+//            System.out.println("Change: " + (newValue.doubleValue() - oldValue.doubleValue()));
+
+            main.onScrollingScrollPane();
+        });
 
         viewportBoundsProperty().addListener((observable, oldValue, newValue) -> {
             if (main != null) {

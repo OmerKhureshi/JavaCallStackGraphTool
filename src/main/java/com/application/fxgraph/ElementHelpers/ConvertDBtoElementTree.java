@@ -3,7 +3,6 @@ package com.application.fxgraph.ElementHelpers;
 import com.application.Main;
 import com.application.db.DAOImplementation.EdgeDAOImpl;
 import com.application.db.DAOImplementation.ElementDAOImpl;
-import com.application.db.DAOImplementation.ElementToChildDAOImpl;
 import com.application.db.DAOImplementation.MethodDefnDAOImpl;
 import com.application.db.DatabaseUtil;
 import com.application.db.TableNames;
@@ -12,6 +11,7 @@ import com.application.fxgraph.graph.CellLayer;
 import com.application.fxgraph.graph.Edge;
 import com.application.fxgraph.graph.Graph;
 import com.application.fxgraph.graph.Model;
+import com.sun.org.apache.xpath.internal.SourceTree;
 import javafx.application.Platform;
 import javafx.geometry.BoundingBox;
 import javafx.scene.control.ScrollPane;
@@ -173,33 +173,46 @@ public class ConvertDBtoElementTree {
             });
     }
 
-    public void getCirclesToLoadIntoViewPort(Graph graph) {
+    public void loadUIComponentsInsideVisibleViewPort(Graph graph) {
+
+
         this.graph = graph;
         ScrollPane scrollPane = graph.getScrollPane();
         Model model = graph.getModel();
+        BoundingBox viewPortDims = Graph.getViewPortDims(scrollPane);
+
+        if (!isUIDrawingRequired(viewPortDims)) {
+            System.out.println("Not Adding.");
+            System.out.println("------------------");
+
+            return;
+        }
+
+        System.out.println("Adding.");
+        System.out.println("------------------");
+
         this.model = model;
         Map<String, CircleCell> mapCircleCellsOnUI = model.getMapCircleCellsOnUI();
-        BoundingBox boundingBox = Graph.getViewPortDims(scrollPane);
-        double viewPortMinX = boundingBox.getMinX();
-        double viewPortMaxX = boundingBox.getMaxX();
-        double viewPortMinY = boundingBox.getMinY();
-        double viewPortMaxY = boundingBox.getMaxY();
-        int offset = 40;
+        double viewPortMinX = viewPortDims.getMinX();
+        double viewPortMaxX = viewPortDims.getMaxX();
+        double viewPortMinY = viewPortDims.getMinY();
+        double viewPortMaxY = viewPortDims.getMaxY();
+        double widthOffset = viewPortDims.getWidth() * 3;
+        double heightOffset = viewPortDims.getHeight() * 3 ;
+
 
         String sql = "SELECT E.ID AS EID, parent_id, collapsed, bound_box_x_coordinate, bound_box_y_coordinate, message, id_enter_call_trace, method_id " +
                 "FROM " + TableNames.CALL_TRACE_TABLE + " AS CT JOIN " + TableNames.ELEMENT_TABLE + " AS E ON CT.ID = E.ID_ENTER_CALL_TRACE " +
                 "WHERE CT.THREAD_ID = " + currentThreadId +
-                " AND E.bound_box_x_coordinate > " + (viewPortMinX - offset) +
-                " AND E.bound_box_x_coordinate < " + (viewPortMaxX + offset) +
-                // " AND E.bound_box_y_coordinate > " + (viewPortMinY + offset) +
-                " AND E.bound_box_y_coordinate > " + (viewPortMinY - offset) +
-                // " AND E.bound_box_y_coordinate < " + (viewPortMaxY - offset) +
-                " AND E.bound_box_y_coordinate < " + (viewPortMaxY + offset) +
+                " AND E.bound_box_x_coordinate > " + (viewPortMinX - widthOffset) +
+                " AND E.bound_box_x_coordinate < " + (viewPortMaxX + widthOffset) +
+                " AND E.bound_box_y_coordinate > " + (viewPortMinY - heightOffset) +
+                " AND E.bound_box_y_coordinate < " + (viewPortMaxY + heightOffset) +
                 " AND E.LEVEL_COUNT > 1";
 
 
-        CircleCell curCircleCell = null;
-        CircleCell parentCircleCell = null;
+        CircleCell curCircleCell;
+        CircleCell parentCircleCell;
 
         try (ResultSet rs = DatabaseUtil.select(sql)) {
             while (rs.next()) {
@@ -286,18 +299,18 @@ public class ConvertDBtoElementTree {
                 "INNER JOIN CALL_TRACE ON ELEMENT.ID_ENTER_CALL_TRACE = CALL_TRACE.ID " +
                 "WHERE CALL_TRACE.THREAD_ID = " + currentThreadId + " ";
 
-        String commonWhereClausForEdges = "AND EDGE_ELEMENT.collapsed = 0 AND " + "end_x >= " + viewPortMinX + " AND start_x <= " + viewPortMaxX ;
-        String whereClauseForUpwardEdges = " AND end_Y >= " + viewPortMinY + " AND start_y <= " + viewPortMaxY;
-        String whereClauseForDownwardEdges = " AND start_y >= " + viewPortMinY + " AND end_Y <= " + viewPortMaxY;
+        String commonWhereClausForEdges = "AND EDGE_ELEMENT.collapsed = 0 AND " + "end_x >= " + (viewPortMinX - widthOffset) + " AND start_x <= " + (viewPortMaxX + widthOffset);
+        String whereClauseForUpwardEdges = " AND end_Y >= " + (viewPortMinY - heightOffset )+ " AND start_y <= " + (viewPortMaxY + heightOffset);
+        String whereClauseForDownwardEdges = " AND start_y >= " + (viewPortMinY - heightOffset)+ " AND end_Y <= " + (viewPortMaxY + heightOffset);
 
-        // System.out.println("ConvertDBtoElementTree::getCirclesToLoadIntoViewPort: sql: " + sql + commonWhereClausForEdges + whereClauseForUpwardEdges);
+        // System.out.println("ConvertDBtoElementTree::loadUIComponentsInsideVisibleViewPort: sql: " + sql + commonWhereClausForEdges + whereClauseForUpwardEdges);
         try (ResultSet rsUpEdges = DatabaseUtil.select(sql + commonWhereClausForEdges + whereClauseForUpwardEdges)) {
             getEdgesFromResultSet(rsUpEdges);
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        // System.out.println("ConvertDBtoElementTree::getCirclesToLoadIntoViewPort: sql: " + sql + commonWhereClausForEdges + whereClauseForDownwardEdges);
+        // System.out.println("ConvertDBtoElementTree::loadUIComponentsInsideVisibleViewPort: sql: " + sql + commonWhereClausForEdges + whereClauseForDownwardEdges);
         try (ResultSet rsDownEdges = DatabaseUtil.select(sql + commonWhereClausForEdges + whereClauseForDownwardEdges)) {
             getEdgesFromResultSet(rsDownEdges);
         } catch (SQLException e) {
@@ -322,7 +335,6 @@ public class ConvertDBtoElementTree {
         //     e.printStackTrace();
         // }
 
-        removeFromUI(graph);
     }
 
     public void getEdgesFromResultSet(ResultSet rs) {
@@ -344,11 +356,21 @@ public class ConvertDBtoElementTree {
         }
     }
 
-    public void removeFromUI(Graph graph) {
+    public void removeUIComponentsFromInvisibleViewPort(Graph graph) {
         CellLayer cellLayer = (CellLayer) graph.getCellLayer();
         Model model = graph.getModel();
         ScrollPane scrollPane = graph.getScrollPane();
+        BoundingBox viewPortDims = Graph.getViewPortDims(scrollPane);
 
+        if (!isUIDrawingRequired(viewPortDims)) {
+            System.out.println("Not removing.");
+            System.out.println("------------------");
+
+            return;
+        }
+
+        System.out.println("removing");
+        System.out.println("------------------");
         Map<String, CircleCell> mapCircleCellsOnUI = model.getMapCircleCellsOnUI();
         List<String> removeCircleCells = new ArrayList<>();
         List<String> removeEdges = new ArrayList<>();
@@ -356,13 +378,16 @@ public class ConvertDBtoElementTree {
         Map<String, Edge> mapEdgesOnUI = model.getMapEdgesOnUI();
         List<Edge> listEdgesOnUI = model.getListEdgesOnUI();
 
-        BoundingBox curViewPort = Graph.getViewPortDims(scrollPane);
-        double minX = curViewPort.getMinX();
-        double minY = curViewPort.getMinY();
+        double minX = viewPortDims.getMinX();
+        double minY = viewPortDims.getMinY();
+        double maxX = viewPortDims.getWidth();
+        double maxY = viewPortDims.getHeight();
 
-        int offset = 20;
-        // BoundingBox shrunkBB = new BoundingBox(minX + offset, minY + offset, curViewPort.getWidth() - (2 * offset), curViewPort.getHeight() - (2 * offset));
-        BoundingBox shrunkBB = new BoundingBox(minX , minY, curViewPort.getWidth() - (2), curViewPort.getHeight() - (2));
+        double widthOffset = viewPortDims.getWidth() * 3;
+        double heightOffset = viewPortDims.getHeight() * 3;
+
+         BoundingBox shrunkBB = new BoundingBox(minX - widthOffset, minY - heightOffset, maxX + widthOffset, maxY + heightOffset);
+//        BoundingBox shrunkBB = new BoundingBox(minX , minY, maxX, maxY);
 
             Iterator i = mapCircleCellsOnUI.entrySet().iterator();
             while (i.hasNext()) {
@@ -413,8 +438,11 @@ public class ConvertDBtoElementTree {
     public void removeFromCellLayer() {
         CellLayer cellLayer = (CellLayer) graph.getCellLayer();
         cellLayer.getChildren().clear();
-        model.getMapCircleCellsOnUI().clear();
-        model.getMapEdgesOnUI().clear();
+        if (model != null && model.getMapCircleCellsOnUI() != null)
+            model.getMapCircleCellsOnUI().clear();
+
+        if (model != null && model.getMapEdgesOnUI() != null)
+            model.getMapEdgesOnUI().clear();
 
         String SQLMaxLevelCount = "select max(LEVEL_COUNT) from ELEMENT " +
                 "where ID_ENTER_CALL_TRACE in " +
@@ -464,5 +492,57 @@ public class ConvertDBtoElementTree {
         this.showAllThreads = showAllThreads;
     }
 
+    // Region where UI components are loaded.
+    public BoundingBox activeRegion;
+
+    // Trigger UI components to be reloaded when visible viewport is outside this region. triggerRegion < activeRegion
+    public BoundingBox triggerRegion;
+
+    public boolean isUIDrawingRequired(BoundingBox viewPort) {
+        if (activeRegion == null)
+            setActiveRegion(viewPort);
+
+        if (triggerRegion == null)
+            setTriggerRegion(viewPort);
+
+        if (!triggerRegion.contains(viewPort)){
+            setActiveRegion(viewPort);
+            setTriggerRegion(viewPort);
+            return true;
+        }
+
+        return false;
+    }
+
+
+    public void setActiveRegion(BoundingBox viewPort) {
+        System.out.println();
+        System.out.println("------------- New active region -------------");
+        this.activeRegion = new BoundingBox(
+                viewPort.getMinX() - viewPort.getWidth() * 3,
+                viewPort.getMinY() - viewPort.getHeight() * 3,
+                viewPort.getWidth() * 7,
+                viewPort.getHeight() * 7
+        );
+        System.out.println("Viewport: " + viewPort);
+        System.out.println("activeRegion: " + activeRegion);
+        System.out.println("triggerRegion: " + triggerRegion);
+        System.out.println("------------------");
+    }
+
+    public void setTriggerRegion(BoundingBox viewPort) {
+        System.out.println();
+        System.out.println("------------- New Triggering region -------------");
+        triggerRegion = new BoundingBox(
+                activeRegion.getMinX() + viewPort.getWidth(),
+                activeRegion.getMinY() + viewPort.getHeight(),
+                viewPort.getWidth() * 5,
+                viewPort.getHeight() * 5
+        );
+        System.out.println("Viewport: " + viewPort);
+        System.out.println("activeRegion: " + activeRegion);
+        System.out.println("triggerRegion: " + triggerRegion);
+        System.out.println("------------------");
+    }
 }
 

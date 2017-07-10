@@ -12,7 +12,6 @@ import com.application.fxgraph.graph.*;
 import com.application.logs.fileHandler.CallTraceLogFile;
 import com.application.logs.fileHandler.MethodDefinitionLogFile;
 import com.application.logs.fileIntegrity.CheckFileIntegrity;
-import com.application.logs.parsers.FileParser;
 import com.application.logs.parsers.ParseCallTrace;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -30,7 +29,6 @@ import javafx.scene.control.*;
 import javafx.scene.image.WritableImage;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
@@ -49,6 +47,8 @@ import java.util.Queue;
 
 
 public class Main extends Application {
+
+    // Main UI screen
     Graph graph;
     Model model;
     BorderPane root;
@@ -92,7 +92,6 @@ public class Main extends Application {
     Label title;
     Label progressText;
     private static final int PROGRESS_BAR_WIDTH = 676;
-
 
     // Background tasks
     Task task;
@@ -218,9 +217,7 @@ public class Main extends Application {
             return;
         }
 
-        System.out.println("Checkpoint 1: Before calling addGraphCellComponents()");
         addGraphCellComponents();
-        System.out.println("Checkpoint 1: After returning from addGraphCellComponents()");
     }
 
     public void resetCenterLayout() {
@@ -245,6 +242,26 @@ public class Main extends Application {
             String threadId = selectedItem.split(" ")[1];
             showThread(threadId);
         });
+
+        // Get thread list and populate
+        threadsObsList.clear();
+
+        ConvertDBtoElementTree.greatGrandParent.getChildren().stream()
+                .forEach(element -> {
+                    Element child = element.getChildren().get(0);
+                    int callTraceId = -1;
+                    if (child != null) callTraceId = child.getFkEnterCallTrace();
+                    try (ResultSet rs = CallTraceDAOImpl.selectWhere("id = " + callTraceId)) {
+                        if (rs.next()) {
+                            int threadId = rs.getInt("thread_id");
+                            threadsObsList.add("Thread: " + threadId);
+                        }
+                    } catch (SQLException e) {
+                    }
+                });
+
+
+
     }
 
     public void saveUIImage() {
@@ -262,16 +279,6 @@ public class Main extends Application {
     }
 
     private void addGraphCellComponents() {
-        // Check log file integrity.
-//        System.out.printf("Checkpoint 1: Before calling checkFile()");
-//        System.out.printf("Checkpoint 1: After returning from checkFile()");
-
-
-        long startTime = System.currentTimeMillis();
-        System.out.println("Checkpoint 1: Before calling readFile() on method definition");
-       // Parse method definition file and insert into database.
-
-
         convertDBtoElementTree = new ConvertDBtoElementTree();
 
         task = new Task<Void>(){
@@ -320,9 +327,8 @@ public class Main extends Application {
                         2 * ParseCallTrace.countNumberOfLines(CallTraceLogFile.getFile())
                 );
 
-//                progressBar.setProgress(0);
                 updateTitle("Writing to DB.");
-                updateMessage("Please wait... total records" + linesInserted.total + " records processed: " + linesInserted.insertedSoFar);
+                updateMessage("Please wait... total records: " + linesInserted.total + " records processed: " + linesInserted.insertedSoFar);
                 updateProgress(linesInserted.insertedSoFar, linesInserted.total);
                 convertDBtoElementTree.calculateElementProperties();
 
@@ -334,7 +340,6 @@ public class Main extends Application {
                 queue.add(root);
 
                 Element element;
-
                 while ((element = queue.poll()) != null) {
                     ElementDAOImpl.insert(element);
                     ElementToChildDAOImpl.insert(
@@ -346,13 +351,13 @@ public class Main extends Application {
                     }
 
                     linesInserted.insertedSoFar++;
-                    updateMessage("Please wait... total records" + linesInserted.total + " records processed: " + linesInserted.insertedSoFar);
+                    updateMessage("Please wait... total records: " + linesInserted.total + " records processed: " + linesInserted.insertedSoFar);
                     updateProgress(linesInserted.insertedSoFar, linesInserted.total);
                 }
 
 
                 convertDBtoElementTree.recursivelyInsertEdgeElementsIntoDB(convertDBtoElementTree.greatGrandParent);
-                System.out.println("Inserting into Database.");
+                System.out.println("Finished inserting into Database.");
                 return null;
             }
 
@@ -367,12 +372,6 @@ public class Main extends Application {
 
         long elapsed = System.currentTimeMillis() - startTime;
 
-//        System.out.println("Checkpoint 1: After returning readFile() on method definition. Took: " + elapsed);
-//        startTime = System.currentTimeMillis();
-//        System.out.println("Checkpoint 1: Before calling readFile() on call trace");
-//        elapsed = System.currentTimeMillis() - startTime;
-//
-        System.out.println("Checkpoint 1: After returning from readFile() on call trace. Took: " + elapsed);
         progressBar.progressProperty().bind(task.progressProperty());
         title.textProperty().bind(task.titleProperty());
         progressText.textProperty().bind(task.messageProperty());
@@ -407,26 +406,7 @@ public class Main extends Application {
         setUpThreadsView();
         Graph.drawPlaceHolderLines();
 
-        // Get thread list and populate
-        threadsObsList.clear();
-
-        ConvertDBtoElementTree.greatGrandParent.getChildren().stream()
-                .forEach(element -> {
-                    Element child = element.getChildren().get(0);
-                    int callTraceId = -1;
-                    if (child != null) callTraceId = child.getFkEnterCallTrace();
-                    try (ResultSet rs = CallTraceDAOImpl.selectWhere("id = " + callTraceId)) {
-                        if (rs.next()) {
-                            int threadId = rs.getInt("thread_id");
-                            threadsObsList.add("Thread: " + threadId);
-                        }
-                    } catch (SQLException e) {
-                    }
-                });
-
-        System.out.println("Checkpoint 1: Before calling onScrollingScrollPane");
         onScrollingScrollPane();
-        System.out.println("Checkpoint 1: After returning from onScrollingScrollPane");
 
         String firstThreadID = threadsObsList.get(0).split(" ")[1];
         showThread(firstThreadID);
@@ -490,9 +470,9 @@ public class Main extends Application {
     }
 
     public void onScrollingScrollPane() {
-//        statusBarLabel.setText("Ready.");
         if (convertDBtoElementTree!= null && graph != null) {
-            convertDBtoElementTree.getCirclesToLoadIntoViewPort(graph);
+            convertDBtoElementTree.loadUIComponentsInsideVisibleViewPort(graph);
+            convertDBtoElementTree.removeUIComponentsFromInvisibleViewPort(graph);
             graph.myEndUpdate();
         }
     }
