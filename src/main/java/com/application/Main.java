@@ -370,8 +370,6 @@ public class Main extends Application {
             }
         };
 
-        long elapsed = System.currentTimeMillis() - startTime;
-
         progressBar.progressProperty().bind(task.progressProperty());
         title.textProperty().bind(task.titleProperty());
         progressText.textProperty().bind(task.messageProperty());
