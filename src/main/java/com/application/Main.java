@@ -240,6 +240,7 @@ public class Main extends Application {
         threadListView.setOnMouseClicked(event -> {
             String selectedItem = threadListView.getSelectionModel().getSelectedItem();
             String threadId = selectedItem.split(" ")[1];
+            ConvertDBtoElementTree.resetRegions();
             showThread(threadId);
         });
 

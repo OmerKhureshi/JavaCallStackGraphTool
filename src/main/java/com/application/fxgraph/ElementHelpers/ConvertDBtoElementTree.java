@@ -493,12 +493,19 @@ public class ConvertDBtoElementTree {
     }
 
     // Region where UI components are loaded.
-    public BoundingBox activeRegion;
+    public static BoundingBox activeRegion;
 
     // Trigger UI components to be reloaded when visible viewport is outside this region. triggerRegion < activeRegion
-    public BoundingBox triggerRegion;
+    public static BoundingBox triggerRegion;
+
+    static boolean firstLoad = true;
 
     public boolean isUIDrawingRequired(BoundingBox viewPort) {
+        if (firstLoad) {
+            firstLoad = false;
+            return true;
+        }
+
         if (activeRegion == null)
             setActiveRegion(viewPort);
 
@@ -543,6 +550,12 @@ public class ConvertDBtoElementTree {
         System.out.println("activeRegion: " + activeRegion);
         System.out.println("triggerRegion: " + triggerRegion);
         System.out.println("------------------");
+    }
+
+    public static void resetRegions() {
+        activeRegion = null;
+        triggerRegion = null;
+        firstLoad = true;
     }
 }
 

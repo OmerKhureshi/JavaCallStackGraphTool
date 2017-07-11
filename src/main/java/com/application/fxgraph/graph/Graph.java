@@ -50,11 +50,11 @@ public class Graph {
 
     public static void drawPlaceHolderLines(int height, int width) {
         Line hPlaceHolderLine = new Line(0, 0, (width + 2) * BoundBox.unitWidthFactor, 0);
-        hPlaceHolderLine.setStrokeWidth(10);
+        hPlaceHolderLine.setStrokeWidth(.001);
         cellLayer.getChildren().add(hPlaceHolderLine);
 
         Line vPlaceHolderLine = new Line(0, 0, 0, height * BoundBox.unitHeightFactor);
-        vPlaceHolderLine.setStrokeWidth(10);
+        vPlaceHolderLine.setStrokeWidth(.001);
         cellLayer.getChildren().add(vPlaceHolderLine);
     }
 

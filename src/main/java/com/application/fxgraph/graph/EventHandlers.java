@@ -1,5 +1,6 @@
 package com.application.fxgraph.graph;
 
+import com.application.fxgraph.graph.Graph;
 import com.application.Main;
 import com.application.db.DAOImplementation.*;
 import com.application.db.DatabaseUtil;
