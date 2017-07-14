@@ -19,6 +19,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.embed.swing.SwingFXUtils;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
@@ -75,6 +77,10 @@ public class Main extends Application {
 
     Menu saveImageMenu;  // Save Image menu button
     MenuItem saveImage;
+
+    Menu goTo;
+    Menu recents;
+    MenuItem clearHistory;
 
     // Status bar
     Group statusBar;
@@ -147,7 +153,15 @@ public class Main extends Application {
         saveImage = new MenuItem("Save Image");
         saveImageMenu.getItems().add(saveImage);
 
-        mb.getMenus().addAll(file, run, saveImageMenu);
+        goTo = new Menu("Go To");
+        recents = new Menu("Recent nodes");
+
+        clearHistory = new MenuItem("Clear histroy");
+
+        goTo.getItems().addAll(recents, clearHistory);
+
+
+        mb.getMenus().addAll(file, run, saveImageMenu, goTo);
 
         populateInstructions();
         setMenuActions();
@@ -190,6 +204,32 @@ public class Main extends Application {
         saveImage.setOnAction(event -> {
             saveUIImage();
         });
+
+
+        // Populate recents menu.
+        goTo.setOnShowing(event -> {
+            recents.getItems().clear();
+            System.out.println("size: " + graph.getRecentLocationsMap().size());
+            graph.getRecentLocationsMap().entrySet().stream().forEach(entry -> {
+                MenuItem nodeLocation = new MenuItem();
+                nodeLocation.setText(entry.getKey());
+                nodeLocation.setOnAction(new EventHandler<ActionEvent>() {
+                    @Override
+                    public void handle(ActionEvent event) {
+                        graph.getRecentLocationsMap().get(entry.getKey());
+                        double hValue = graph.getHValue(entry.getValue().x);
+                        double vValue = graph.getVValue(entry.getValue().y);
+                        graph.moveScrollPane(hValue, vValue);
+                        System.out.println("Moved scrollpane to " + hValue + " " + vValue);
+                    }
+                });
+                recents.getItems().add(nodeLocation);
+            });
+        });
+
+        clearHistory.setOnAction(event -> {
+            graph.getRecentLocationsMap().clear();
+        });
     }
 
     public void setUpStatusBar() {
@@ -206,7 +246,7 @@ public class Main extends Application {
         changeBool("methodDefnFileSet", false);
         changeBool("callTraceFileSet", false);
         populateInstructions();
-
+        ConvertDBtoElementTree.resetRegions();
     }
 
     public void reload() {
@@ -288,8 +328,6 @@ public class Main extends Application {
                 // Reset Database
                 updateTitle("Resetting the Database.");
                 DatabaseUtil.resetDB();
-                System.out.println("Reset Database");
-
 
                 // Check file integrity.
                 BytesRead bytesRead = new BytesRead(
@@ -300,8 +338,6 @@ public class Main extends Application {
                 updateMessage("Please wait... total Bytes: " + bytesRead.total + " bytes processed: " + bytesRead.readSoFar);
                 updateProgress(bytesRead.readSoFar, bytesRead.total);
                 CheckFileIntegrity.checkFile(CallTraceLogFile.getFile(), bytesRead);
-                System.out.println("Check file integrity.");
-
 
                 // Parse Log files.
                 new ParseCallTrace().readFile(MethodDefinitionLogFile.getFile(), bytesRead, MethodDefnDAOImpl::insert);
@@ -318,8 +354,6 @@ public class Main extends Application {
                                 e.printStackTrace();
                             }
                         });
-                System.out.println("Parse Log files.");
-
 
 
                 // Inserting into Database.
@@ -332,6 +366,8 @@ public class Main extends Application {
                 updateMessage("Please wait... total records: " + linesInserted.total + " records processed: " + linesInserted.insertedSoFar);
                 updateProgress(linesInserted.insertedSoFar, linesInserted.total);
                 convertDBtoElementTree.calculateElementProperties();
+
+//                convertDBtoElementTree.recursivelyInsertElementsIntoDB(convertDBtoElementTree.greatGrandParent);
 
                 Element root = convertDBtoElementTree.greatGrandParent;
                 if (root == null)
@@ -358,7 +394,6 @@ public class Main extends Application {
 
 
                 convertDBtoElementTree.recursivelyInsertEdgeElementsIntoDB(convertDBtoElementTree.greatGrandParent);
-                System.out.println("Finished inserting into Database.");
                 return null;
             }
 

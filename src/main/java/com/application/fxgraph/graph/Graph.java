@@ -9,6 +9,9 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Line;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class Graph {
 
     private Model model;
@@ -146,7 +149,61 @@ public class Graph {
 //        System.out.println("Viewport height: " + scaledViewportHeight + " : width: " + scaledViewportWidth);
 //        System.out.println("minY: " + minY + " : minX: " + minX);
 //        System.out.println();
+        /*
 
+            1 -> contentWidth - viewPortWidth
+            ? -> x cord
+
+            ? = xCord/contentWidth
+
+
+
+
+
+        */
         return new BoundingBox(minX, minY, scaledViewportWidth, scaledViewportHeight);
+    }
+
+    public double getHValue(double xCordinate) {
+        double scaledContentWidth = getScrollPane().getContent().getLayoutBounds().getWidth();// * scale;
+        double scaledViewportWidth = getScrollPane().getViewportBounds().getWidth(); // / scale;
+
+        return xCordinate / (scaledContentWidth - scaledViewportWidth);
+    }
+
+    public double getVValue(double yCordinate) {
+        double scaledContentHeight = getScrollPane().getContent().getLayoutBounds().getHeight();// * scale;
+        double scaledViewportHeight = getScrollPane().getViewportBounds().getHeight(); // / scale;
+
+        return yCordinate / (scaledContentHeight - scaledViewportHeight);
+    }
+
+    public void moveScrollPane(double hValue, double vValue){
+        getScrollPane().setHvalue(hValue);
+        getScrollPane().setVvalue(vValue);
+    }
+
+    public Map<String, XYCordinate> recentLocationsMap = new HashMap<>();
+
+    public Map<String, XYCordinate> getRecentLocationsMap() {
+        return recentLocationsMap;
+    }
+
+    public void addToRecents(String classMethodName, XYCordinate location) {
+        recentLocationsMap.put(classMethodName, location);
+    }
+
+    public void clearRecents() {
+        recentLocationsMap = null;
+    }
+
+    public static class XYCordinate {
+        public double x;
+        public double y;
+
+        XYCordinate(double x, double y) {
+            this.x = x;
+            this.y = y;
+        }
     }
 }

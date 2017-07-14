@@ -1,5 +1,6 @@
 package com.application.fxgraph.graph;
 
+import com.application.fxgraph.ElementHelpers.ConvertDBtoElementTree;
 import com.application.fxgraph.graph.Graph;
 import com.application.Main;
 import com.application.db.DAOImplementation.*;
@@ -47,6 +48,7 @@ public class EventHandlers {
 
         // Show popup to display element details on mouse hover on an element.
         node.setOnMouseEntered(onMouseHoverToShowInfoEventHandler);
+//        node.setOnMousePressed(onMouseHoverToShowInfoEventHandler);
 
         // *****************
         // To dismiss the pop over when cursor leaves the circle. But this makes it impossible to click buttons on pop
@@ -54,10 +56,10 @@ public class EventHandlers {
         // node.setOnMouseExited(onMouseExitToDismissPopover);
         // *****************
 
-        // Original handlers
-        // node.setOnMousePressed(onMousePressedEventHandler);
-        // node.setOnMouseDragged(onMouseDraggedEventHandler);
-        // node.setOnMouseReleased(onMouseReleasedEventHandler);
+        // Make elements dragable.
+         node.setOnMousePressed(onMousePressedEventHandler);
+         node.setOnMouseDragged(onMouseDraggedEventHandler);
+         node.setOnMouseReleased(onMouseReleasedEventHandler);
     }
 
     PopOver popOver;
@@ -66,17 +68,34 @@ public class EventHandlers {
 
         @Override
         public void handle(MouseEvent event) {
-            if (popOver != null)
+            if (popOver != null) {
                 popOver.hide();
+            }
 
             Node node = (Node) event.getSource();
             CircleCell cell = (CircleCell) node;
             String timeStamp;
             int methodId, processId, threadId;
             String parameters, packageName = "", methodName = "", parameterTypes = "", eventType, lockObjectId = "";
-            String sql = "";
-            try (ResultSet callTraceRS = CallTraceDAOImpl.selectWhere("id = (Select id_enter_call_trace FROM " + TableNames.ELEMENT_TABLE +
-                    " WHERE id = " + cell.getCellId() + ")")) {
+            double xCord=0, yCord=0;
+
+
+            // Do Not Uncomment
+//            String sql = "Select * from " + TableNames.ELEMENT_TABLE + " " +
+//                    "JOIN " + TableNames.CALL_TRACE_TABLE + " ON " + TableNames.CALL_TRACE_TABLE + ".id = " + TableNames.ELEMENT_TABLE+ ".ID_ENTER_CALL_TRACE " +
+//                    "JOIN " + TableNames.METHOD_DEFINITION_TABLE + " ON " + TableNames.METHOD_DEFINITION_TABLE + ".ID = " + TableNames.CALL_TRACE_TABLE + ".METHOD_ID " +
+//                    "WHERE " + TableNames.ELEMENT_TABLE + ".ID = " + cell.getCellId();
+//            System.out.println("your query: " + sql);
+
+            // Please. Please do not try to combine the next two queries into one. Unless you want to spend another day tyring to prove it to yourself.
+
+            String sql = "Select * from " + TableNames.ELEMENT_TABLE + " " +
+                    "JOIN " + TableNames.CALL_TRACE_TABLE + " ON " + TableNames.CALL_TRACE_TABLE + ".id = " + TableNames.ELEMENT_TABLE+ ".ID_ENTER_CALL_TRACE " +
+                    "WHERE " + TableNames.ELEMENT_TABLE + ".ID = " + cell.getCellId();
+
+            try (ResultSet callTraceRS = DatabaseUtil.select(sql)){
+//            try (ResultSet callTraceRS = CallTraceDAOImpl.selectWhere("id = (Select id_enter_call_trace FROM " + TableNames.ELEMENT_TABLE +
+//                    " WHERE id = " + cell.getCellId() + ")")) {
                 if (callTraceRS.next()) {
                     timeStamp = callTraceRS.getString("time_instant");
                     methodId = callTraceRS.getInt("method_id");
@@ -85,6 +104,11 @@ public class EventHandlers {
                     parameters = callTraceRS.getString("parameters");
                     eventType = callTraceRS.getString("message");
                     lockObjectId = callTraceRS.getString("lockobjid");
+                    xCord = callTraceRS.getFloat("bound_box_x_coordinate");
+                    yCord = callTraceRS.getFloat("bound_box_y_coordinate");
+
+                    System.out.println("Clicked on cell: " + methodName + " " + cell.getCellId());
+
                     try (ResultSet methodDefRS = MethodDefnDAOImpl.selectWhere("id = " + methodId)) {
                         if (methodDefRS.next()) {
                             packageName = methodDefRS.getString("package_name");
@@ -99,6 +123,10 @@ public class EventHandlers {
                             parameters = "N/A";
                         }
                     } catch (SQLException e) {}
+
+                    // Save the clicked element into recents menu.
+                    graph.addToRecents(packageName + "." + methodName, new Graph.XYCordinate(xCord, yCord));
+
 
                     Label lMethodName = new Label(methodName);
                     Label lPackageName = new Label(packageName);
@@ -147,7 +175,6 @@ public class EventHandlers {
 
                     List<Integer> ctIdList = new ArrayList<>();
                     List<Integer> eleIdList = new ArrayList<>();
-
                     if (eventType.equalsIgnoreCase("WAIT-ENTER")) {
                         int ctId = -2;  // Will throw exception if value not changed. Which is what we want.
                         sql = "lockobjid = '" + lockObjectId + "'" +
@@ -241,6 +268,8 @@ public class EventHandlers {
                     }
 
                     List<Button> buttonList = new ArrayList<>();
+                    String finalPackageName = packageName;
+                    String finalMethodName = methodName;
                     eleIdList.stream().forEach(elementId ->{
                         String query = "SELECT E.ID AS EID, bound_box_x_coordinate, bound_box_y_coordinate, THREAD_ID " +
                                 "FROM CALL_TRACE AS CT " +
@@ -256,10 +285,18 @@ public class EventHandlers {
                                 double width = graph.getScrollPane().getContent().getBoundsInLocal().getWidth();
                                 double height = graph.getScrollPane().getContent().getBoundsInLocal().getHeight();
 
+
+                                // go to location.
+
+
                                 Button button = new Button();
                                 button.setOnMouseClicked(event1 -> {
+                                    ConvertDBtoElementTree.resetRegions();
                                     main.showThread(targetThreadId);
                                     Main.makeSelection(targetThreadId);
+                                    graph.moveScrollPane(xCoordinate, yCoordinate);
+
+                                    System.out.println("Moving scroll pane: " + xCoordinate + " " + yCoordinate);
                                 });
                                 buttonList.add(button);
                             }
@@ -307,6 +344,8 @@ public class EventHandlers {
                 System.out.println("Line that threw exception: " + sql);
                 e.printStackTrace();
             }
+
+
         }
     };
 

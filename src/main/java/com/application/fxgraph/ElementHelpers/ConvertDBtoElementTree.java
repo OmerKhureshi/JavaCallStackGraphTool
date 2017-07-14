@@ -1,8 +1,8 @@
 package com.application.fxgraph.ElementHelpers;
 
-import com.application.Main;
 import com.application.db.DAOImplementation.EdgeDAOImpl;
 import com.application.db.DAOImplementation.ElementDAOImpl;
+import com.application.db.DAOImplementation.ElementToChildDAOImpl;
 import com.application.db.DAOImplementation.MethodDefnDAOImpl;
 import com.application.db.DatabaseUtil;
 import com.application.db.TableNames;
@@ -11,7 +11,6 @@ import com.application.fxgraph.graph.CellLayer;
 import com.application.fxgraph.graph.Edge;
 import com.application.fxgraph.graph.Graph;
 import com.application.fxgraph.graph.Model;
-import com.sun.org.apache.xpath.internal.SourceTree;
 import javafx.application.Platform;
 import javafx.geometry.BoundingBox;
 import javafx.scene.control.ScrollPane;
@@ -134,29 +133,19 @@ public class ConvertDBtoElementTree {
 
     }
 
-    public void recursivelyInsertElementsIntoDB(Element root, Main.LinesInserted linesInserted) {
-//        if (root == null)
-//            return;
-//
-//        Queue<Element> queue = new LinkedList<>();
-//        queue.add(root);
-//
-//        Element element;
-//        while ((element = queue.poll()) != null) {
-//            linesInserted.insertedSoFar++;
-//            System.out.println("here:  "  + linesInserted.insertedSoFar);
-//            ElementDAOImpl.insert(element);
-//            ElementToChildDAOImpl.insert(
-//                    element.getParent() == null? -1 : element.getParent().getElementId(),
-//                    element.getElementId());
-//
-//            if (element.getChildren() != null)
-//                element.getChildren().stream().forEachOrdered(queue::add);
-//
-//        }
-//
-////        if (root.getChildren() != null)
-////            root.getChildren().stream().forEachOrdered(this::recursivelyInsertElementsIntoDB);
+    public void recursivelyInsertElementsIntoDB(Element root) {
+        if (root == null)
+            return;
+        ElementDAOImpl.insert(root);
+        ElementToChildDAOImpl.insert(
+                root.getParent() == null? -1 : root.getParent().getElementId(),
+                root.getElementId());
+        // // Create and insert Edges.
+        // Edge edge = new Edge(root.getParent(), root);
+        // edge.setStartX();
+
+        if (root.getChildren() != null)
+            root.getChildren().stream().forEachOrdered(this::recursivelyInsertElementsIntoDB);
     }
 
     public void recursivelyInsertEdgeElementsIntoDB(Element root) {
@@ -182,14 +171,14 @@ public class ConvertDBtoElementTree {
         BoundingBox viewPortDims = Graph.getViewPortDims(scrollPane);
 
         if (!isUIDrawingRequired(viewPortDims)) {
-            System.out.println("Not Adding.");
-            System.out.println("------------------");
+//            System.out.println("Not Adding.");
+//            System.out.println("------------------");
 
             return;
         }
 
-        System.out.println("Adding.");
-        System.out.println("------------------");
+//        System.out.println("Adding.");
+//        System.out.println("------------------");
 
         this.model = model;
         Map<String, CircleCell> mapCircleCellsOnUI = model.getMapCircleCellsOnUI();
@@ -317,7 +306,6 @@ public class ConvertDBtoElementTree {
             e.printStackTrace();
         }
 
-
         // Add edges - doesnot have logic for thread specific edges.
         // String commonWhereClausForEdges = "collapsed = 0 AND " + "end_x >= " + viewPortMinX + " AND start_x <= " + viewPortMaxX ;
         // String whereClauseForUpwardEdges = " AND end_Y >= " + viewPortMinY + " AND start_y <= " + viewPortMaxY;
@@ -363,14 +351,13 @@ public class ConvertDBtoElementTree {
         BoundingBox viewPortDims = Graph.getViewPortDims(scrollPane);
 
         if (!isUIDrawingRequired(viewPortDims)) {
-            System.out.println("Not removing.");
-            System.out.println("------------------");
-
+            // System.out.println("Not removing.");
+            // System.out.println("------------------");
             return;
         }
 
-        System.out.println("removing");
-        System.out.println("------------------");
+        // System.out.println("removing");
+        // System.out.println("------------------");
         Map<String, CircleCell> mapCircleCellsOnUI = model.getMapCircleCellsOnUI();
         List<String> removeCircleCells = new ArrayList<>();
         List<String> removeEdges = new ArrayList<>();
@@ -386,51 +373,51 @@ public class ConvertDBtoElementTree {
         double widthOffset = viewPortDims.getWidth() * 3;
         double heightOffset = viewPortDims.getHeight() * 3;
 
-         BoundingBox shrunkBB = new BoundingBox(minX - widthOffset, minY - heightOffset, maxX + widthOffset, maxY + heightOffset);
+        BoundingBox shrunkBB = new BoundingBox(minX - widthOffset, minY - heightOffset, maxX + widthOffset, maxY + heightOffset);
 //        BoundingBox shrunkBB = new BoundingBox(minX , minY, maxX, maxY);
 
-            Iterator i = mapCircleCellsOnUI.entrySet().iterator();
-            while (i.hasNext()) {
-                Map.Entry<String, CircleCell> entry = (Map.Entry) i.next();
-                CircleCell cell = entry.getValue();
-                if (!shrunkBB.contains(cell.getLayoutX(), cell.getLayoutY())) {
-                    removeCircleCells.add(cell.getCellId());
-                }
+        Iterator i = mapCircleCellsOnUI.entrySet().iterator();
+        while (i.hasNext()) {
+            Map.Entry<String, CircleCell> entry = (Map.Entry) i.next();
+            CircleCell cell = entry.getValue();
+            if (!shrunkBB.contains(cell.getLayoutX(), cell.getLayoutY())) {
+                removeCircleCells.add(cell.getCellId());
             }
+        }
 
-            removeCircleCells.stream()
-                    .forEach(cellId -> {
-                        CircleCell circleCell = mapCircleCellsOnUI.get(cellId);
-                        Platform.runLater(() -> cellLayer.getChildren().remove(circleCell));
-                        mapCircleCellsOnUI.remove(cellId);
-                        listCircleCellsOnUI.remove(circleCell);
-                    });
+        removeCircleCells.stream()
+                .forEach(cellId -> {
+                    CircleCell circleCell = mapCircleCellsOnUI.get(cellId);
+                    Platform.runLater(() -> cellLayer.getChildren().remove(circleCell));
+                    mapCircleCellsOnUI.remove(cellId);
+                    listCircleCellsOnUI.remove(circleCell);
+                });
 
-            Iterator j = mapEdgesOnUI.entrySet().iterator();
-            while (j.hasNext()) {
-                Map.Entry<String, Edge> entry = (Map.Entry) j.next();
-                Edge edge = entry.getValue();
-                Line line = (Line) edge.getChildren().get(0);
-                BoundingBox lineBB = new BoundingBox(
-                        line.getStartX(),
-                        Math.min(line.getStartY(), line.getEndY()),
-                        Math.abs(line.getEndX() - line.getStartX()),
-                        Math.abs(line.getEndY() - line.getStartY()));
-                // if (!shrunkBB.contains(line.getEndX(), line.getEndY())) {
-                //     removeEdges.add(edge.getEdgeId());
-                // }
-                if (!shrunkBB.intersects(lineBB)) {
-                    removeEdges.add(edge.getEdgeId());
-                }
+        Iterator j = mapEdgesOnUI.entrySet().iterator();
+        while (j.hasNext()) {
+            Map.Entry<String, Edge> entry = (Map.Entry) j.next();
+            Edge edge = entry.getValue();
+            Line line = (Line) edge.getChildren().get(0);
+            BoundingBox lineBB = new BoundingBox(
+                    line.getStartX(),
+                    Math.min(line.getStartY(), line.getEndY()),
+                    Math.abs(line.getEndX() - line.getStartX()),
+                    Math.abs(line.getEndY() - line.getStartY()));
+            // if (!shrunkBB.contains(line.getEndX(), line.getEndY())) {
+            //     removeEdges.add(edge.getEdgeId());
+            // }
+            if (!shrunkBB.intersects(lineBB)) {
+                removeEdges.add(edge.getEdgeId());
             }
+        }
 
-            removeEdges.stream()
-                    .forEach(edgeId -> {
-                        Edge edge = mapEdgesOnUI.get(edgeId);
-                        Platform.runLater(() -> cellLayer.getChildren().remove(edge));
-                        mapEdgesOnUI.remove(edgeId);
-                        listEdgesOnUI.remove(edge);
-                    });
+        removeEdges.stream()
+                .forEach(edgeId -> {
+                    Edge edge = mapEdgesOnUI.get(edgeId);
+                    Platform.runLater(() -> cellLayer.getChildren().remove(edge));
+                    mapEdgesOnUI.remove(edgeId);
+                    listEdgesOnUI.remove(edge);
+                });
 
         // removeFromCellLayer();
     }
@@ -523,33 +510,35 @@ public class ConvertDBtoElementTree {
 
 
     public void setActiveRegion(BoundingBox viewPort) {
-        System.out.println();
-        System.out.println("------------- New active region -------------");
         this.activeRegion = new BoundingBox(
                 viewPort.getMinX() - viewPort.getWidth() * 3,
                 viewPort.getMinY() - viewPort.getHeight() * 3,
                 viewPort.getWidth() * 7,
                 viewPort.getHeight() * 7
         );
-        System.out.println("Viewport: " + viewPort);
-        System.out.println("activeRegion: " + activeRegion);
-        System.out.println("triggerRegion: " + triggerRegion);
-        System.out.println("------------------");
+
+        // System.out.println();
+        // System.out.println("------------- New active region -------------");
+        // System.out.println("Viewport: " + viewPort);
+        // System.out.println("activeRegion: " + activeRegion);
+        // System.out.println("triggerRegion: " + triggerRegion);
+        // System.out.println("------------------");
     }
 
     public void setTriggerRegion(BoundingBox viewPort) {
-        System.out.println();
-        System.out.println("------------- New Triggering region -------------");
         triggerRegion = new BoundingBox(
                 activeRegion.getMinX() + viewPort.getWidth(),
                 activeRegion.getMinY() + viewPort.getHeight(),
                 viewPort.getWidth() * 5,
                 viewPort.getHeight() * 5
         );
-        System.out.println("Viewport: " + viewPort);
-        System.out.println("activeRegion: " + activeRegion);
-        System.out.println("triggerRegion: " + triggerRegion);
-        System.out.println("------------------");
+
+        // System.out.println();
+        // System.out.println("------------- New Triggering region -------------");
+        // System.out.println("Viewport: " + viewPort);
+        // System.out.println("activeRegion: " + activeRegion);
+        // System.out.println("triggerRegion: " + triggerRegion);
+        // System.out.println("------------------");
     }
 
     public static void resetRegions() {
