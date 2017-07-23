@@ -1,7 +1,6 @@
 package com.application.fxgraph.graph;
 
 import com.application.fxgraph.ElementHelpers.ConvertDBtoElementTree;
-import com.application.fxgraph.graph.Graph;
 import com.application.Main;
 import com.application.db.DAOImplementation.*;
 import com.application.db.DatabaseUtil;
@@ -57,9 +56,9 @@ public class EventHandlers {
         // *****************
 
         // Make elements dragable.
-         node.setOnMousePressed(onMousePressedEventHandler);
-         node.setOnMouseDragged(onMouseDraggedEventHandler);
-         node.setOnMouseReleased(onMouseReleasedEventHandler);
+        node.setOnMousePressed(onMousePressedEventHandler);
+        node.setOnMouseDragged(onMouseDraggedEventHandler);
+        node.setOnMouseReleased(onMouseReleasedEventHandler);
     }
 
     PopOver popOver;
@@ -76,16 +75,16 @@ public class EventHandlers {
             CircleCell cell = (CircleCell) node;
             String timeStamp;
             int methodId, processId, threadId;
-            String parameters, packageName = "", methodName = "", parameterTypes = "", eventType, lockObjectId = "";
+            String parameters, packageName = "", methodName = "", parameterTypes = "", eventType, lockObjectId;
             double xCord=0, yCord=0;
 
 
             // Do Not Uncomment
-//            String sql = "Select * from " + TableNames.ELEMENT_TABLE + " " +
-//                    "JOIN " + TableNames.CALL_TRACE_TABLE + " ON " + TableNames.CALL_TRACE_TABLE + ".id = " + TableNames.ELEMENT_TABLE+ ".ID_ENTER_CALL_TRACE " +
-//                    "JOIN " + TableNames.METHOD_DEFINITION_TABLE + " ON " + TableNames.METHOD_DEFINITION_TABLE + ".ID = " + TableNames.CALL_TRACE_TABLE + ".METHOD_ID " +
-//                    "WHERE " + TableNames.ELEMENT_TABLE + ".ID = " + cell.getCellId();
-//            System.out.println("your query: " + sql);
+            // String sql = "Select * from " + TableNames.ELEMENT_TABLE + " " +
+            //         "JOIN " + TableNames.CALL_TRACE_TABLE + " ON " + TableNames.CALL_TRACE_TABLE + ".id = " + TableNames.ELEMENT_TABLE+ ".ID_ENTER_CALL_TRACE " +
+            //         "JOIN " + TableNames.METHOD_DEFINITION_TABLE + " ON " + TableNames.METHOD_DEFINITION_TABLE + ".ID = " + TableNames.CALL_TRACE_TABLE + ".METHOD_ID " +
+            //         "WHERE " + TableNames.ELEMENT_TABLE + ".ID = " + cell.getCellId();
+            // System.out.println("your query: " + sql);
 
             // Please. Please do not try to combine the next two queries into one. Unless you want to spend another day tyring to prove it to yourself.
 
@@ -94,8 +93,8 @@ public class EventHandlers {
                     "WHERE " + TableNames.ELEMENT_TABLE + ".ID = " + cell.getCellId();
 
             try (ResultSet callTraceRS = DatabaseUtil.select(sql)){
-//            try (ResultSet callTraceRS = CallTraceDAOImpl.selectWhere("id = (Select id_enter_call_trace FROM " + TableNames.ELEMENT_TABLE +
-//                    " WHERE id = " + cell.getCellId() + ")")) {
+                // try (ResultSet callTraceRS = CallTraceDAOImpl.selectWhere("id = (Select id_enter_call_trace FROM " + TableNames.ELEMENT_TABLE +
+                //         " WHERE id = " + cell.getCellId() + ")")) {
                 if (callTraceRS.next()) {
                     timeStamp = callTraceRS.getString("time_instant");
                     methodId = callTraceRS.getInt("method_id");
@@ -276,7 +275,7 @@ public class EventHandlers {
                                 "JOIN ELEMENT AS E ON CT.ID = E.ID_ENTER_CALL_TRACE " +
                                 "WHERE E.ID = " + elementId;
                         try (ResultSet elementRS = DatabaseUtil.select(query)){
-                        // try (ResultSet elementRS = ElementDAOImpl.selectWhere("id = " + elementId)){
+                            // try (ResultSet elementRS = ElementDAOImpl.selectWhere("id = " + elementId)){
                             if (elementRS.next()) {
                                 int id = elementRS.getInt("EID");
                                 String targetThreadId = String.valueOf(elementRS.getInt("thread_id"));
@@ -287,8 +286,6 @@ public class EventHandlers {
 
 
                                 // go to location.
-
-
                                 Button button = new Button();
                                 button.setOnMouseClicked(event1 -> {
                                     ConvertDBtoElementTree.resetRegions();
@@ -353,7 +350,7 @@ public class EventHandlers {
         @Override
         public void handle(MouseEvent event) {
             if (popOver != null)
-            popOver.hide();
+                popOver.hide();
         }
     };
 
@@ -393,11 +390,11 @@ public class EventHandlers {
                 // cell.setStyle("-fx-background-color: blue");
                 cell.setLabel("+");
                 ElementDAOImpl.updateWhere("collapsed", "2", "id = " + cellId);
-                Map<String, CircleCell> mapCircleCellsOnUI = graph.getModel().getMapCircleCellsOnUI();
+                Map<String, CircleCell> mapCircleCellsOnUI = graph.getModel().getCircleCellsOnUI();
                 List<CircleCell> listCircleCellsOnUI = graph.getModel().getListCircleCellsOnUI();
                 List<String> removeCircleCells = new ArrayList<>();
 
-                Map<String, Edge> mapEdgesOnUI = graph.getModel().getMapEdgesOnUI();
+                Map<String, Edge> mapEdgesOnUI = graph.getModel().getEdgesOnUI();
                 List<Edge> listEdgesOnUI = graph.getModel().getListEdgesOnUI();
                 List<String> removeEdges = new ArrayList<>();
 
@@ -454,7 +451,7 @@ public class EventHandlers {
                     try (ResultSet parentRS = ElementToChildDAOImpl.selectWhere("child_id = " + cellId)) {
                         if (parentRS.next()) {
                             String parentId = String.valueOf(parentRS.getInt("parent_id"));
-                            CircleCell parentCell = graph.getModel().getMapCircleCellsOnUI().get(parentId);
+                            CircleCell parentCell = graph.getModel().getCircleCellsOnUI().get(parentId);
 
                             Edge edge = new Edge(parentCell, cell);
 
@@ -465,7 +462,8 @@ public class EventHandlers {
 
                         }
                     }
-                    graph.myEndUpdate();
+                    // graph.myEndUpdate();
+                    graph.updateCellLayer();
 
                     try (ResultSet childrenRS = ElementToChildDAOImpl.selectWhere("parent_id = " + cellId)) {
                         while (childrenRS.next()) {
@@ -495,7 +493,7 @@ public class EventHandlers {
                     try (ResultSet parentRS = ElementToChildDAOImpl.selectWhere("child_id = " + cellId)) {
                         if (parentRS.next()) {
                             String parentId = String.valueOf(parentRS.getInt("parent_id"));
-                            CircleCell parentCell = graph.getModel().getMapCircleCellsOnUI().get(parentId);
+                            CircleCell parentCell = graph.getModel().getCircleCellsOnUI().get(parentId);
 
                             Edge edge = new Edge(parentCell, cell);
                             EdgeDAOImpl.updateWhere("collapsed", "0",
@@ -503,7 +501,8 @@ public class EventHandlers {
                             graph.getModel().addEdge(edge);
                         }
                     }
-                    graph.myEndUpdate();
+                    // graph.myEndUpdate();
+                    graph.updateCellLayer();
                 }
             }
         } catch (SQLException e) {

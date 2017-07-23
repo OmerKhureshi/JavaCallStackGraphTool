@@ -29,8 +29,8 @@ public class ZoomableScrollPane extends ScrollPane {
         zoomGroup.getTransforms().add(scaleTransform);
         zoomGroup.setOnScroll(new ZoomHandler());
 
-//        hvalueProperty().addListener((observable, oldValue, newValue) -> main.onScrollingScrollPane());
-//        vvalueProperty().addListener((observable, oldValue, newValue) -> main.onScrollingScrollPane());
+//        hvalueProperty().addListener((observable, oldValue, newValue) -> main.updateUi());
+//        vvalueProperty().addListener((observable, oldValue, newValue) -> main.updateUi());
 
 
         hvalueProperty().addListener(new ChangeListener<Number>() {
@@ -39,7 +39,7 @@ public class ZoomableScrollPane extends ScrollPane {
 //                System.out.println("new value "+newValue.doubleValue());
 //                System.out.println("old value "+oldValue.doubleValue());
 //                System.out.println("Change: " + (newValue.doubleValue() - oldValue.doubleValue()));
-                main.onScrollingScrollPane();
+                main.updateUi();
             }
         });
         vvalueProperty().addListener((observable, oldValue, newValue) -> {
@@ -47,13 +47,12 @@ public class ZoomableScrollPane extends ScrollPane {
 //            System.out.println("old value "+oldValue.doubleValue());
 //            System.out.println("Change: " + (newValue.doubleValue() - oldValue.doubleValue()));
 
-            main.onScrollingScrollPane();
+            main.updateUi();
         });
 
         viewportBoundsProperty().addListener((observable, oldValue, newValue) -> {
             if (main != null) {
-                System.out.println("view port size changed.");
-                main.onScrollingScrollPane();
+                main.updateUi();
             }
         });
     }

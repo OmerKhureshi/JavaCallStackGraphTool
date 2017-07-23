@@ -41,7 +41,7 @@ public class CallTraceDAOImpl {
                         "time_instant TIMESTAMP" +
                         ")";
                 ps.execute(sql);
-                System.out.println(">> Creating table " + TableNames.CALL_TRACE_TABLE);
+                System.out.println("** Creating table " + TableNames.CALL_TRACE_TABLE);
             } catch (SQLException e) {
                 e.printStackTrace();
             }

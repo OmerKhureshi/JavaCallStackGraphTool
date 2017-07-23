@@ -38,7 +38,7 @@ public class MethodDefnDAOImpl {
                         "parameter_types VARCHAR(200)" +
                         ")";
                 ps.execute(sql);
-                System.out.println(">> Creating table " + TableNames.METHOD_DEFINITION_TABLE);
+                System.out.println("** Creating table " + TableNames.METHOD_DEFINITION_TABLE);
             } catch (SQLException e) {
                 System.err.println("MethodDefnDAOImpl::createTable: SQL Exception on create table");
                 e.printStackTrace();

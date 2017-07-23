@@ -52,7 +52,7 @@ public class ElementDAOImpl {
                         "collapsed INTEGER" +
                         ")";
                 ps.execute(sql);
-                System.out.println(">> Creating table " + TableNames.ELEMENT_TABLE);
+                System.out.println("** Creating table " + TableNames.ELEMENT_TABLE);
             } catch (SQLException e) {
                 e.printStackTrace();
             }

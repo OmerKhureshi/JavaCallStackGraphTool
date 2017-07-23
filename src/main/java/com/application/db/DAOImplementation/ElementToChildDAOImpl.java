@@ -21,7 +21,7 @@ public class ElementToChildDAOImpl {
                         "child_id INTEGER" +  // todo define foreign key
                         ")";
                 ps.execute(sql);
-                System.out.println(">> Creating table " + TableNames.ELEMENT_TO_CHILD_TABLE);
+                System.out.println("** Creating table " + TableNames.ELEMENT_TO_CHILD_TABLE);
             } catch (SQLException e) {
                 e.printStackTrace();
             }

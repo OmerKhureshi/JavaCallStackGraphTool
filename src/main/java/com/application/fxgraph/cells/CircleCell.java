@@ -10,13 +10,14 @@ public class CircleCell extends Cell {
 
     Label label;
     Label methodName;
+    Circle circle;
 
     public CircleCell(String id) {
         super(id);
 
         // Uncomment to see yellow background on the whole circle cell stack pane.
         // setStyle("-fx-background-color: yellow");
-        Circle circle = new Circle(20);
+        circle = new Circle(20);
         label = new Label("This is a long string");
         methodName = new Label("");
         circle.setStroke(Color.GRAY);
@@ -61,5 +62,9 @@ public class CircleCell extends Cell {
         this.methodName.setMinWidth(this.methodName.getText().length()*2);
         this.methodName.relocate(-this.methodName.getMinWidth()/2, 40);//-this.methodName.getMinHeight()/2);
 
+    }
+
+    public void setColor(Color color) {
+        circle.setFill(color);
     }
 }

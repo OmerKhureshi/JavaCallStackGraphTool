@@ -314,6 +314,19 @@ public class DatabaseUtil {
         throw new IllegalStateException("Table does not exist. Hence cannot fetch any rows from it.");
     }
 
+
+    public static void executeUpdate(String query ) {
+        try {
+            conn = getConnection();
+            ps = conn.createStatement();
+            ps.executeUpdate(query);
+        } catch (SQLException e) {
+            System.out.println("Exception caused by: " + query);
+            e.printStackTrace();
+        }
+        throw new IllegalStateException("Table does not exist. Hence cannot fetch any rows from it.");
+    }
+
     public static void dropCallTrace() {
         if (true) {
             try {
@@ -351,6 +364,7 @@ public class DatabaseUtil {
         ElementDAOImpl.dropTable();
         ElementToChildDAOImpl.dropTable();
         EdgeDAOImpl.dropTable();
+        HighlightDAOImpl.dropTable();
 
         CallTraceDAOImpl.createTable();
         MethodDefnDAOImpl.createTable();

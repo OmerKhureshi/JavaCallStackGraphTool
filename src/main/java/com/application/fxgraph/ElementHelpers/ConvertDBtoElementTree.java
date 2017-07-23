@@ -1,9 +1,6 @@
 package com.application.fxgraph.ElementHelpers;
 
-import com.application.db.DAOImplementation.EdgeDAOImpl;
-import com.application.db.DAOImplementation.ElementDAOImpl;
-import com.application.db.DAOImplementation.ElementToChildDAOImpl;
-import com.application.db.DAOImplementation.MethodDefnDAOImpl;
+import com.application.db.DAOImplementation.*;
 import com.application.db.DatabaseUtil;
 import com.application.db.TableNames;
 import com.application.fxgraph.cells.CircleCell;
@@ -13,8 +10,9 @@ import com.application.fxgraph.graph.Graph;
 import com.application.fxgraph.graph.Model;
 import javafx.application.Platform;
 import javafx.geometry.BoundingBox;
-import javafx.scene.control.ScrollPane;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
+import javafx.scene.shape.Rectangle;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -31,6 +29,9 @@ public class ConvertDBtoElementTree {
     private String currentThreadId = "0";
 
     private boolean showAllThreads = true;
+
+    public int multiplierForVisibleViewPort = 3;
+    public int multiplierForPreLoadedViewPort = 2;
 
     public ConvertDBtoElementTree() {
         Element.clearAutoIncrementId();
@@ -162,34 +163,88 @@ public class ConvertDBtoElementTree {
             });
     }
 
+
+
     public void loadUIComponentsInsideVisibleViewPort(Graph graph) {
-
-
         this.graph = graph;
-        ScrollPane scrollPane = graph.getScrollPane();
-        Model model = graph.getModel();
-        BoundingBox viewPortDims = Graph.getViewPortDims(scrollPane);
+        this.model = graph.getModel();
+
+        BoundingBox viewPortDims = graph.getViewPortDims();
 
         if (!isUIDrawingRequired(viewPortDims)) {
 //            System.out.println("Not Adding.");
 //            System.out.println("------------------");
-
             return;
         }
 
-//        System.out.println("Adding.");
-//        System.out.println("------------------");
+        // Add circle cells
+        addCircleCells();
 
-        this.model = model;
-        Map<String, CircleCell> mapCircleCellsOnUI = model.getMapCircleCellsOnUI();
+        // Add edges
+        addEdges();
+
+        // Add highlights
+        addHighlights();
+
+    }
+
+    private void addHighlights() {
+        Map<Integer, Rectangle> highlightsOnUI = model.getHighlightsOnUI();
+
+        BoundingBox viewPortDims = graph.getViewPortDims();
+
         double viewPortMinX = viewPortDims.getMinX();
         double viewPortMaxX = viewPortDims.getMaxX();
         double viewPortMinY = viewPortDims.getMinY();
         double viewPortMaxY = viewPortDims.getMaxY();
-        double widthOffset = viewPortDims.getWidth() * 3;
-        double heightOffset = viewPortDims.getHeight() * 3 ;
+        double widthOffset = viewPortDims.getWidth() * multiplierForVisibleViewPort;
+        double heightOffset = viewPortDims.getHeight() * multiplierForVisibleViewPort ;
+
+        // Query to fetches highlight boxes that are contained within the bounds of outermost preload box.
+
+        String sql = (viewPortMinX - widthOffset) + " <= (start_x + width) " + " AND " + (viewPortMaxX + widthOffset) + " >= start_x " +
+                "AND " +
+                (viewPortMinY - heightOffset) + " <= (start_y + height) " + " AND " + (viewPortMaxY + heightOffset) + " >= start_Y " +
+                "AND thread_id = " + currentThreadId;
+
+        ResultSet rs = HighlightDAOImpl.selectWhere(sql);
+
+        try {
+            while (rs.next()) {
+                int id = rs.getInt("ID");
+                float startX = rs.getFloat("START_X");
+                float startY = rs.getFloat("START_Y");
+                float width = rs.getFloat("WIDTH");
+                float height = rs.getFloat("HEIGHT");
+
+                // If the rectangle highlight is not on UI then create a new rectangle and show on UI.
+                if (!highlightsOnUI.containsKey(id)) {
+                    // System.out.println("Drawing rectangle: " + id);
+                    Rectangle rectangle = new Rectangle(startX, startY, width, height);
+                    rectangle.setFill(Color.AQUA);
+
+                    model.addHighlight(id, rectangle);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void addCircleCells() {
+        Map<String, CircleCell> mapCircleCellsOnUI = model.getCircleCellsOnUI();
+        BoundingBox viewPortDims = graph.getViewPortDims();
+
+        double viewPortMinX = viewPortDims.getMinX();
+        double viewPortMaxX = viewPortDims.getMaxX();
+        double viewPortMinY = viewPortDims.getMinY();
+        double viewPortMaxY = viewPortDims.getMaxY();
+        double widthOffset = viewPortDims.getWidth() * multiplierForVisibleViewPort;
+        double heightOffset = viewPortDims.getHeight() * multiplierForVisibleViewPort ;
 
 
+        // Get element properties for those elements that are inside the current viewport.
         String sql = "SELECT E.ID AS EID, parent_id, collapsed, bound_box_x_coordinate, bound_box_y_coordinate, message, id_enter_call_trace, method_id " +
                 "FROM " + TableNames.CALL_TRACE_TABLE + " AS CT JOIN " + TableNames.ELEMENT_TABLE + " AS E ON CT.ID = E.ID_ENTER_CALL_TRACE " +
                 "WHERE CT.THREAD_ID = " + currentThreadId +
@@ -212,9 +267,9 @@ public class ConvertDBtoElementTree {
                 float xCoordinate = rs.getFloat("bound_box_x_coordinate");
                 float yCoordinate = rs.getFloat("bound_box_y_coordinate");
                 int idEnterCallTrace = rs.getInt("id_enter_call_trace");
-
                 int methodId = rs.getInt("method_id");
                 String methodName = "";
+
                 if (methodId == 0) {
                     methodName = rs.getString("message");
                 } else {
@@ -272,7 +327,7 @@ public class ConvertDBtoElementTree {
                 //     curCircleCell = mapCircleCellsOnUI.get(id);
                 //     parentCircleCell = mapCircleCellsOnUI.get(parentId);
                 // }
-                // if (curCircleCell != null && !model.getMapEdgesOnUI().containsKey(curCircleCell.getCellId()) && parentCircleCell != null) {
+                // if (curCircleCell != null && !model.getEdgesOnUI().containsKey(curCircleCell.getCellId()) && parentCircleCell != null) {
                 //     Edge curEdge = new Edge(parentCircleCell, curCircleCell);
                 //     model.addEdge(curEdge);
                 // }
@@ -280,10 +335,18 @@ public class ConvertDBtoElementTree {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
 
-        // Adde edges
+    private void addEdges() {
+        BoundingBox viewPortDims = graph.getViewPortDims();
+        double viewPortMinX = viewPortDims.getMinX();
+        double viewPortMaxX = viewPortDims.getMaxX();
+        double viewPortMinY = viewPortDims.getMinY();
+        double viewPortMaxY = viewPortDims.getMaxY();
+        double widthOffset = viewPortDims.getWidth() * multiplierForVisibleViewPort;
+        double heightOffset = viewPortDims.getHeight() * multiplierForVisibleViewPort ;
 
-        sql = "SELECT * FROM EDGE_ELEMENT " +
+        String sql = "SELECT * FROM EDGE_ELEMENT " +
                 "INNER JOIN ELEMENT ON FK_SOURCE_ELEMENT_ID = ELEMENT.ID " +
                 "INNER JOIN CALL_TRACE ON ELEMENT.ID_ENTER_CALL_TRACE = CALL_TRACE.ID " +
                 "WHERE CALL_TRACE.THREAD_ID = " + currentThreadId + " ";
@@ -305,27 +368,11 @@ public class ConvertDBtoElementTree {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
-        // Add edges - doesnot have logic for thread specific edges.
-        // String commonWhereClausForEdges = "collapsed = 0 AND " + "end_x >= " + viewPortMinX + " AND start_x <= " + viewPortMaxX ;
-        // String whereClauseForUpwardEdges = " AND end_Y >= " + viewPortMinY + " AND start_y <= " + viewPortMaxY;
-        // String whereClauseForDownwardEdges = " AND start_y >= " + viewPortMinY + " AND end_Y <= " + viewPortMaxY;
-
-        // try (ResultSet rsUpEdges = EdgeDAOImpl.selectWhere(commonWhereClausForEdges + whereClauseForUpwardEdges)) {
-        //     getEdgesFromResultSet(rsUpEdges);
-        // } catch (SQLException e) {
-        //     e.printStackTrace();
-        // }
-        //
-        // try (ResultSet rsDownEdges = EdgeDAOImpl.selectWhere(commonWhereClausForEdges + whereClauseForDownwardEdges)) {
-        //     getEdgesFromResultSet(rsDownEdges);
-        // } catch (SQLException e) {
-        //     e.printStackTrace();
-        // }
-
     }
 
-    public void getEdgesFromResultSet(ResultSet rs) {
+
+
+    private void getEdgesFromResultSet(ResultSet rs) {
         Edge curEdge;
         try {
             while (rs.next()) {
@@ -344,43 +391,20 @@ public class ConvertDBtoElementTree {
         }
     }
 
-    public void removeUIComponentsFromInvisibleViewPort(Graph graph) {
+    private void removeCircleCells(BoundingBox preloadBox) {
         CellLayer cellLayer = (CellLayer) graph.getCellLayer();
-        Model model = graph.getModel();
-        ScrollPane scrollPane = graph.getScrollPane();
-        BoundingBox viewPortDims = Graph.getViewPortDims(scrollPane);
 
-        if (!isUIDrawingRequired(viewPortDims)) {
-            // System.out.println("Not removing.");
-            // System.out.println("------------------");
-            return;
-        }
-
-        // System.out.println("removing");
-        // System.out.println("------------------");
-        Map<String, CircleCell> mapCircleCellsOnUI = model.getMapCircleCellsOnUI();
+        Map<String, CircleCell> mapCircleCellsOnUI = model.getCircleCellsOnUI();
         List<String> removeCircleCells = new ArrayList<>();
-        List<String> removeEdges = new ArrayList<>();
         List<CircleCell> listCircleCellsOnUI = model.getListCircleCellsOnUI();
-        Map<String, Edge> mapEdgesOnUI = model.getMapEdgesOnUI();
-        List<Edge> listEdgesOnUI = model.getListEdgesOnUI();
 
-        double minX = viewPortDims.getMinX();
-        double minY = viewPortDims.getMinY();
-        double maxX = viewPortDims.getWidth();
-        double maxY = viewPortDims.getHeight();
 
-        double widthOffset = viewPortDims.getWidth() * 3;
-        double heightOffset = viewPortDims.getHeight() * 3;
-
-        BoundingBox shrunkBB = new BoundingBox(minX - widthOffset, minY - heightOffset, maxX + widthOffset, maxY + heightOffset);
-//        BoundingBox shrunkBB = new BoundingBox(minX , minY, maxX, maxY);
 
         Iterator i = mapCircleCellsOnUI.entrySet().iterator();
         while (i.hasNext()) {
             Map.Entry<String, CircleCell> entry = (Map.Entry) i.next();
             CircleCell cell = entry.getValue();
-            if (!shrunkBB.contains(cell.getLayoutX(), cell.getLayoutY())) {
+            if (!preloadBox.contains(cell.getLayoutX(), cell.getLayoutY())) {
                 removeCircleCells.add(cell.getCellId());
             }
         }
@@ -392,8 +416,18 @@ public class ConvertDBtoElementTree {
                     mapCircleCellsOnUI.remove(cellId);
                     listCircleCellsOnUI.remove(circleCell);
                 });
+    }
+
+    private void removeEdges(BoundingBox preloadBox) {
+        CellLayer cellLayer = (CellLayer) graph.getCellLayer();
+
+        Map<String, Edge> mapEdgesOnUI = model.getEdgesOnUI();
+
+        List<String> removeEdges = new ArrayList<>();
+        List<Edge> listEdgesOnUI = model.getListEdgesOnUI();
 
         Iterator j = mapEdgesOnUI.entrySet().iterator();
+
         while (j.hasNext()) {
             Map.Entry<String, Edge> entry = (Map.Entry) j.next();
             Edge edge = entry.getValue();
@@ -403,34 +437,99 @@ public class ConvertDBtoElementTree {
                     Math.min(line.getStartY(), line.getEndY()),
                     Math.abs(line.getEndX() - line.getStartX()),
                     Math.abs(line.getEndY() - line.getStartY()));
-            // if (!shrunkBB.contains(line.getEndX(), line.getEndY())) {
+            // if (!preloadBox.contains(line.getEndX(), line.getEndY())) {
             //     removeEdges.add(edge.getEdgeId());
             // }
-            if (!shrunkBB.intersects(lineBB)) {
+            if (!preloadBox.intersects(lineBB)) {
                 removeEdges.add(edge.getEdgeId());
             }
         }
 
-        removeEdges.stream()
-                .forEach(edgeId -> {
+        removeEdges.forEach(edgeId -> {
                     Edge edge = mapEdgesOnUI.get(edgeId);
                     Platform.runLater(() -> cellLayer.getChildren().remove(edge));
                     mapEdgesOnUI.remove(edgeId);
                     listEdgesOnUI.remove(edge);
                 });
 
-        // removeFromCellLayer();
+        // clearUI();
     }
 
-    public void removeFromCellLayer() {
+    private void removeHighlights(BoundingBox preloadBox) {
         CellLayer cellLayer = (CellLayer) graph.getCellLayer();
-        cellLayer.getChildren().clear();
-        if (model != null && model.getMapCircleCellsOnUI() != null)
-            model.getMapCircleCellsOnUI().clear();
 
-        if (model != null && model.getMapEdgesOnUI() != null)
-            model.getMapEdgesOnUI().clear();
+        // This is the global HashMap that stores rectangle highlights currently on the UI.
+        Map<Integer, Rectangle > highlightsOnUI = model.getHighlightsOnUI();
 
+        // Temporary list to aid in removal of HashMap elements.
+        List<Rectangle> removeHighlights = new ArrayList<>();
+
+        // Iterate through the rectangle highlights on UI and remove those that don't intersect preload area.
+        Iterator j = highlightsOnUI.entrySet().iterator();
+
+        while (j.hasNext()) {
+            Map.Entry<Integer, Rectangle> entry = (Map.Entry) j.next();
+            Rectangle rectangle = entry.getValue();
+
+            if (!preloadBox.intersects(rectangle.getBoundsInLocal())) {
+                removeHighlights.add(rectangle);
+            }
+        }
+
+        // Removing elements from HashMap is a two step process, this is to avoid concurrent modification exception
+        // Remove rectangle highlights from UI and HashMap.
+        removeHighlights.forEach(rectangle -> {
+            Platform.runLater(() -> cellLayer.getChildren().remove(rectangle));
+            highlightsOnUI.remove(rectangle);
+        });
+    }
+
+    public void removeUIComponentsFromInvisibleViewPort(Graph graph) {
+        this.graph = graph;
+        this.model = graph.getModel();
+
+        BoundingBox viewPortDims = graph.getViewPortDims();
+
+        if (!isUIDrawingRequired(viewPortDims)) {
+            return;
+        }
+
+        double minX = viewPortDims.getMinX();
+        double minY = viewPortDims.getMinY();
+        double maxX = viewPortDims.getWidth();
+        double maxY = viewPortDims.getHeight();
+        double widthOffset = viewPortDims.getWidth() * 3;
+        double heightOffset = viewPortDims.getHeight() * 3;
+
+        BoundingBox preloadBox = new BoundingBox(
+                minX - widthOffset,
+                minY - heightOffset,
+                maxX + widthOffset,
+                maxY + heightOffset);
+//        BoundingBox preloadBox = new BoundingBox(minX , minY, maxX, maxY);
+
+        removeCircleCells(preloadBox);
+        removeEdges(preloadBox);
+        removeHighlights(preloadBox);
+    }
+
+    public void clearUI() {
+
+        // CellLayer cellLayer = (CellLayer) graph.getCellLayer();
+        // cellLayer.getChildren().clear();
+
+        graph.clearCellLayer();
+        if (model != null) {
+            model.clearMaps();
+        }
+
+        // if (model != null && model.getCircleCellsOnUI() != null)
+        //     model.getCircleCellsOnUI().clear();
+        //
+        // if (model != null && model.getEdgesOnUI() != null)
+        //     model.getEdgesOnUI().clear();
+
+        // Get the width for placeholder line.
         String SQLMaxLevelCount = "select max(LEVEL_COUNT) from ELEMENT " +
                 "where ID_ENTER_CALL_TRACE in " +
                 "(SELECT  CALL_TRACE.ID from CALL_TRACE where THREAD_ID  = " + currentThreadId + ")";
@@ -444,6 +543,9 @@ public class ConvertDBtoElementTree {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
+
+        // Get the height for placeholder line.
         String SQLMaxLeafCount = "select LEAF_COUNT from ELEMENT " +
                 "where LEVEL_COUNT = 1 AND ID = " +
                 "(SELECT PARENT_ID from ELEMENT_TO_CHILD " +
@@ -462,7 +564,6 @@ public class ConvertDBtoElementTree {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
 
         graph.drawPlaceHolderLines(height, width);
     }
@@ -507,7 +608,6 @@ public class ConvertDBtoElementTree {
 
         return false;
     }
-
 
     public void setActiveRegion(BoundingBox viewPort) {
         this.activeRegion = new BoundingBox(

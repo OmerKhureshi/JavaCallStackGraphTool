@@ -4,6 +4,7 @@ import com.application.fxgraph.ElementHelpers.Element;
 import com.application.fxgraph.cells.CircleCell;
 import com.application.fxgraph.cells.RectangleCell;
 import com.application.fxgraph.cells.TriangleCell;
+import javafx.scene.shape.Rectangle;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,13 +25,15 @@ public class Model {
 
     Map<String, Cell> cellMap; // <id,cell>
 
-    Map<String, CircleCell> mapCircleCellsOnUI = new HashMap<>();
-
+    // Global HashMaps to store UI elements.
+    private Map<String, CircleCell> circleCellsOnUI = new HashMap<>();
     List<CircleCell> listCircleCellsOnUI = new ArrayList<>();
 
-    Map<String, Edge> mapEdgesOnUI = new HashMap<>();
-
+    private Map<String, Edge> edgesOnUI = new HashMap<>();
     List<Edge> listEdgesOnUI = new ArrayList<>();
+
+    private Map<Integer, Rectangle> highlightsOnUI = new HashMap<>();
+
 
     public Model() {
         graphParent = new Cell("_ROOT_");
@@ -38,15 +41,18 @@ public class Model {
         clear();
     }
 
-    /*
+    /**
      * new/modified methods start
      */
+
+    // Adders
+
     public void addCell(CircleCell circleCell) {
         // circleCell.toFront();
         // circleCell.setTranslateZ(10);
         // synchronized (Main.getLock()) {
-            if (!mapCircleCellsOnUI.containsKey(circleCell.getCellId())) {
-                mapCircleCellsOnUI.put(circleCell.getCellId(), circleCell);
+            if (!circleCellsOnUI.containsKey(circleCell.getCellId())) {
+                circleCellsOnUI.put(circleCell.getCellId(), circleCell);
                 listCircleCellsOnUI.add(circleCell);
             }
         // }
@@ -56,7 +62,7 @@ public class Model {
         // edge.toBack();
         // edge.setTranslateZ(.5);
         addedEdges.add(edge);
-        if (edge != null && !mapEdgesOnUI.containsKey(edge.getEdgeId())) {
+        if (edge != null && !edgesOnUI.containsKey(edge.getEdgeId())) {
             // System.out.println();
             // System.out.println();
             // System.out.println(">>>> Adding edge: " + edge.getEdgeId());
@@ -65,14 +71,12 @@ public class Model {
             //         .forEach(s -> System.out.print("    : " +s.getEdgeId()));
             // System.out.println();
             //
-            // System.out.println(">>>> MAP: Before adding: size:" + mapEdgesOnUI.size());
-            // mapEdgesOnUI.entrySet().stream()
+            // System.out.println(">>>> MAP: Before adding: size:" + edgesOnUI.size());
+            // edgesOnUI.entrySet().stream()
             //         .forEach(s -> System.out.print("    : " + s.getKey()));
             // System.out.println();
             //**********************************************
-            mapEdgesOnUI.put(
-                    edge.getEdgeId(),
-                    edge);
+            edgesOnUI.put(edge.getEdgeId(), edge);
             listEdgesOnUI.add(edge);
             //**********************************************
 
@@ -80,11 +84,23 @@ public class Model {
             // listEdgesOnUI.stream()
             //         .forEach(s -> System.out.print("    : " + s.getEdgeId()));
             // System.out.println();
-            // System.out.println(">>>> MAP: After adding: size:" + mapEdgesOnUI.size());
-            // mapEdgesOnUI.entrySet().stream()
+            // System.out.println(">>>> MAP: After adding: size:" + edgesOnUI.size());
+            // edgesOnUI.entrySet().stream()
             //         .forEach(s -> System.out.print("    : " + s.getKey()));
             // System.out.println();
         }
+    }
+
+    public void addHighlight(Integer id, Rectangle rectangle) {
+        highlightsOnUI.putIfAbsent(id, rectangle);
+    }
+
+    // Clear methods.
+
+    public void clearMaps() {
+        circleCellsOnUI.clear();
+        edgesOnUI.clear();
+        highlightsOnUI.clear();
     }
 
     public void clearListCircleCellsOnUI() {
@@ -95,32 +111,32 @@ public class Model {
         listEdgesOnUI.clear();
     }
 
+
+    // Getters
+
     public List<CircleCell> getListCircleCellsOnUI() {
         return listCircleCellsOnUI;
     }
+
+    public Map<String, CircleCell> getCircleCellsOnUI() {
+        return circleCellsOnUI;
+    }
+
+    public Map<String, Edge> getEdgesOnUI() {
+        return edgesOnUI;
+    }
+
     public List<Edge> getListEdgesOnUI() {
         return listEdgesOnUI;
     }
 
-    public Map<String, CircleCell> getMapCircleCellsOnUI() {
-        return mapCircleCellsOnUI;
+    public Map<Integer, Rectangle> getHighlightsOnUI() {
+        return highlightsOnUI;
     }
 
-    public Map<String, Edge> getMapEdgesOnUI() {
-        return mapEdgesOnUI;
-    }
-
-    public void clearScrollPane() {
-        mapCircleCellsOnUI.clear();
-        listCircleCellsOnUI.clear();
-
-        mapEdgesOnUI.clear();
-        listEdgesOnUI.clear();
-    }
-
-    /*
-    * new methods end
-    * */
+    /**
+     * new methods end
+     */
 
     public void clear() {
 

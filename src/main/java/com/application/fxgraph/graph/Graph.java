@@ -39,6 +39,10 @@ public class Graph {
         scrollPane.setFitToHeight(true);
     }
 
+    public void clearCellLayer() {
+        cellLayer.getChildren().clear();
+    }
+
     public static void drawPlaceHolderLines() {
         // Line hPlaceHolderLine = new Line(0, 0, (Element.getMaxLevelCount() + 2) * BoundBox.unitWidthFactor, 0);
         Line hPlaceHolderLine = new Line(0, 0, (Element.getMaxLevelCount() + 2) * BoundBox.unitWidthFactor, 0);
@@ -88,13 +92,36 @@ public class Graph {
         // getCellLayer().getChildren().addAll(model.listCircleCellsOnUI);
         // getCellLayer().getChildren().addAll(model.listEdgesOnUI);
 
-        model.listCircleCellsOnUI.stream()
-                .forEach(circleCell -> {
+        model.listCircleCellsOnUI.forEach(circleCell -> {
                     eventHandlers.makeDraggable(circleCell);
                 });
 
         model.clearListCircleCellsOnUI();
         model.clearListEdgesOnUI();
+    }
+
+    public void updateCellLayer() {
+        model.getCircleCellsOnUI().forEach((id, circleCell) -> {
+            if (!cellLayer.getChildren().contains(circleCell)) {
+                cellLayer.getChildren().add(circleCell);
+                eventHandlers.makeDraggable(circleCell);
+            }
+        });
+
+        model.getEdgesOnUI().forEach((id, edge) -> {
+            if (!cellLayer.getChildren().contains(edge)) {
+                cellLayer.getChildren().add(edge);
+            }
+        });
+
+        model.getHighlightsOnUI().forEach((id, rectangle) -> {
+            if (!cellLayer.getChildren().contains(rectangle)) {
+                cellLayer.getChildren().add(rectangle);
+                rectangle.toBack();
+            }
+        });
+
+
     }
 
     public void endUpdate() {
@@ -128,7 +155,8 @@ public class Graph {
         return this.scrollPane.getScaleValue();
     }
 
-    public static BoundingBox getViewPortDims(ScrollPane scrollPane) {
+    public BoundingBox getViewPortDims() {
+        ScrollPane scrollPane1 = getScrollPane();
         double scale = ZoomableScrollPane.getScaleValue();
 
         // http://stackoverflow.com/questions/26240501/javafx-scrollpane-update-viewportbounds-on-scroll

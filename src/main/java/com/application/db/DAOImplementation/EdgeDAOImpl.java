@@ -42,7 +42,7 @@ public class EdgeDAOImpl {
                         "collapsed INTEGER" +
                         ")";
                 ps.execute(sql);
-                System.out.println(">> Creating table " + TableNames.EDGE_TABLE);
+                System.out.println("** Creating table " + TableNames.EDGE_TABLE);
             } catch (SQLException e) {
                 e.printStackTrace();
             }

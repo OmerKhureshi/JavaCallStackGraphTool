@@ -1,10 +1,8 @@
 package com.application;
 
-import com.application.db.DAOImplementation.CallTraceDAOImpl;
-import com.application.db.DAOImplementation.ElementDAOImpl;
-import com.application.db.DAOImplementation.ElementToChildDAOImpl;
-import com.application.db.DAOImplementation.MethodDefnDAOImpl;
+import com.application.db.DAOImplementation.*;
 import com.application.db.DatabaseUtil;
+import com.application.db.TableNames;
 import com.application.fxgraph.ElementHelpers.ConvertDBtoElementTree;
 import com.application.fxgraph.ElementHelpers.Element;
 import com.application.fxgraph.cells.CircleCell;
@@ -25,28 +23,30 @@ import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.*;
 import javafx.scene.image.WritableImage;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
+import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import org.controlsfx.control.CheckListView;
+import org.controlsfx.glyphfont.FontAwesome;
+import org.controlsfx.glyphfont.Glyph;
 
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Queue;
-
+import java.sql.Statement;
+import java.util.*;
 
 public class Main extends Application {
 
@@ -55,32 +55,58 @@ public class Main extends Application {
     Model model;
     BorderPane root;
     Scene scene;
+    ConvertDBtoElementTree convertDBtoElementTree;
+
     public Stage primaryStage;
 
-    boolean methodDefnFileSet;
-    boolean callTraceFileSet;
-    Text selectMethodDefn = new Text("");
-    Text selectCallTrace = new Text("");
+    // Information panel.
+    private boolean methodDefnFileSet;
+    private boolean callTraceFileSet;
+
+    private Glyph methodDefnInfoGlyph;
+    private String methodDefnInfoString = "Select Method Definition log file.";
+    private Label methodDefnInfoLabel;
+
+    private Glyph callTraceInfoGlyph;
+    private String callTraceInfoString = "Select Call Trace log file.";
+    private Label callTraceInfoLabel;
+
+    private Glyph runInfoGlyph;
+    private String runInfoString = "Click run.";
+    private Label runInfoLabel;
+
     FlowPane instructionsNode;
-    ConvertDBtoElementTree convertDBtoElementTree;
+
+    // Font
+    String font = "FontAwesome";
 
     // Menu bar
     MenuBar mb;
 
-    Menu file; // File menu button
-    MenuItem chooseMethodDefn;
-    MenuItem chooseCallTrace;
+    Menu fileMenu; // File menu button
+    MenuItem chooseMethodDefnMenuItem;
+    MenuItem chooseCallTraceMenuItem;
+    Glyph methodDefnGlyph;
+    Glyph callTraceGlyph;
 
-    Menu run;  // Run menu button
-    MenuItem runAnalysis;
-    MenuItem reset;
+    Menu runMenu;  // Run menu button
+    MenuItem runAnalysisMenuItem;
+    Glyph runAnalysisGlyph;
+    MenuItem resetMenuItem;
+    Glyph resetGlyph;
 
-    Menu saveImageMenu;  // Save Image menu button
-    MenuItem saveImage;
+    Menu saveImgMenu;  // Save Image menu button
+    MenuItem saveImg;
+    Glyph saveImgGlyph;
 
     Menu goTo;
     Menu recents;
     MenuItem clearHistory;
+    Glyph clearHistoryGlyph;
+
+    Menu highlight;
+    MenuItem highlightItems;
+    Glyph highlightItemsGlyph;
 
     // Status bar
     Group statusBar;
@@ -122,7 +148,9 @@ public class Main extends Application {
         setUpMenu();
 
         // Create Status Bar
-        setUpStatusBar();
+        // setUpStatusBar();
+
+        setUpNavigationBar();
 
         scene = new Scene(root, 1000, 300);
 
@@ -138,20 +166,39 @@ public class Main extends Application {
     public void setUpMenu() {
         mb = new MenuBar();
 
-        file = new Menu("File");
-        chooseMethodDefn = new MenuItem("Select Method Definition log file");
-        chooseCallTrace = new MenuItem("Select Call Trace log file");
-        file.getItems().addAll(chooseMethodDefn, chooseCallTrace);
+        fileMenu = new Menu("File");
+        methodDefnGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.PLUS);
+        methodDefnGlyph.setColor(ColorProp.ENABLED);
+        methodDefnGlyph.setPadding(new Insets(2,2,2,2));
+        chooseMethodDefnMenuItem = new MenuItem("Select Method Definition log file", methodDefnGlyph);
 
-        run = new Menu("Run");
-        reset = new MenuItem("Reset");
-        runAnalysis = new MenuItem("Run");
-        runAnalysis.setDisable(true);
-        run.getItems().addAll(runAnalysis, reset);
+        callTraceGlyph = new Glyph(font, FontAwesome.Glyph.PLUS);
+        callTraceGlyph.setColor(Color.DIMGRAY);
+        callTraceGlyph.setPadding(new Insets(2,2,2,2));
+        chooseCallTraceMenuItem = new MenuItem("Select Call Trace log file", callTraceGlyph);
 
-        saveImageMenu = new Menu("Save Image");
-        saveImage = new MenuItem("Save Image");
-        saveImageMenu.getItems().add(saveImage);
+        fileMenu.getItems().addAll(chooseMethodDefnMenuItem, chooseCallTraceMenuItem);
+
+        runMenu = new Menu("Run");
+
+
+        resetGlyph = new Glyph(font, FontAwesome.Glyph.RETWEET);
+        resetGlyph.setColor(ColorProp.ENABLED);
+        resetMenuItem = new MenuItem("Reset", resetGlyph);
+
+        runAnalysisGlyph = new Glyph(font, FontAwesome.Glyph.PLAY);
+        runAnalysisGlyph.setColor(ColorProp.DISABLED);
+        runAnalysisMenuItem = new MenuItem("Run", runAnalysisGlyph);
+        runAnalysisMenuItem.setDisable(true);
+
+        runMenu.getItems().addAll(runAnalysisMenuItem, resetMenuItem);
+
+        saveImgMenu = new Menu("Save Image");
+        saveImgGlyph = new Glyph(font, FontAwesome.Glyph.PICTURE_ALT);
+        saveImgGlyph.setColor(ColorProp.ENABLED);
+        saveImg = new MenuItem("Save Image", saveImgGlyph);
+
+        saveImgMenu.getItems().add(saveImg);
 
         goTo = new Menu("Go To");
         recents = new Menu("Recent nodes");
@@ -160,8 +207,15 @@ public class Main extends Application {
 
         goTo.getItems().addAll(recents, clearHistory);
 
+        // Highlight method invocations menu.
+        highlight = new Menu("Highlights");
+        highlightItems = new MenuItem("Highlight method invocations");
 
-        mb.getMenus().addAll(file, run, saveImageMenu, goTo);
+        highlight.getItems().add(highlightItems);
+
+        // Main menu
+        mb.getMenus().addAll(fileMenu, runMenu, saveImgMenu, goTo, highlight);
+
 
         populateInstructions();
         setMenuActions();
@@ -170,38 +224,60 @@ public class Main extends Application {
     }
 
     public void setMenuActions() {
-        chooseMethodDefn.setOnAction(event -> {
+        chooseMethodDefnMenuItem.setOnAction(event -> {
 //            DatabaseUtil.resetDB();
             File methodDefnFile = chooseLogFile("MethodDefinition");
             if (methodDefnFile != null) {
+
+                // Menu buttons related
                 MethodDefinitionLogFile.setFile(methodDefnFile);
-                selectMethodDefn.setText("");
+                methodDefnGlyph.setIcon(FontAwesome.Glyph.CHECK);
+
+                // Change icons and colors in instructions panel
+                methodDefnInfoGlyph.setIcon(FontAwesome.Glyph.CHECK);
+                methodDefnInfoGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+                callTraceInfoGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+
                 changeBool("methodDefnFileSet", true);
             }
         });
 
-        chooseCallTrace.setOnAction(event -> {
+        chooseCallTraceMenuItem.setOnAction(event -> {
 //            DatabaseUtil.resetDB();
             File callTraceFile = chooseLogFile("CallTrace");
             if (callTraceFile != null) {
+                // Menu buttons related
                 CallTraceLogFile.setFile(callTraceFile);
-                selectCallTrace.setText("");
+                callTraceGlyph.setIcon(FontAwesome.Glyph.CHECK);
+
+                // Change icons and colors in instructions panel
+                methodDefnInfoGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+                callTraceInfoGlyph.setIcon(FontAwesome.Glyph.CHECK);
+                callTraceInfoGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+
                 changeBool("callTraceFileSet", true);
             }
         });
 
-        runAnalysis.setOnAction(event -> {
+        runAnalysisMenuItem.setOnAction(event -> {
             setUpProgressBar();
             reload();
-            selectMethodDefn.setText("Sit tight. We are working hard dumping logs into the DB.");
+
+            // Change icons and colors in instructions panel
+            runInfoGlyph.setIcon(FontAwesome.Glyph.CHECK);
+            runInfoGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+
+            highlight.setDisable(false);
         });
 
-        reset.setOnAction(event -> {
+        resetMenuItem.setOnAction(event -> {
             reset();
+            methodDefnGlyph.setIcon(FontAwesome.Glyph.PLUS);
+            callTraceGlyph.setIcon(FontAwesome.Glyph.PLUS);
         });
 
         // Capture and save the currently loaded UI tree.
-        saveImage.setOnAction(event -> {
+        saveImg.setOnAction(event -> {
             saveUIImage();
         });
 
@@ -209,7 +285,6 @@ public class Main extends Application {
         // Populate recents menu.
         goTo.setOnShowing(event -> {
             recents.getItems().clear();
-            System.out.println("size: " + graph.getRecentLocationsMap().size());
             graph.getRecentLocationsMap().entrySet().stream().forEach(entry -> {
                 MenuItem nodeLocation = new MenuItem();
                 nodeLocation.setText(entry.getKey());
@@ -230,6 +305,9 @@ public class Main extends Application {
         clearHistory.setOnAction(event -> {
             graph.getRecentLocationsMap().clear();
         });
+
+
+        highlightItems.setOnAction(event -> setUpMethodsWindow());
     }
 
     public void setUpStatusBar() {
@@ -242,10 +320,11 @@ public class Main extends Application {
     public void reset() {
         root.setCenter(null);
         root.setLeft(null);
-        runAnalysis.setDisable(true);
-        changeBool("methodDefnFileSet", false);
-        changeBool("callTraceFileSet", false);
-        populateInstructions();
+        runAnalysisMenuItem.setDisable(true);
+
+        resetInstructionsPanel();
+        resetHighlights();
+
         ConvertDBtoElementTree.resetRegions();
     }
 
@@ -270,12 +349,74 @@ public class Main extends Application {
         ((ZoomableScrollPane) graph.getScrollPane()).saveRef(this);
     }
 
+    public void setUpNavigationBar() {
+        HBox hBox = new HBox();
+        Button goToParent = new Button("Parent");
+        Button goToChildren = new Button("Children");
+        Button goUpSigbling = new Button("Up Sibling");
+        Button goDownSigbling = new Button("Down Sibling");
+
+        hBox.getChildren().addAll(goToParent, goUpSigbling, goDownSigbling, goToChildren);
+        root.setBottom(hBox);
+
+        goToParent.setOnAction(event -> {
+            Node node = (Node) event.getSource();
+            CircleCell cell = (CircleCell) node;
+            getNextElementToGO("up", cell);
+
+            // Go To Parent
+            // When an element is clicked. Highlight it.
+            // when go to parent is clicked.
+            // unhighlight element.
+            // From element table
+            // Get its element id. Get its parent id.
+            // Get clicked cell's parent cell coordinates.
+            // scroll to parent.
+            // highlight parent.
+
+            // Go To First child.
+            // When an element is clicked. Highlight it.
+            // when go to child is clicked.
+            // unhighlight element.
+            // From element table
+            // Get its element id. Get its child's id.
+            // Get clicked cell's child cell coordinates.
+            // scroll to child
+            // highlight parent.
+
+
+        });
+    }
+
+    public void getNextElementToGO(String direction, CircleCell cell) {
+        switch (direction) {
+            case "up":
+                // Get parent element record.
+                ResultSet rs = ElementDAOImpl.selectWhere("id = (Select PARENT_ID FROM " + TableNames.ELEMENT_TABLE + " WHERE ID = " + cell.getCellId());
+
+                try {
+                    if (rs.next()) {
+                        double xCord = rs.getDouble("BOUND_BOX_X_COORDINATE");
+                        double yCord = rs.getDouble("BOUND_BOX_Y_COORDINATE");
+
+                        double hValue = graph.getHValue(xCord);
+                        double vValue = graph.getVValue(yCord);
+                        graph.moveScrollPane(hValue, vValue);
+
+                    }
+
+                    break;
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+        }
+    }
+
     public void setUpThreadsView() {
         // Layout Left
         threadsObsList = FXCollections.observableArrayList();
         threadListView = new ListView<>();
         threadListView.setItems(threadsObsList);
-        root.setLeft(threadListView);
 
         threadListView.setOnMouseClicked(event -> {
             String selectedItem = threadListView.getSelectionModel().getSelectedItem();
@@ -287,8 +428,7 @@ public class Main extends Application {
         // Get thread list and populate
         threadsObsList.clear();
 
-        ConvertDBtoElementTree.greatGrandParent.getChildren().stream()
-                .forEach(element -> {
+        ConvertDBtoElementTree.greatGrandParent.getChildren().forEach(element -> {
                     Element child = element.getChildren().get(0);
                     int callTraceId = -1;
                     if (child != null) callTraceId = child.getFkEnterCallTrace();
@@ -297,12 +437,11 @@ public class Main extends Application {
                             int threadId = rs.getInt("thread_id");
                             threadsObsList.add("Thread: " + threadId);
                         }
-                    } catch (SQLException e) {
+                    } catch (SQLException ignored) {
                     }
                 });
 
-
-
+        root.setLeft(threadListView);
     }
 
     public void saveUIImage() {
@@ -322,19 +461,19 @@ public class Main extends Application {
     private void addGraphCellComponents() {
         convertDBtoElementTree = new ConvertDBtoElementTree();
 
-        task = new Task<Void>(){
+        task = new Task<Void>() {
             @Override
             protected Void call() throws Exception {
                 // Reset Database
                 updateTitle("Resetting the Database.");
                 DatabaseUtil.resetDB();
 
-                // Check file integrity.
+                // Check fileMenu integrity.
                 BytesRead bytesRead = new BytesRead(
                         0,
-                        MethodDefinitionLogFile.getFile().length() + 2*CallTraceLogFile.getFile().length()
+                        MethodDefinitionLogFile.getFile().length() + 2 * CallTraceLogFile.getFile().length()
                 );
-                updateTitle("Checking call trace file for errors.");
+                updateTitle("Checking call trace fileMenu for errors.");
                 updateMessage("Please wait... total Bytes: " + bytesRead.total + " bytes processed: " + bytesRead.readSoFar);
                 updateProgress(bytesRead.readSoFar, bytesRead.total);
                 CheckFileIntegrity.checkFile(CallTraceLogFile.getFile(), bytesRead);
@@ -356,7 +495,7 @@ public class Main extends Application {
                         });
 
 
-                // Inserting into Database.
+                // Inserting log files into Database.
                 LinesInserted linesInserted = new LinesInserted(
                         0,
                         2 * ParseCallTrace.countNumberOfLines(CallTraceLogFile.getFile())
@@ -367,6 +506,7 @@ public class Main extends Application {
                 updateProgress(linesInserted.insertedSoFar, linesInserted.total);
                 convertDBtoElementTree.calculateElementProperties();
 
+                // Insert elements and properties into database
 //                convertDBtoElementTree.recursivelyInsertElementsIntoDB(convertDBtoElementTree.greatGrandParent);
 
                 Element root = convertDBtoElementTree.greatGrandParent;
@@ -380,7 +520,7 @@ public class Main extends Application {
                 while ((element = queue.poll()) != null) {
                     ElementDAOImpl.insert(element);
                     ElementToChildDAOImpl.insert(
-                            element.getParent() == null? -1 : element.getParent().getElementId(),
+                            element.getParent() == null ? -1 : element.getParent().getElementId(),
                             element.getElementId());
 
                     if (element.getChildren() != null) {
@@ -392,7 +532,7 @@ public class Main extends Application {
                     updateProgress(linesInserted.insertedSoFar, linesInserted.total);
                 }
 
-
+                // Insert lines and properties into database.
                 convertDBtoElementTree.recursivelyInsertEdgeElementsIntoDB(convertDBtoElementTree.greatGrandParent);
                 return null;
             }
@@ -400,8 +540,10 @@ public class Main extends Application {
             @Override
             protected void succeeded() {
                 super.succeeded();
+                // close the progress bar screen.
                 pStage.close();
-                System.out.println("Successfully loaded.");
+
+                // Load UI.
                 postDatabaseLoad();
             }
         };
@@ -435,123 +577,126 @@ public class Main extends Application {
     public void updateProgress(BytesRead bytesRead) {
     }
 
-    public void postDatabaseLoad(){
+    public void postDatabaseLoad() {
         resetCenterLayout();
         setUpThreadsView();
+        // setUpCheckTreeView();
+
         Graph.drawPlaceHolderLines();
 
-        onScrollingScrollPane();
+        updateUi();
 
         String firstThreadID = threadsObsList.get(0).split(" ")[1];
         showThread(firstThreadID);
         threadListView.getSelectionModel().select(0);
     }
 
-    private void createCircleCellsRecursively(Element root, Model model) {
-        if (root == null) {
-            return;
-        }
-        createCircleCell(root, model);
+    // private void createCircleCellsRecursively(Element root, Model model) {
+    //     if (root == null) {
+    //         return;
+    //     }
+    //     createCircleCell(root, model);
+    //
+    //     if (root.getChildren() != null) {
+    //         root.getChildren()
+    //                 .forEach(ele -> createCircleCellsRecursively(ele, model));
+    //     }
+    // }
 
-        if (root.getChildren() != null){
-            root.getChildren()
-                    .forEach(ele -> createCircleCellsRecursively(ele, model));
-        }
-    }
+    // public void createCircleCell(Element root, Model model) {
+    //     CircleCell targetCell = model.addCircleCell(String.valueOf(root.getElementId()), root);
+    //     if (root.getParent() != null) {
+    //         CircleCell sourceCell = root.getParent().getCircleCell();
+    //         model.addEdge(sourceCell, targetCell);
+    //     }
+    // }
 
-    public void createCircleCell(Element root, Model model) {
-        CircleCell targetCell = model.addCircleCell(String.valueOf(root.getElementId()), root);
-        if (root.getParent() != null) {
-            CircleCell sourceCell = root.getParent().getCircleCell();
-            model.addEdge(sourceCell, targetCell);
-        }
-    }
-
-    public Map<Integer, CircleCell> fromDBToUI() {
-        Map resMap = new HashMap<Integer, CircleCell>();
-        // Do fast
-        // monitor scroll hvalue changes and load more circles.
-        try {
-            ResultSet rs = ElementDAOImpl.selectWhere("parent_id = -1");
-            rs.next();
-            int grandParentId = rs.getInt("id");
-            float grandParentXCoordinate = rs.getFloat("bound_box_x_coordinate");
-            float grandParentYCoordinate = rs.getFloat("bound_box_y_coordinate");
-            CircleCell grandParentCell = new CircleCell(String.valueOf(grandParentId), grandParentXCoordinate, grandParentYCoordinate);
-            model.addCell(grandParentCell);
-
-            rs = ElementDAOImpl.selectWhere("parent_id = " + grandParentId);
-            while (rs.next()) {
-                int cellId = rs.getInt("id");
-                float cellXCoordinate = rs.getFloat("bound_box_x_coordinate");
-                float cellYCoordinate = rs.getFloat("bound_box_y_coordinate");
-                // For each level 1 element, draw on UI.
-                CircleCell targetCell = new CircleCell(String.valueOf(cellId), cellXCoordinate, cellYCoordinate);
-                model.addCell(targetCell);
-                model.addEdge(grandParentCell, targetCell);
-                resMap.put(cellId, targetCell);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return resMap;
-    }
+    // public Map<Integer, CircleCell> fromDBToUI() {
+    //     Map resMap = new HashMap<Integer, CircleCell>();
+    //     // Do fast
+    //     // monitor scroll hvalue changes and load more circles.
+    //     try {
+    //         ResultSet rs = ElementDAOImpl.selectWhere("parent_id = -1");
+    //         rs.next();
+    //         int grandParentId = rs.getInt("id");
+    //         float grandParentXCoordinate = rs.getFloat("bound_box_x_coordinate");
+    //         float grandParentYCoordinate = rs.getFloat("bound_box_y_coordinate");
+    //         CircleCell grandParentCell = new CircleCell(String.valueOf(grandParentId), grandParentXCoordinate, grandParentYCoordinate);
+    //         model.addCell(grandParentCell);
+    //
+    //         rs = ElementDAOImpl.selectWhere("parent_id = " + grandParentId);
+    //         while (rs.next()) {
+    //             int cellId = rs.getInt("id");
+    //             float cellXCoordinate = rs.getFloat("bound_box_x_coordinate");
+    //             float cellYCoordinate = rs.getFloat("bound_box_y_coordinate");
+    //             // For each level 1 element, draw on UI.
+    //             CircleCell targetCell = new CircleCell(String.valueOf(cellId), cellXCoordinate, cellYCoordinate);
+    //             model.addCell(targetCell);
+    //             model.addEdge(grandParentCell, targetCell);
+    //             resMap.put(cellId, targetCell);
+    //         }
+    //     } catch (SQLException e) {
+    //         e.printStackTrace();
+    //     }
+    //     return resMap;
+    // }
 
     public void showThread(String threadId) {
         convertDBtoElementTree.setCurrentThreadId(threadId);
-        convertDBtoElementTree.removeFromCellLayer();
-        onScrollingScrollPane();
+        convertDBtoElementTree.clearUI();
+        updateUi();
     }
 
-    public void onScrollingScrollPane() {
-        if (convertDBtoElementTree!= null && graph != null) {
+    public void updateUi() {
+        if (convertDBtoElementTree != null && graph != null) {
             convertDBtoElementTree.loadUIComponentsInsideVisibleViewPort(graph);
             convertDBtoElementTree.removeUIComponentsFromInvisibleViewPort(graph);
-            graph.myEndUpdate();
+            // graph.myEndUpdate();
+            graph.updateCellLayer();
         }
     }
 
-    private void addGraphComponents() {
+    // private void addGraphComponents() {
+    //
+    //     Model model = graph.getModel();
+    //
+    //     graph.beginUpdate();
+    //
+    //     //        model.addCell("Cell A", CellType.RECTANGLE);
+    //     //        model.addCell("Cell B", CellType.RECTANGLE);
+    //     //        model.addCell("Cell C", CellType.RECTANGLE);
+    //     //        model.addCell("Cell D", CellType.TRIANGLE);
+    //     //        model.addCell("Cell E", CellType.TRIANGLE);
+    //     //        model.addCell("Cell F", CellType.RECTANGLE);
+    //     //        model.addCell("Cell G", CellType.RECTANGLE);
+    //     model.addCell("Cell A", CellType.RECTANGLE);
+    //     model.addCell("Cell B", CellType.RECTANGLE);
+    //     model.addCell("Cell C", CellType.RECTANGLE);
+    //     model.addCell("Cell D", CellType.RECTANGLE);
+    //     model.addCell("Cell E", CellType.RECTANGLE);
+    //     model.addCell("Cell F", CellType.RECTANGLE);
+    //     model.addCell("Cell G", CellType.RECTANGLE);
+    //     model.addCell("Cell H", CellType.RECTANGLE);
+    //     model.addCell("Cell I", CellType.RECTANGLE);
+    //     model.addCell("Cell J", CellType.RECTANGLE);
+    //     model.addCell("Cell K", CellType.RECTANGLE);
+    //
+    //     model.addEdge("Cell A", "Cell B");
+    //     model.addEdge("Cell A", "Cell C");
+    //     //        model.addEdge("Cell B", "Cell C");
+    //     model.addEdge("Cell C", "Cell D");
+    //     model.addEdge("Cell B", "Cell E");
+    //     model.addEdge("Cell D", "Cell F");
+    //     model.addEdge("Cell D", "Cell G");
+    //     model.addEdge("Cell G", "Cell H");
+    //     model.addEdge("Cell G", "Cell I");
+    //     model.addEdge("Cell G", "Cell J");
+    //     model.addEdge("Cell G", "Cell K");
+    //
+    //     graph.endUpdate();
+    // }
 
-        Model model = graph.getModel();
-
-        graph.beginUpdate();
-
-        //        model.addCell("Cell A", CellType.RECTANGLE);
-        //        model.addCell("Cell B", CellType.RECTANGLE);
-        //        model.addCell("Cell C", CellType.RECTANGLE);
-        //        model.addCell("Cell D", CellType.TRIANGLE);
-        //        model.addCell("Cell E", CellType.TRIANGLE);
-        //        model.addCell("Cell F", CellType.RECTANGLE);
-        //        model.addCell("Cell G", CellType.RECTANGLE);
-        model.addCell("Cell A", CellType.RECTANGLE);
-        model.addCell("Cell B", CellType.RECTANGLE);
-        model.addCell("Cell C", CellType.RECTANGLE);
-        model.addCell("Cell D", CellType.RECTANGLE);
-        model.addCell("Cell E", CellType.RECTANGLE);
-        model.addCell("Cell F", CellType.RECTANGLE);
-        model.addCell("Cell G", CellType.RECTANGLE);
-        model.addCell("Cell H", CellType.RECTANGLE);
-        model.addCell("Cell I", CellType.RECTANGLE);
-        model.addCell("Cell J", CellType.RECTANGLE);
-        model.addCell("Cell K", CellType.RECTANGLE);
-
-        model.addEdge("Cell A", "Cell B");
-        model.addEdge("Cell A", "Cell C");
-        //        model.addEdge("Cell B", "Cell C");
-        model.addEdge("Cell C", "Cell D");
-        model.addEdge("Cell B", "Cell E");
-        model.addEdge("Cell D", "Cell F");
-        model.addEdge("Cell D", "Cell G");
-        model.addEdge("Cell G", "Cell H");
-        model.addEdge("Cell G", "Cell I");
-        model.addEdge("Cell G", "Cell J");
-        model.addEdge("Cell G", "Cell K");
-
-        graph.endUpdate();
-    }
-
-    public static void main(String[] args){
+    public static void main(String[] args) {
         launch(args);
     }
 
@@ -561,11 +706,12 @@ public class Main extends Application {
 
     public File chooseLogFile(String logType) {
         FileChooser fileChooser = new FileChooser();
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Text Files", "*.txt"));
 
         if (logType.equalsIgnoreCase("CallTrace")) {
-            fileChooser.setTitle("Choose call trace log file.");
+            fileChooser.setTitle("Choose call trace log fileMenu.");
         } else {
-            fileChooser.setTitle("Choose method definition log file.");
+            fileChooser.setTitle("Choose method definition log fileMenu.");
         }
 
         File logFile = fileChooser.showOpenDialog(primaryStage);
@@ -583,20 +729,43 @@ public class Main extends Application {
             callTraceFileSet = val;
 
         if (methodDefnFileSet && callTraceFileSet) {
-            runAnalysis.setDisable(false);
-            selectMethodDefn.setText("Click Run.");
+            runAnalysisMenuItem.setDisable(false);
+
+            // Menu buttons related.
+            runAnalysisGlyph.setColor(ColorProp.ENABLED);
+
+            // Change icons and colors in instructions panel
+            runInfoGlyph.setIcon(FontAwesome.Glyph.ARROW_RIGHT);
+            runInfoGlyph.setColor(ColorProp.ENABLED_COLORFUL);
         }
+    }
+
+    public void resetInstructionsPanel() {
+        changeBool("methodDefnFileSet", false);
+        changeBool("callTraceFileSet", false);
+        populateInstructions();
     }
 
     public void populateInstructions() {
         instructionsNode = new FlowPane();
         root.setCenter(instructionsNode);
-        selectMethodDefn.setText("Select Method Definition log file.");
-        selectCallTrace.setText("Select Call Trace log file.");
-        instructionsNode.getChildren().addAll(selectMethodDefn, selectCallTrace);
+
+        methodDefnInfoGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.ARROW_RIGHT);
+        methodDefnInfoGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+        methodDefnInfoLabel = new Label(methodDefnInfoString, methodDefnInfoGlyph);
+
+        callTraceInfoGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.ARROW_RIGHT);
+        callTraceInfoGlyph.setColor(ColorProp.ENABLED);
+        callTraceInfoLabel = new Label(callTraceInfoString, callTraceInfoGlyph);
+
+        runInfoGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.ARROW_RIGHT);
+        runInfoGlyph.setColor(ColorProp.DISABLED);
+        runInfoLabel = new Label(runInfoString, runInfoGlyph);
+
+        instructionsNode.getChildren().addAll(methodDefnInfoLabel, callTraceInfoLabel, runInfoLabel);
         instructionsNode.setAlignment(Pos.CENTER);
         instructionsNode.setOrientation(Orientation.VERTICAL);
-        instructionsNode.setPadding(new Insets(5,5,5,5));
+        instructionsNode.setPadding(new Insets(5, 5, 5, 5));
         instructionsNode.setVgap(10);
     }
 
@@ -619,5 +788,178 @@ public class Main extends Application {
             this.total = totalBytes;
         }
     }
+
+
+    Stage mStage;
+    Scene mScene;
+    Group mRootGroup;
+    Button applyButton;
+    Button cancelButton;
+    HBox hBox;
+    VBox vBox;
+
+    ObservableList<String> strings ;
+    CheckListView<String> checkListView;
+    boolean firstTimeSetUpMethodsWindowCall = true;
+
+    public void firstTimeSetUpMethodsWindow() {
+        if (!firstTimeSetUpMethodsWindowCall)
+            return;
+
+        firstTimeSetUpMethodsWindowCall = false;
+
+        mRootGroup = new Group();
+        strings = FXCollections.observableArrayList();
+        checkListView = new CheckListView<>(strings);
+        checkListView.setPrefWidth(500);
+        // checkListView.getCheckModel().getCheckedItems().addListener(new ListChangeListener<String>() {
+        //     public void onChanged(ListChangeListener.Change<? extends String> c) {
+        //         // Do something if item checked.
+        //     }
+        // });
+
+        applyButton = new Button("Apply");
+        applyButton.setAlignment(Pos.BASELINE_RIGHT);
+
+        cancelButton = new Button("Cancel");
+        cancelButton.setAlignment(Pos.BASELINE_RIGHT);
+
+        hBox = new HBox(cancelButton, applyButton);
+        hBox.setSpacing(SizeProp.SPACING);
+
+        vBox = new VBox(SizeProp.SPACING);
+        vBox.getChildren().addAll(checkListView, hBox);
+
+        mRootGroup.getChildren().add(vBox);
+        mScene = new Scene(mRootGroup);
+        mStage = new Stage();
+        mStage.setScene(mScene);
+
+        LinkedList<String> methodNamesList = new LinkedList<>();
+
+        // Fetch all methods from method definition fileMenu and display on UI.
+        Task<Void> onStageLoad = new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                // Fetch all methods from method definition fileMenu.
+                ResultSet rs = DatabaseUtil.select("SELECT * FROM " + TableNames.METHOD_DEFINITION_TABLE);
+                while (rs.next()) {
+                    String methodName = rs.getString("METHOD_NAME");
+                    String packageName = rs.getString("PACKAGE_NAME");
+                    methodNamesList.add(packageName + "." + methodName);
+                }
+                return null;
+            }
+
+            @Override
+            protected void succeeded() {
+                super.succeeded();
+                // Display the methods on UI
+                methodNamesList.stream().forEach(s -> {
+                    strings.add(s);
+                });
+            }
+        };
+
+        new Thread(onStageLoad).start();
+
+    }
+
+    public void setUpMethodsWindow() {
+
+        if(firstTimeSetUpMethodsWindowCall)
+            firstTimeSetUpMethodsWindow();
+
+        mStage.show();
+
+        /*
+        On Apply button click behaviour.
+        For each of the selected methods, insert the bound box properties into Highlights table if not already present.
+        */
+        Task<Void> taskOnApply = new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                if (!HighlightDAOImpl.isTableCreated()) {
+                    HighlightDAOImpl.createTable();
+                }
+
+                // For each of the selected methods, insert the bound box properties into Highlights table if not already present.
+                Statement statement = DatabaseUtil.getConnection().createStatement();
+                checkListView.getCheckModel().getCheckedItems().stream().forEach(fullName -> {
+                    String[] arr = fullName.split("\\.");
+                    String methodName = arr[arr.length - 1];
+                    String packageName = fullName.substring(0, fullName.length() - methodName.length() - 1);
+                    String sql = "INSERT INTO " + TableNames.HIGHLIGHT_ELEMENT + " (METHOD_ID, THREAD_ID, START_X, START_Y, WIDTH, HEIGHT) " +
+                            "SELECT " + TableNames.METHOD_DEFINITION_TABLE + ".ID, " +
+                            TableNames.CALL_TRACE_TABLE + ".THREAD_ID, " +
+                            TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT, " +
+                            TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT, " +
+                            "(" + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_RIGHT - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT), " +
+                            "(" + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_BOTTOM_LEFT - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT) " +
+                            "FROM " + TableNames.ELEMENT_TABLE + " " +
+                            "JOIN " + TableNames.CALL_TRACE_TABLE + " ON " + TableNames.ELEMENT_TABLE + ".ID_ENTER_CALL_TRACE = " + TableNames.CALL_TRACE_TABLE + ".ID " +
+                            "JOIN " + TableNames.METHOD_DEFINITION_TABLE + " ON " + TableNames.CALL_TRACE_TABLE + ".METHOD_ID = " + TableNames.METHOD_DEFINITION_TABLE + ".ID " +
+                            "WHERE " + TableNames.METHOD_DEFINITION_TABLE + ".METHOD_NAME = '" + methodName + "' " +
+                            "AND " + TableNames.METHOD_DEFINITION_TABLE + ".PACKAGE_NAME = '" + packageName + "' " +
+                            "AND NOT EXISTS " +
+                            "(SELECT * FROM " + TableNames.HIGHLIGHT_ELEMENT + " " +
+                            "WHERE " + TableNames.HIGHLIGHT_ELEMENT + ".METHOD_ID = " + TableNames.METHOD_DEFINITION_TABLE + ".ID)";
+
+                    try {
+                    statement.addBatch(sql);
+                    } catch (SQLException e) {e.printStackTrace();}
+                });
+
+                // Delete records from HIGHLIGHT_ELEMENT if that method is not checked in the stage.
+                StringJoiner sj = new StringJoiner("','", "'", "'");
+                checkListView.getCheckModel().getCheckedItems().stream().forEach(sj::add);
+
+                String sql = "DELETE FROM " + TableNames.HIGHLIGHT_ELEMENT + " WHERE ID IN " +
+                        "(SELECT ID FROM " + TableNames.HIGHLIGHT_ELEMENT + " " +
+                        "WHERE METHOD_ID NOT IN " +
+                        "(SELECT ID FROM " + TableNames.METHOD_DEFINITION_TABLE + " " +
+                        "WHERE (" + TableNames.METHOD_DEFINITION_TABLE + ".PACKAGE_NAME || '.' || " + TableNames.METHOD_DEFINITION_TABLE + ".METHOD_NAME) " +
+                        "IN (" + sj.toString() + ")))";
+
+                statement.addBatch(sql);
+                statement.executeBatch();
+
+                return null;
+            }
+
+            @Override
+            protected void succeeded() {
+                super.succeeded();
+                updateUi();
+            }
+        };
+
+        applyButton.setOnAction(event -> {
+            new Thread(taskOnApply).start();
+            mStage.close();
+        });
+
+        cancelButton.setOnAction(event -> {
+            mStage.close();
+        });
+    }
+
+    public void resetHighlights() {
+        firstTimeSetUpMethodsWindowCall = true;
+        highlight.setDisable(true);
+    }
+
+    // Color coding.
+    // Method selection screen
+    //      Show all methods from method definition
+    //          with colors assigned.
+    //          wheather single cell or complete subtree is highlighted.
+    //      loads on a background thread.
+    //      enaled/disables mode for buttons.
+    //      apply button.
+
+    // Save to db on clicking apply button.
+    // background color will be loaded like elements and lines.
+    //
 
 }
