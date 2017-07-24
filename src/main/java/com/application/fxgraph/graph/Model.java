@@ -91,7 +91,10 @@ public class Model {
         }
     }
 
+    public boolean highlightsUpdated = true;
+
     public void addHighlight(Integer id, Rectangle rectangle) {
+        highlightsUpdated = true;
         highlightsOnUI.putIfAbsent(id, rectangle);
     }
 

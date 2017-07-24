@@ -28,15 +28,12 @@ import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.*;
 import javafx.scene.image.WritableImage;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import org.controlsfx.control.CheckListView;
+import org.controlsfx.control.spreadsheet.Grid;
 import org.controlsfx.glyphfont.FontAwesome;
 import org.controlsfx.glyphfont.Glyph;
 
@@ -47,6 +44,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Main extends Application {
 
@@ -169,12 +167,12 @@ public class Main extends Application {
         fileMenu = new Menu("File");
         methodDefnGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.PLUS);
         methodDefnGlyph.setColor(ColorProp.ENABLED);
-        methodDefnGlyph.setPadding(new Insets(2,2,2,2));
+        methodDefnGlyph.setPadding(new Insets(2, 2, 2, 2));
         chooseMethodDefnMenuItem = new MenuItem("Select Method Definition log file", methodDefnGlyph);
 
         callTraceGlyph = new Glyph(font, FontAwesome.Glyph.PLUS);
         callTraceGlyph.setColor(Color.DIMGRAY);
-        callTraceGlyph.setPadding(new Insets(2,2,2,2));
+        callTraceGlyph.setPadding(new Insets(2, 2, 2, 2));
         chooseCallTraceMenuItem = new MenuItem("Select Call Trace log file", callTraceGlyph);
 
         fileMenu.getItems().addAll(chooseMethodDefnMenuItem, chooseCallTraceMenuItem);
@@ -232,6 +230,7 @@ public class Main extends Application {
                 // Menu buttons related
                 MethodDefinitionLogFile.setFile(methodDefnFile);
                 methodDefnGlyph.setIcon(FontAwesome.Glyph.CHECK);
+                methodDefnInfoLabel.setText(methodDefnInfoString + " File: " + methodDefnFile.getName());
 
                 // Change icons and colors in instructions panel
                 methodDefnInfoGlyph.setIcon(FontAwesome.Glyph.CHECK);
@@ -249,6 +248,7 @@ public class Main extends Application {
                 // Menu buttons related
                 CallTraceLogFile.setFile(callTraceFile);
                 callTraceGlyph.setIcon(FontAwesome.Glyph.CHECK);
+                callTraceInfoLabel.setText(callTraceInfoString + " File: " + callTraceFile.getName());
 
                 // Change icons and colors in instructions panel
                 methodDefnInfoGlyph.setColor(ColorProp.ENABLED_COLORFUL);
@@ -307,7 +307,8 @@ public class Main extends Application {
         });
 
 
-        highlightItems.setOnAction(event -> setUpMethodsWindow());
+        // highlightItems.setOnAction(event -> setUpMethodsWindow());
+        highlightItems.setOnAction(event -> setUpHighlightsWindow());
     }
 
     public void setUpStatusBar() {
@@ -429,17 +430,17 @@ public class Main extends Application {
         threadsObsList.clear();
 
         ConvertDBtoElementTree.greatGrandParent.getChildren().forEach(element -> {
-                    Element child = element.getChildren().get(0);
-                    int callTraceId = -1;
-                    if (child != null) callTraceId = child.getFkEnterCallTrace();
-                    try (ResultSet rs = CallTraceDAOImpl.selectWhere("id = " + callTraceId)) {
-                        if (rs.next()) {
-                            int threadId = rs.getInt("thread_id");
-                            threadsObsList.add("Thread: " + threadId);
-                        }
-                    } catch (SQLException ignored) {
-                    }
-                });
+            Element child = element.getChildren().get(0);
+            int callTraceId = -1;
+            if (child != null) callTraceId = child.getFkEnterCallTrace();
+            try (ResultSet rs = CallTraceDAOImpl.selectWhere("id = " + callTraceId)) {
+                if (rs.next()) {
+                    int threadId = rs.getInt("thread_id");
+                    threadsObsList.add("Thread: " + threadId);
+                }
+            } catch (SQLException ignored) {
+            }
+        });
 
         root.setLeft(threadListView);
     }
@@ -649,6 +650,7 @@ public class Main extends Application {
 
     public void updateUi() {
         if (convertDBtoElementTree != null && graph != null) {
+
             convertDBtoElementTree.loadUIComponentsInsideVisibleViewPort(graph);
             convertDBtoElementTree.removeUIComponentsFromInvisibleViewPort(graph);
             // graph.myEndUpdate();
@@ -798,25 +800,196 @@ public class Main extends Application {
     HBox hBox;
     VBox vBox;
 
-    ObservableList<String> strings ;
-    CheckListView<String> checkListView;
-    boolean firstTimeSetUpMethodsWindowCall = true;
+    // ObservableList<String> strings ;
+    // CheckListView<String> checkListView;
+    // boolean firstTimeSetUpMethodsWindowCall = true;
+    //
+    // public void firstTimeSetUpMethodsWindow() {
+    //     if (!firstTimeSetUpMethodsWindowCall)
+    //         return;
+    //
+    //     firstTimeSetUpMethodsWindowCall = false;
+    //
+    //     mRootGroup = new Group();
+    //     strings = FXCollections.observableArrayList();
+    //     checkListView = new CheckListView<>(strings);
+    //     checkListView.setPrefWidth(500);
+    //     // checkListView.getCheckModel().getCheckedItems().addListener(new ListChangeListener<String>() {
+    //     //     public void onChanged(ListChangeListener.Change<? extends String> c) {
+    //     //         // Do something if item checked.
+    //     //     }
+    //     // });
+    //
+    //     applyButton = new Button("Apply");
+    //     applyButton.setAlignment(Pos.BASELINE_RIGHT);
+    //
+    //     cancelButton = new Button("Cancel");
+    //     cancelButton.setAlignment(Pos.BASELINE_RIGHT);
+    //
+    //     hBox = new HBox(cancelButton, applyButton);
+    //     hBox.setSpacing(SizeProp.SPACING);
+    //
+    //     vBox = new VBox(SizeProp.SPACING);
+    //     vBox.getChildren().addAll(checkListView, hBox);
+    //
+    //     mRootGroup.getChildren().add(vBox);
+    //     mScene = new Scene(mRootGroup);
+    //     mStage = new Stage();
+    //     mStage.setScene(mScene);
+    //
+    //     LinkedList<String> methodNamesList = new LinkedList<>();
+    //
+    //     // Fetch all methods from method definition fileMenu and display on UI.
+    //     Task<Void> onStageLoad = new Task<Void>() {
+    //         @Override
+    //         protected Void call() throws Exception {
+    //             // Fetch all methods from method definition fileMenu.
+    //             ResultSet rs = DatabaseUtil.select("SELECT * FROM " + TableNames.METHOD_DEFINITION_TABLE);
+    //             while (rs.next()) {
+    //                 String methodName = rs.getString("METHOD_NAME");
+    //                 String packageName = rs.getString("PACKAGE_NAME");
+    //                 methodNamesList.add(packageName + "." + methodName);
+    //             }
+    //             return null;
+    //         }
+    //
+    //         @Override
+    //         protected void succeeded() {
+    //             super.succeeded();
+    //             // Display the methods on UI
+    //             methodNamesList.stream().forEach(s -> {
+    //                 strings.add(s);
+    //             });
+    //         }
+    //     };
+    //
+    //     new Thread(onStageLoad).start();
+    //
+    // }
+    //
+    // public void setUpMethodsWindow() {
+    //
+    //     if(firstTimeSetUpMethodsWindowCall)
+    //         firstTimeSetUpMethodsWindow();
+    //
+    //     mStage.show();
+    //
+    //     /*
+    //     On Apply button click behaviour.
+    //     For each of the selected methods, insert the bound box properties into Highlights table if not already present.
+    //     */
+    //     Task<Void> taskOnApply = new Task<Void>() {
+    //         @Override
+    //         protected Void call() throws Exception {
+    //             if (!HighlightDAOImpl.isTableCreated()) {
+    //                 HighlightDAOImpl.createTable();
+    //             }
+    //
+    //             // For each of the selected methods, insert the bound box properties into Highlights table if not already present.
+    //             Statement statement = DatabaseUtil.getConnection().createStatement();
+    //             checkListView.getCheckModel().getCheckedItems().stream().forEach(fullName -> {
+    //                 String[] arr = fullName.split("\\.");
+    //                 String methodName = arr[arr.length - 1];
+    //                 String packageName = fullName.substring(0, fullName.length() - methodName.length() - 1);
+    //                 String sql = "INSERT INTO " + TableNames.HIGHLIGHT_ELEMENT + " (METHOD_ID, THREAD_ID, START_X, START_Y, WIDTH, HEIGHT) " +
+    //                         "SELECT " + TableNames.METHOD_DEFINITION_TABLE + ".ID, " +
+    //                         TableNames.CALL_TRACE_TABLE + ".THREAD_ID, " +
+    //                         TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT, " +
+    //                         TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT, " +
+    //                         "(" + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_RIGHT - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT), " +
+    //                         "(" + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_BOTTOM_LEFT - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT) " +
+    //                         "FROM " + TableNames.ELEMENT_TABLE + " " +
+    //                         "JOIN " + TableNames.CALL_TRACE_TABLE + " ON " + TableNames.ELEMENT_TABLE + ".ID_ENTER_CALL_TRACE = " + TableNames.CALL_TRACE_TABLE + ".ID " +
+    //                         "JOIN " + TableNames.METHOD_DEFINITION_TABLE + " ON " + TableNames.CALL_TRACE_TABLE + ".METHOD_ID = " + TableNames.METHOD_DEFINITION_TABLE + ".ID " +
+    //                         "WHERE " + TableNames.METHOD_DEFINITION_TABLE + ".METHOD_NAME = '" + methodName + "' " +
+    //                         "AND " + TableNames.METHOD_DEFINITION_TABLE + ".PACKAGE_NAME = '" + packageName + "' " +
+    //                         "AND NOT EXISTS " +
+    //                         "(SELECT * FROM " + TableNames.HIGHLIGHT_ELEMENT + " " +
+    //                         "WHERE " + TableNames.HIGHLIGHT_ELEMENT + ".METHOD_ID = " + TableNames.METHOD_DEFINITION_TABLE + ".ID)";
+    //
+    //                 try {
+    //                 statement.addBatch(sql);
+    //                 } catch (SQLException e) {e.printStackTrace();}
+    //             });
+    //
+    //             // Delete records from HIGHLIGHT_ELEMENT if that method is not checked in the stage.
+    //             StringJoiner sj = new StringJoiner("','", "'", "'");
+    //             checkListView.getCheckModel().getCheckedItems().stream().forEach(sj::add);
+    //
+    //             String sql = "DELETE FROM " + TableNames.HIGHLIGHT_ELEMENT + " WHERE ID IN " +
+    //                     "(SELECT ID FROM " + TableNames.HIGHLIGHT_ELEMENT + " " +
+    //                     "WHERE METHOD_ID NOT IN " +
+    //                     "(SELECT ID FROM " + TableNames.METHOD_DEFINITION_TABLE + " " +
+    //                     "WHERE (" + TableNames.METHOD_DEFINITION_TABLE + ".PACKAGE_NAME || '.' || " + TableNames.METHOD_DEFINITION_TABLE + ".METHOD_NAME) " +
+    //                     "IN (" + sj.toString() + ")))";
+    //
+    //             statement.addBatch(sql);
+    //             statement.executeBatch();
+    //
+    //             return null;
+    //         }
+    //
+    //         @Override
+    //         protected void succeeded() {
+    //             super.succeeded();
+    //             updateUi();
+    //         }
+    //     };
+    //
+    //     applyButton.setOnAction(event -> {
+    //         new Thread(taskOnApply).start();
+    //         mStage.close();
+    //     });
+    //
+    //     cancelButton.setOnAction(event -> {
+    //         mStage.close();
+    //     });
+    // }
+    //
+    //
 
-    public void firstTimeSetUpMethodsWindow() {
-        if (!firstTimeSetUpMethodsWindowCall)
+
+    boolean firstTimeSetUpHighlightsWindowCall = true;
+
+    private Map<String, CheckBox> firstCBMap;
+    private Map<String, CheckBox> secondCBMap;
+    private Map<String, Color> colorsMap;
+    private boolean anyColorChange = false;
+
+    private void firstTimeSetUpHighlightsWindow() {
+        if (!firstTimeSetUpHighlightsWindowCall)
             return;
 
-        firstTimeSetUpMethodsWindowCall = false;
+        firstTimeSetUpHighlightsWindowCall = false;
+
+        firstCBMap = new HashMap<>();
+        secondCBMap = new HashMap<>();
+        colorsMap = new HashMap<>();
+        anyColorChange = false;
+
+
+        GridPane gridPane = new GridPane();
+        gridPane.setPadding(SizeProp.INSETS);
+        gridPane.setHgap(60);
+        gridPane.setVgap(30);
+
+        Label headingCol1 = new Label("Package and method name");
+        GridPane.setConstraints(headingCol1, 0, 0);
+
+        Label headingCol2 = new Label("Highlight method only");
+        GridPane.setConstraints(headingCol2, 1, 0);
+
+        Label headingCol3 = new Label("Highlight subtree");
+        GridPane.setConstraints(headingCol3, 2, 0);
+
+        Label headingCol4 = new Label("Choose color");
+        GridPane.setConstraints(headingCol4, 3,0);
+
+        gridPane.getChildren().addAll(
+                headingCol1, headingCol2, headingCol3, headingCol4
+        );
 
         mRootGroup = new Group();
-        strings = FXCollections.observableArrayList();
-        checkListView = new CheckListView<>(strings);
-        checkListView.setPrefWidth(500);
-        // checkListView.getCheckModel().getCheckedItems().addListener(new ListChangeListener<String>() {
-        //     public void onChanged(ListChangeListener.Change<? extends String> c) {
-        //         // Do something if item checked.
-        //     }
-        // });
 
         applyButton = new Button("Apply");
         applyButton.setAlignment(Pos.BASELINE_RIGHT);
@@ -828,10 +1001,10 @@ public class Main extends Application {
         hBox.setSpacing(SizeProp.SPACING);
 
         vBox = new VBox(SizeProp.SPACING);
-        vBox.getChildren().addAll(checkListView, hBox);
+        vBox.getChildren().addAll(gridPane, hBox);
 
         mRootGroup.getChildren().add(vBox);
-        mScene = new Scene(mRootGroup);
+        mScene = new Scene(mRootGroup, 500, 500);
         mStage = new Stage();
         mStage.setScene(mScene);
 
@@ -848,15 +1021,53 @@ public class Main extends Application {
                     String packageName = rs.getString("PACKAGE_NAME");
                     methodNamesList.add(packageName + "." + methodName);
                 }
+
                 return null;
             }
 
             @Override
             protected void succeeded() {
                 super.succeeded();
+                final AtomicInteger rowInd = new AtomicInteger(1);
+
                 // Display the methods on UI
-                methodNamesList.stream().forEach(s -> {
-                    strings.add(s);
+                methodNamesList.forEach(fullName -> {
+
+                    Label name = new Label(fullName);
+                    GridPane.setConstraints(name, 0, rowInd.get());
+
+                    CheckBox firstCB = new CheckBox();
+                    GridPane.setConstraints(firstCB, 1, rowInd.get());
+                    firstCB.selectedProperty().addListener((observable, oldValue, newValue) -> {
+                        if (newValue) {
+                            firstCBMap.put(fullName, firstCB);
+                        } else {
+                            firstCBMap.remove(fullName);
+                        }
+                    });
+
+                    CheckBox secondCB = new CheckBox();
+                    GridPane.setConstraints(secondCB, 2, rowInd.get());
+                    secondCB.selectedProperty().addListener((observable, oldValue, newValue) -> {
+                        if (newValue) {
+                            secondCBMap.put(fullName, secondCB);
+                        } else {
+                            secondCBMap.remove(fullName);
+                        }
+                    });
+
+                    ColorPicker colorPicker = new ColorPicker(Color.AQUAMARINE);
+                    colorPicker.setOnAction(event -> {
+                        anyColorChange = true;
+                        colorsMap.put(fullName, colorPicker.getValue());
+                        System.out.println(colorPicker.getValue());
+                        System.out.println(colorPicker.getValue().toString());
+                    });
+                    GridPane.setConstraints(colorPicker, 3, rowInd.get());
+
+                    gridPane.getChildren().addAll(name, firstCB, secondCB, colorPicker);
+
+                    rowInd.incrementAndGet();
                 });
             }
         };
@@ -865,10 +1076,10 @@ public class Main extends Application {
 
     }
 
-    public void setUpMethodsWindow() {
+    public void setUpHighlightsWindow() {
 
-        if(firstTimeSetUpMethodsWindowCall)
-            firstTimeSetUpMethodsWindow();
+        if (firstTimeSetUpHighlightsWindowCall)
+            firstTimeSetUpHighlightsWindow();
 
         mStage.show();
 
@@ -885,43 +1096,25 @@ public class Main extends Application {
 
                 // For each of the selected methods, insert the bound box properties into Highlights table if not already present.
                 Statement statement = DatabaseUtil.getConnection().createStatement();
-                checkListView.getCheckModel().getCheckedItems().stream().forEach(fullName -> {
-                    String[] arr = fullName.split("\\.");
-                    String methodName = arr[arr.length - 1];
-                    String packageName = fullName.substring(0, fullName.length() - methodName.length() - 1);
-                    String sql = "INSERT INTO " + TableNames.HIGHLIGHT_ELEMENT + " (METHOD_ID, THREAD_ID, START_X, START_Y, WIDTH, HEIGHT) " +
-                            "SELECT " + TableNames.METHOD_DEFINITION_TABLE + ".ID, " +
-                            TableNames.CALL_TRACE_TABLE + ".THREAD_ID, " +
-                            TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT, " +
-                            TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT, " +
-                            "(" + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_RIGHT - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT), " +
-                            "(" + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_BOTTOM_LEFT - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT) " +
-                            "FROM " + TableNames.ELEMENT_TABLE + " " +
-                            "JOIN " + TableNames.CALL_TRACE_TABLE + " ON " + TableNames.ELEMENT_TABLE + ".ID_ENTER_CALL_TRACE = " + TableNames.CALL_TRACE_TABLE + ".ID " +
-                            "JOIN " + TableNames.METHOD_DEFINITION_TABLE + " ON " + TableNames.CALL_TRACE_TABLE + ".METHOD_ID = " + TableNames.METHOD_DEFINITION_TABLE + ".ID " +
-                            "WHERE " + TableNames.METHOD_DEFINITION_TABLE + ".METHOD_NAME = '" + methodName + "' " +
-                            "AND " + TableNames.METHOD_DEFINITION_TABLE + ".PACKAGE_NAME = '" + packageName + "' " +
-                            "AND NOT EXISTS " +
-                            "(SELECT * FROM " + TableNames.HIGHLIGHT_ELEMENT + " " +
-                            "WHERE " + TableNames.HIGHLIGHT_ELEMENT + ".METHOD_ID = " + TableNames.METHOD_DEFINITION_TABLE + ".ID)";
+                firstCBMap.forEach((fullName, checkBox) -> {
+                    addInsertQueryToStatement(fullName, statement, "SINGLE");
+                });
 
-                    try {
-                    statement.addBatch(sql);
-                    } catch (SQLException e) {e.printStackTrace();}
+                secondCBMap.forEach((fullName, checkBox) -> {
+                    addInsertQueryToStatement(fullName, statement, "FULL");
                 });
 
                 // Delete records from HIGHLIGHT_ELEMENT if that method is not checked in the stage.
-                StringJoiner sj = new StringJoiner("','", "'", "'");
-                checkListView.getCheckModel().getCheckedItems().stream().forEach(sj::add);
+                StringJoiner firstSJ = new StringJoiner("','", "'", "'");
+                firstCBMap.forEach((fullName, checkBox) -> firstSJ.add(fullName));
+                addDeleteQueryToStatement(firstSJ.toString(), statement, "SINGLE");
 
-                String sql = "DELETE FROM " + TableNames.HIGHLIGHT_ELEMENT + " WHERE ID IN " +
-                        "(SELECT ID FROM " + TableNames.HIGHLIGHT_ELEMENT + " " +
-                        "WHERE METHOD_ID NOT IN " +
-                        "(SELECT ID FROM " + TableNames.METHOD_DEFINITION_TABLE + " " +
-                        "WHERE (" + TableNames.METHOD_DEFINITION_TABLE + ".PACKAGE_NAME || '.' || " + TableNames.METHOD_DEFINITION_TABLE + ".METHOD_NAME) " +
-                        "IN (" + sj.toString() + ")))";
+                StringJoiner secondSJ = new StringJoiner("','", "'", "'");
+                secondCBMap.forEach((fullName, checkBox) -> secondSJ.add(fullName));
+                addDeleteQueryToStatement(secondSJ.toString(), statement, "FULL");
 
-                statement.addBatch(sql);
+                updateColors(statement);
+
                 statement.executeBatch();
 
                 return null;
@@ -930,6 +1123,7 @@ public class Main extends Application {
             @Override
             protected void succeeded() {
                 super.succeeded();
+                graph.getModel().highlightsUpdated = true;
                 updateUi();
             }
         };
@@ -944,8 +1138,110 @@ public class Main extends Application {
         });
     }
 
+    public void addInsertQueryToStatement(String fullName, Statement statement, String highlightType) {
+
+        String[] arr = fullName.split("\\.");
+        String methodName = arr[arr.length - 1];
+        String packageName = fullName.substring(0, fullName.length() - methodName.length() - 1);
+
+        String sqlSingle = "INSERT INTO " + TableNames.HIGHLIGHT_ELEMENT + " " +
+                "(METHOD_ID, THREAD_ID, HIGHLIGHT_TYPE, START_X, START_Y, WIDTH, HEIGHT, COLOR) " +
+                "SELECT " + TableNames.METHOD_DEFINITION_TABLE + ".ID, " +
+                TableNames.CALL_TRACE_TABLE + ".THREAD_ID, " +
+                "'" + highlightType + "', " +
+                TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT, " +
+                TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT, " +
+                "(" + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_RIGHT - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT), " +
+                "(" + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_BOTTOM_LEFT - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT), " +
+                "'" + colorsMap.getOrDefault(fullName, Color.AQUAMARINE) + "' " +
+                "FROM " + TableNames.ELEMENT_TABLE + " " +
+                "JOIN " + TableNames.CALL_TRACE_TABLE + " ON " + TableNames.ELEMENT_TABLE + ".ID_ENTER_CALL_TRACE = " + TableNames.CALL_TRACE_TABLE + ".ID " +
+                "JOIN " + TableNames.METHOD_DEFINITION_TABLE + " ON " + TableNames.CALL_TRACE_TABLE + ".METHOD_ID = " + TableNames.METHOD_DEFINITION_TABLE + ".ID " +
+                "WHERE " + TableNames.METHOD_DEFINITION_TABLE + ".METHOD_NAME = '" + methodName + "' " +
+                "AND " + TableNames.METHOD_DEFINITION_TABLE + ".PACKAGE_NAME = '" + packageName + "' " +
+                "AND NOT EXISTS " +
+                "(SELECT * FROM " + TableNames.HIGHLIGHT_ELEMENT + " " +
+                "WHERE " + TableNames.HIGHLIGHT_ELEMENT + ".METHOD_ID = " + TableNames.METHOD_DEFINITION_TABLE + ".ID " +
+                "AND " + TableNames.HIGHLIGHT_ELEMENT + ".HIGHLIGHT_TYPE = '" + highlightType + "')";
+
+
+        String sqlFull = "INSERT INTO " + TableNames.HIGHLIGHT_ELEMENT + " " +
+                "(METHOD_ID, THREAD_ID, HIGHLIGHT_TYPE, START_X, START_Y, WIDTH, HEIGHT, COLOR) " +
+                "SELECT " + TableNames.METHOD_DEFINITION_TABLE + ".ID, " +
+                TableNames.CALL_TRACE_TABLE + ".THREAD_ID, " +
+                "'" + highlightType + "', " +
+                TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT, " +
+                TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT, " +
+
+                "(SELECT MAX(E1.BOUND_BOX_X_TOP_RIGHT) FROM " + TableNames.ELEMENT_TABLE + " AS E1 " +
+                "WHERE E1.BOUND_BOX_Y_COORDINATE >= " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT " +
+                "AND E1.BOUND_BOX_Y_COORDINATE <= " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_BOTTOM_LEFT), " +
+
+                "(SELECT MAX(E1.BOUND_BOX_X_BOTTOM_RIGHT) FROM " + TableNames.ELEMENT_TABLE + " AS E1 " +
+                "WHERE E1.BOUND_BOX_Y_COORDINATE >= " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT " +
+                "AND E1.BOUND_BOX_Y_COORDINATE <= " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_BOTTOM_LEFT), "+
+
+                "'" + colorsMap.getOrDefault(fullName, Color.AQUAMARINE) + "' " +
+
+                "FROM " + TableNames.ELEMENT_TABLE + " " +
+                "JOIN " + TableNames.CALL_TRACE_TABLE + " ON " + TableNames.ELEMENT_TABLE + ".ID_ENTER_CALL_TRACE = " + TableNames.CALL_TRACE_TABLE + ".ID " +
+                "JOIN " + TableNames.METHOD_DEFINITION_TABLE + " ON " + TableNames.CALL_TRACE_TABLE + ".METHOD_ID = " + TableNames.METHOD_DEFINITION_TABLE + ".ID " +
+                "WHERE " + TableNames.METHOD_DEFINITION_TABLE + ".METHOD_NAME = '" + methodName + "' " +
+                "AND " + TableNames.METHOD_DEFINITION_TABLE + ".PACKAGE_NAME = '" + packageName + "' " +
+                "AND NOT EXISTS " +
+                "(SELECT * FROM " + TableNames.HIGHLIGHT_ELEMENT + " " +
+                "WHERE " + TableNames.HIGHLIGHT_ELEMENT + ".METHOD_ID = " + TableNames.METHOD_DEFINITION_TABLE + ".ID " +
+                "AND " + TableNames.HIGHLIGHT_ELEMENT + ".HIGHLIGHT_TYPE = '" + highlightType + "')";
+
+        String sql = highlightType.equalsIgnoreCase("SINGLE") ? sqlSingle : sqlFull;
+
+        System.out.println("-------------");
+        System.out.println(sql);
+        try {
+            statement.addBatch(sql);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void addDeleteQueryToStatement(String fullNames, Statement statement, String highlightType) {
+        String sql = "DELETE FROM " + TableNames.HIGHLIGHT_ELEMENT + " " +
+                "WHERE HIGHLIGHT_TYPE = '" + highlightType + "' AND METHOD_ID NOT IN " +
+                "(SELECT ID FROM " + TableNames.METHOD_DEFINITION_TABLE + " " +
+                "WHERE (" + TableNames.METHOD_DEFINITION_TABLE + ".PACKAGE_NAME || '.' || " + TableNames.METHOD_DEFINITION_TABLE + ".METHOD_NAME) " +
+                "IN (" + fullNames + "))";
+
+        System.out.println("-------------");
+        System.out.println(sql);
+
+        try {
+            statement.addBatch(sql);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void updateColors(Statement statement) {
+        if (!anyColorChange)
+            return;
+
+        anyColorChange = false;
+
+        colorsMap.forEach((fullName, color) -> {
+            String sql = "UPDATE " + TableNames.HIGHLIGHT_ELEMENT + " SET COLOR = '" + color + "' " +
+                    "WHERE METHOD_ID = (SELECT ID FROM " + TableNames.METHOD_DEFINITION_TABLE + " "+
+                    "WHERE PACKAGE_NAME || '.' || METHOD_NAME = '" + fullName + "')";
+            try {
+                statement.addBatch(sql);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
     public void resetHighlights() {
-        firstTimeSetUpMethodsWindowCall = true;
+        // firstTimeSetUpMethodsWindowCall = true;
+        firstTimeSetUpHighlightsWindowCall = true;
         highlight.setDisable(true);
     }
 

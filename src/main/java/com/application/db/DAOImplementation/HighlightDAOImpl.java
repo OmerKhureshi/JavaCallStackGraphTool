@@ -22,45 +22,18 @@ public class HighlightDAOImpl {
                         "id INTEGER NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1), " +
                         "method_id INT, " +
                         "thread_id INT, " +
+                        "highlight_type VARCHAR(6), " + // valid values may be "SINGLE" or "FuLL".
                         "start_x FLOAT, " +
                         "start_y FLOAT, " +
                         "width FLOAT, " +
-                        "height FLOAT" +
+                        "height FLOAT, " +
+                        "color VARCHAR(10)" +
                         ")";
                 ps.execute(sql);
                 System.out.println("** Creating table " + TableNames.HIGHLIGHT_ELEMENT);
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-        }
-    }
-
-    public static void insert(BoundingBox box, int methodId, int threadId) {
-        if (!isTableCreated())
-            createTable();
-
-        String sql = null;
-        try (Connection c = DatabaseUtil.getConnection(); Statement ps = c.createStatement()) {
-            sql = "INSERT INTO " + TableNames.HIGHLIGHT_ELEMENT + " (" +
-                    "method_id, " +
-                    "thread_id, " +
-                    "start_x, " +
-                    "start_y, " +
-                    "width, " +
-                    "height) " +
-                    " VALUES (" +
-                    methodId + ", " +
-                    threadId + ", " +
-                    box.getMinX() + ", " +
-                    box.getMinY() + ", " +
-                    box.getWidth() + ", " +
-                    box.getHeight() +
-                    ")";
-
-            ps.execute(sql);
-        } catch (SQLException e) {
-            System.out.println(" Exception caused by: " + sql);
-            e.printStackTrace();
         }
     }
 

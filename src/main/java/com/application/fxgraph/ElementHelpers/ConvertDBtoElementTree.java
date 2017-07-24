@@ -170,10 +170,7 @@ public class ConvertDBtoElementTree {
         this.model = graph.getModel();
 
         BoundingBox viewPortDims = graph.getViewPortDims();
-
         if (!isUIDrawingRequired(viewPortDims)) {
-//            System.out.println("Not Adding.");
-//            System.out.println("------------------");
             return;
         }
 
@@ -189,6 +186,7 @@ public class ConvertDBtoElementTree {
     }
 
     private void addHighlights() {
+
         Map<Integer, Rectangle> highlightsOnUI = model.getHighlightsOnUI();
 
         BoundingBox viewPortDims = graph.getViewPortDims();
@@ -216,12 +214,13 @@ public class ConvertDBtoElementTree {
                 float startY = rs.getFloat("START_Y");
                 float width = rs.getFloat("WIDTH");
                 float height = rs.getFloat("HEIGHT");
+                String color = rs.getString("COLOR");
 
                 // If the rectangle highlight is not on UI then create a new rectangle and show on UI.
                 if (!highlightsOnUI.containsKey(id)) {
                     // System.out.println("Drawing rectangle: " + id);
                     Rectangle rectangle = new Rectangle(startX, startY, width, height);
-                    rectangle.setFill(Color.AQUA);
+                    rectangle.setFill(Color.web(color));
 
                     model.addHighlight(id, rectangle);
                 }
@@ -603,6 +602,9 @@ public class ConvertDBtoElementTree {
         if (!triggerRegion.contains(viewPort)){
             setActiveRegion(viewPort);
             setTriggerRegion(viewPort);
+            return true;
+        }
+        if (model.highlightsUpdated) {
             return true;
         }
 

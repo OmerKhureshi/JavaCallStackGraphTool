@@ -101,6 +101,7 @@ public class Graph {
     }
 
     public void updateCellLayer() {
+
         model.getCircleCellsOnUI().forEach((id, circleCell) -> {
             if (!cellLayer.getChildren().contains(circleCell)) {
                 cellLayer.getChildren().add(circleCell);
@@ -121,8 +122,10 @@ public class Graph {
             }
         });
 
+        model.highlightsUpdated = false;
 
     }
+
 
     public void endUpdate() {
         // add components to graph pane
