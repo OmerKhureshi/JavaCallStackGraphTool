@@ -40,7 +40,9 @@ public class Graph {
     }
 
     public void clearCellLayer() {
+        System.out.println("Graph::clearCellLayer:");
         cellLayer.getChildren().clear();
+        System.out.println("Graph::clearCellLayer: END");
     }
 
     public static void drawPlaceHolderLines() {
@@ -93,7 +95,7 @@ public class Graph {
         // getCellLayer().getChildren().addAll(model.listEdgesOnUI);
 
         model.listCircleCellsOnUI.forEach(circleCell -> {
-                    eventHandlers.makeDraggable(circleCell);
+                    eventHandlers.setCustomMouseEventHandlers(circleCell);
                 });
 
         model.clearListCircleCellsOnUI();
@@ -102,10 +104,13 @@ public class Graph {
 
     public void updateCellLayer() {
 
+        System.out.println("Graph::updateCellLayer: ");
+        System.out.println("Graph::updateCellLayer: gighlightsOnUI.size() " + model.getHighlightsOnUI().size());
         model.getCircleCellsOnUI().forEach((id, circleCell) -> {
             if (!cellLayer.getChildren().contains(circleCell)) {
+                System.out.println("Graph::updateCellLayer: Adding circleCell to cellLayer: " + circleCell.getCellId());
                 cellLayer.getChildren().add(circleCell);
-                eventHandlers.makeDraggable(circleCell);
+                eventHandlers.setCustomMouseEventHandlers(circleCell);
             }
         });
 
@@ -117,12 +122,13 @@ public class Graph {
 
         model.getHighlightsOnUI().forEach((id, rectangle) -> {
             if (!cellLayer.getChildren().contains(rectangle)) {
+                System.out.println("Graph::updateCellLayer: Adding highlight to cellLayer: ");
                 cellLayer.getChildren().add(rectangle);
                 rectangle.toBack();
             }
         });
 
-        model.highlightsUpdated = false;
+        model.uiUpdateRequired = false;
 
     }
 
@@ -138,7 +144,7 @@ public class Graph {
 
         // enable dragging of cells
         for (Cell cell : model.getAddedCells()) {
-            eventHandlers.makeDraggable(cell);
+            eventHandlers.setCustomMouseEventHandlers(cell);
         }
 
         // every cell must have a parent, if it doesn't, then the graphParent is

@@ -1,6 +1,7 @@
 package com.application.fxgraph.graph;
 
 import com.application.Main;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
@@ -18,6 +19,12 @@ public class ZoomableScrollPane extends ScrollPane {
     double delta = 0.1;
     Main main;
 
+    static DoubleProperty hValProperty;
+    static ChangeListener<Number> hValListener;
+
+    static DoubleProperty vValProperty;
+    static ChangeListener<Number> vValListener;
+
     public ZoomableScrollPane(Node content) {
         this.content = content;
         Group contentGroup = new Group();
@@ -33,28 +40,33 @@ public class ZoomableScrollPane extends ScrollPane {
 //        vvalueProperty().addListener((observable, oldValue, newValue) -> main.updateUi());
 
 
-        hvalueProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-//                System.out.println("new value "+newValue.doubleValue());
-//                System.out.println("old value "+oldValue.doubleValue());
-//                System.out.println("Change: " + (newValue.doubleValue() - oldValue.doubleValue()));
-                main.updateUi();
-            }
-        });
-        vvalueProperty().addListener((observable, oldValue, newValue) -> {
-//            System.out.println("new value "+newValue.doubleValue());
-//            System.out.println("old value "+oldValue.doubleValue());
-//            System.out.println("Change: " + (newValue.doubleValue() - oldValue.doubleValue()));
+        hValProperty = hvalueProperty();
+        hValListener = (observable, oldValue, newValue) -> main.updateUi("hvalueListener");
 
-            main.updateUi();
-        });
+        vValProperty = vvalueProperty();
+        vValListener = (observable, oldValue, newValue) -> main.updateUi("vValueListener");
+        //
+        // hValProperty.addListener(hValListener);
+        // vValProperty.addListener(vValListener);
+        //
+
+        turnOnListeners();
 
         viewportBoundsProperty().addListener((observable, oldValue, newValue) -> {
             if (main != null) {
-                main.updateUi();
+                main.updateUi("viewportBoundsListener");
             }
         });
+    }
+
+    public static void turnOffListeners() {
+        hValProperty.removeListener(hValListener);
+        vValProperty.removeListener(vValListener);
+    }
+
+    public static void turnOnListeners() {
+        hValProperty.addListener(hValListener);
+        vValProperty.addListener(vValListener);
     }
 
     public void saveRef(Main m) {

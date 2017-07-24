@@ -11,17 +11,14 @@ import com.application.logs.fileHandler.CallTraceLogFile;
 import com.application.logs.fileHandler.MethodDefinitionLogFile;
 import com.application.logs.fileIntegrity.CheckFileIntegrity;
 import com.application.logs.parsers.ParseCallTrace;
+import com.sun.glass.ui.Size;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.embed.swing.SwingFXUtils;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-import javafx.geometry.Insets;
-import javafx.geometry.Orientation;
-import javafx.geometry.Pos;
+import javafx.geometry.*;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -30,10 +27,11 @@ import javafx.scene.control.*;
 import javafx.scene.image.WritableImage;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import org.controlsfx.control.spreadsheet.Grid;
 import org.controlsfx.glyphfont.FontAwesome;
 import org.controlsfx.glyphfont.Glyph;
 
@@ -49,13 +47,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Main extends Application {
 
     // Main UI screen
-    Graph graph;
+    private Graph graph;
     Model model;
-    BorderPane root;
-    Scene scene;
-    ConvertDBtoElementTree convertDBtoElementTree;
-
-    public Stage primaryStage;
+    private BorderPane root;
+    private ConvertDBtoElementTree convertDBtoElementTree;
+    private Stage primaryStage;
 
     // Information panel.
     private boolean methodDefnFileSet;
@@ -70,45 +66,41 @@ public class Main extends Application {
     private Label callTraceInfoLabel;
 
     private Glyph runInfoGlyph;
-    private String runInfoString = "Click run.";
-    private Label runInfoLabel;
 
-    FlowPane instructionsNode;
-
-    // Font
-    String font = "FontAwesome";
+    private FlowPane instructionsNode;
 
     // Menu bar
-    MenuBar mb;
+    private MenuBar menuBar;
 
-    Menu fileMenu; // File menu button
-    MenuItem chooseMethodDefnMenuItem;
-    MenuItem chooseCallTraceMenuItem;
-    Glyph methodDefnGlyph;
-    Glyph callTraceGlyph;
+    private Menu fileMenu; // File menu button
+    private MenuItem chooseMethodDefnMenuItem;
+    private MenuItem chooseCallTraceMenuItem;
+    private Glyph methodDefnGlyph;
+    private Glyph callTraceGlyph;
 
-    Menu runMenu;  // Run menu button
-    MenuItem runAnalysisMenuItem;
-    Glyph runAnalysisGlyph;
-    MenuItem resetMenuItem;
-    Glyph resetGlyph;
+    private Menu runMenu;  // Run menu button
+    private MenuItem runAnalysisMenuItem;
+    private Glyph runAnalysisGlyph;
+    private MenuItem resetMenuItem;
+    private Glyph resetGlyph;
 
-    Menu saveImgMenu;  // Save Image menu button
-    MenuItem saveImg;
-    Glyph saveImgGlyph;
+    private Menu saveImgMenu;  // Save Image menu button
+    private MenuItem saveImgMenuItem;
+    private Glyph saveImgGlyph;
 
-    Menu goTo;
-    Menu recents;
-    MenuItem clearHistory;
-    Glyph clearHistoryGlyph;
+    private Menu goToMenu;
+    private Menu recentsMenu;
+    private Glyph recentsGlyph;
+    private MenuItem clearHistoryMenuItem;
+    private Glyph clearHistoryGlyph;
 
-    Menu highlight;
-    MenuItem highlightItems;
-    Glyph highlightItemsGlyph;
+    private Menu highlight;
+    private MenuItem highlightMeneItem;
+    private Glyph highlightItemsGlyph;
 
     // Status bar
-    Group statusBar;
-    Label statusBarLabel = new Label();
+    private Group statusBar;
+    private Label statusBarLabel = new Label();
 
     // Thread list panel on left.
     static ListView<String> threadListView;
@@ -129,7 +121,7 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) {
         this.primaryStage = primaryStage;
-//        graph = new Graph();
+        // graph = new Graph();
         root = new BorderPane();
         EventHandlers.saveRef(this);
 
@@ -148,80 +140,125 @@ public class Main extends Application {
         // Create Status Bar
         // setUpStatusBar();
 
-        setUpNavigationBar();
+        // Create a navigation bar. Future release
+        // setUpNavigationBar();
 
-        scene = new Scene(root, 1000, 300);
+        Scene scene = new Scene(root, 1000, 300);
 
-//        URL url = getClass().getClassLoader().getResource("css/application.css");
-//        String css = url.toExternalForm();
-//        scene.getStylesheets().add(css);
-//        scene.getStylesheets().add(getClass().getResource("css/application.css").toExternalForm());
+        // URL url = getClass().getClassLoader().getResource("css/application.css");
+        // String css = url.toExternalForm();
+        // scene.getStylesheets().add(css);
+        // scene.getStylesheets().add(getClass().getResource("css/application.css").toExternalForm());
 
         primaryStage.setScene(scene);
+        primaryStage.setTitle("Call Stack Visualization");
         primaryStage.show();
     }
 
-    public void setUpMenu() {
-        mb = new MenuBar();
+    private void setUpMenu() {
+        List<Glyph> glyphs = new ArrayList<>();
+        List<MenuItem> menuItems = new ArrayList<>();
+
+        menuBar = new MenuBar();
+        menuBar.setStyle(SizeProp.PADDING_MENU);
+
+        // *****************
+        // File Menu
+        // *****************
 
         fileMenu = new Menu("File");
         methodDefnGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.PLUS);
         methodDefnGlyph.setColor(ColorProp.ENABLED);
-        methodDefnGlyph.setPadding(new Insets(2, 2, 2, 2));
+        // methodDefnGlyph.setPadding(SizeProp.INSETS_ICONS);
         chooseMethodDefnMenuItem = new MenuItem("Select Method Definition log file", methodDefnGlyph);
+        // chooseMethodDefnMenuItem.setStyle(SizeProp.PADDING_SUBMENU);
 
+        String font = "FontAwesome";
         callTraceGlyph = new Glyph(font, FontAwesome.Glyph.PLUS);
         callTraceGlyph.setColor(Color.DIMGRAY);
-        callTraceGlyph.setPadding(new Insets(2, 2, 2, 2));
+        // callTraceGlyph.setPadding(new Insets(2, 2, 2, 2));
         chooseCallTraceMenuItem = new MenuItem("Select Call Trace log file", callTraceGlyph);
+        // chooseCallTraceMenuItem.setStyle(SizeProp.PADDING_SUBMENU);
 
         fileMenu.getItems().addAll(chooseMethodDefnMenuItem, chooseCallTraceMenuItem);
+        menuItems.add(chooseMethodDefnMenuItem);
+        menuItems.add(chooseCallTraceMenuItem);
 
+        // *****************
+        // Run Menu
+        // *****************
         runMenu = new Menu("Run");
-
 
         resetGlyph = new Glyph(font, FontAwesome.Glyph.RETWEET);
         resetGlyph.setColor(ColorProp.ENABLED);
         resetMenuItem = new MenuItem("Reset", resetGlyph);
+        // resetMenuItem.setStyle(SizeProp.PADDING_SUBMENU);
 
         runAnalysisGlyph = new Glyph(font, FontAwesome.Glyph.PLAY);
         runAnalysisGlyph.setColor(ColorProp.DISABLED);
         runAnalysisMenuItem = new MenuItem("Run", runAnalysisGlyph);
+        // runAnalysisMenuItem.setStyle(SizeProp.PADDING_SUBMENU);
         runAnalysisMenuItem.setDisable(true);
 
         runMenu.getItems().addAll(runAnalysisMenuItem, resetMenuItem);
+        menuItems.add(runAnalysisMenuItem);
+        menuItems.add(resetMenuItem);
 
+
+        // *****************
+        // Save Image Menu
+        // *****************
         saveImgMenu = new Menu("Save Image");
         saveImgGlyph = new Glyph(font, FontAwesome.Glyph.PICTURE_ALT);
         saveImgGlyph.setColor(ColorProp.ENABLED);
-        saveImg = new MenuItem("Save Image", saveImgGlyph);
+        saveImgMenuItem = new MenuItem("Save Image", saveImgGlyph);
 
-        saveImgMenu.getItems().add(saveImg);
+        saveImgMenu.getItems().add(saveImgMenuItem);
+        saveImgMenu.setDisable(true);
+        menuItems.add(saveImgMenuItem);
 
-        goTo = new Menu("Go To");
-        recents = new Menu("Recent nodes");
 
-        clearHistory = new MenuItem("Clear histroy");
+        // *****************
+        // Go To Menu
+        // *****************
+        goToMenu = new Menu("Go To");
+        recentsGlyph = new Glyph(font, FontAwesome.Glyph.HISTORY);
+        recentsGlyph.setColor(ColorProp.ENABLED);
+        recentsMenu = new Menu("Recent nodes", recentsGlyph);
+        recentsMenu.setStyle(SizeProp.PADDING_SUBMENU);
 
-        goTo.getItems().addAll(recents, clearHistory);
+        clearHistoryGlyph = new Glyph(font, FontAwesome.Glyph.TRASH);
+        clearHistoryGlyph.setColor(ColorProp.ENABLED);
+        clearHistoryMenuItem = new MenuItem("Clear history", clearHistoryGlyph);
+
+        goToMenu.getItems().addAll(recentsMenu, clearHistoryMenuItem);
+        goToMenu.setDisable(true);
+        menuItems.add(clearHistoryMenuItem);
 
         // Highlight method invocations menu.
         highlight = new Menu("Highlights");
-        highlightItems = new MenuItem("Highlight method invocations");
+        highlightItemsGlyph = new Glyph(font, FontAwesome.Glyph.FLAG);
+        highlightItemsGlyph.setColor(ColorProp.ENABLED);
+        highlightMeneItem = new MenuItem("Highlight method invocations", highlightItemsGlyph);
 
-        highlight.getItems().add(highlightItems);
+        highlight.getItems().add(highlightMeneItem);
+        highlight.setDisable(true);
+        menuItems.add(highlightMeneItem);
 
         // Main menu
-        mb.getMenus().addAll(fileMenu, runMenu, saveImgMenu, goTo, highlight);
+        menuBar.getMenus().addAll(fileMenu, runMenu, saveImgMenu, goToMenu, highlight);
+        glyphs.addAll(Arrays.asList(methodDefnGlyph, callTraceGlyph, resetGlyph, runAnalysisGlyph, saveImgGlyph, recentsGlyph, clearHistoryGlyph, highlightItemsGlyph));
 
+        menuItems.forEach(menuItem -> menuItem.setStyle(SizeProp.PADDING_SUBMENU));
+        glyphs.forEach(glyph -> glyph.setStyle(SizeProp.PADDING_ICONS));
 
         populateInstructions();
         setMenuActions();
 
-        root.setTop(mb);
+        root.setTop(menuBar);
     }
 
-    public void setMenuActions() {
+    private void setMenuActions() {
         chooseMethodDefnMenuItem.setOnAction(event -> {
 //            DatabaseUtil.resetDB();
             File methodDefnFile = chooseLogFile("MethodDefinition");
@@ -230,7 +267,7 @@ public class Main extends Application {
                 // Menu buttons related
                 MethodDefinitionLogFile.setFile(methodDefnFile);
                 methodDefnGlyph.setIcon(FontAwesome.Glyph.CHECK);
-                methodDefnInfoLabel.setText(methodDefnInfoString + " File: " + methodDefnFile.getName());
+                methodDefnInfoLabel.setText(methodDefnInfoString + "  File selected : " + methodDefnFile.getName());
 
                 // Change icons and colors in instructions panel
                 methodDefnInfoGlyph.setIcon(FontAwesome.Glyph.CHECK);
@@ -248,7 +285,7 @@ public class Main extends Application {
                 // Menu buttons related
                 CallTraceLogFile.setFile(callTraceFile);
                 callTraceGlyph.setIcon(FontAwesome.Glyph.CHECK);
-                callTraceInfoLabel.setText(callTraceInfoString + " File: " + callTraceFile.getName());
+                callTraceInfoLabel.setText(callTraceInfoString + "  File selected : " + callTraceFile.getName());
 
                 // Change icons and colors in instructions panel
                 methodDefnInfoGlyph.setColor(ColorProp.ENABLED_COLORFUL);
@@ -267,6 +304,8 @@ public class Main extends Application {
             runInfoGlyph.setIcon(FontAwesome.Glyph.CHECK);
             runInfoGlyph.setColor(ColorProp.ENABLED_COLORFUL);
 
+            saveImgMenu.setDisable(false);
+            goToMenu.setDisable(false);
             highlight.setDisable(false);
         });
 
@@ -277,38 +316,30 @@ public class Main extends Application {
         });
 
         // Capture and save the currently loaded UI tree.
-        saveImg.setOnAction(event -> {
-            saveUIImage();
-        });
+        saveImgMenuItem.setOnAction(event -> saveUIImage());
 
 
-        // Populate recents menu.
-        goTo.setOnShowing(event -> {
-            recents.getItems().clear();
-            graph.getRecentLocationsMap().entrySet().stream().forEach(entry -> {
+        // Populate recentsMenu menu.
+        goToMenu.setOnShowing(event -> {
+            recentsMenu.getItems().clear();
+            graph.getRecentLocationsMap().entrySet().forEach(entry -> {
                 MenuItem nodeLocation = new MenuItem();
                 nodeLocation.setText(entry.getKey());
-                nodeLocation.setOnAction(new EventHandler<ActionEvent>() {
-                    @Override
-                    public void handle(ActionEvent event) {
-                        graph.getRecentLocationsMap().get(entry.getKey());
-                        double hValue = graph.getHValue(entry.getValue().x);
-                        double vValue = graph.getVValue(entry.getValue().y);
-                        graph.moveScrollPane(hValue, vValue);
-                        System.out.println("Moved scrollpane to " + hValue + " " + vValue);
-                    }
+                nodeLocation.setOnAction(event1 -> {
+                    graph.getRecentLocationsMap().get(entry.getKey());
+                    double hValue = graph.getHValue(entry.getValue().x);
+                    double vValue = graph.getVValue(entry.getValue().y);
+                    graph.moveScrollPane(hValue, vValue);
                 });
-                recents.getItems().add(nodeLocation);
+                recentsMenu.getItems().add(nodeLocation);
             });
         });
 
-        clearHistory.setOnAction(event -> {
-            graph.getRecentLocationsMap().clear();
-        });
+        clearHistoryMenuItem.setOnAction(event -> graph.getRecentLocationsMap().clear());
 
 
-        // highlightItems.setOnAction(event -> setUpMethodsWindow());
-        highlightItems.setOnAction(event -> setUpHighlightsWindow());
+        // highlightMeneItem.setOnAction(event -> setUpMethodsWindow());
+        highlightMeneItem.setOnAction(event -> setUpHighlightsWindow());
     }
 
     public void setUpStatusBar() {
@@ -318,18 +349,21 @@ public class Main extends Application {
         root.setBottom(statusBar);
     }
 
-    public void reset() {
+    private void reset() {
         root.setCenter(null);
         root.setLeft(null);
         runAnalysisMenuItem.setDisable(true);
+        goToMenu.setDisable(true);
+        saveImgMenu.setDisable(true);
 
         resetInstructionsPanel();
         resetHighlights();
 
+
         ConvertDBtoElementTree.resetRegions();
     }
 
-    public void reload() {
+    private void reload() {
         // statusBarLabel.setText("Loading. Please wait.");
 
         if (!methodDefnFileSet || !callTraceFileSet) {
@@ -340,7 +374,7 @@ public class Main extends Application {
         addGraphCellComponents();
     }
 
-    public void resetCenterLayout() {
+    private void resetCenterLayout() {
         // Layout Center
         graph = null;
         root.setCenter(null);
@@ -389,7 +423,7 @@ public class Main extends Application {
         });
     }
 
-    public void getNextElementToGO(String direction, CircleCell cell) {
+    private void getNextElementToGO(String direction, CircleCell cell) {
         switch (direction) {
             case "up":
                 // Get parent element record.
@@ -413,7 +447,7 @@ public class Main extends Application {
         }
     }
 
-    public void setUpThreadsView() {
+    private void setUpThreadsView() {
         // Layout Left
         threadsObsList = FXCollections.observableArrayList();
         threadListView = new ListView<>();
@@ -445,13 +479,14 @@ public class Main extends Application {
         root.setLeft(threadListView);
     }
 
-    public void saveUIImage() {
+    int imgId = 0;
+    private void saveUIImage() {
         System.out.println("In saveUIImage.");
         ScrollPane scrollPane = graph.getScrollPane();
         WritableImage image = scrollPane.snapshot(new SnapshotParameters(), null);
 
-        File file = new File("chart.png");
-
+        File file = new File("screenshot-" + imgId + ".png");
+        imgId++;
         try {
             ImageIO.write(SwingFXUtils.fromFXImage(image, null), "png", file);
         } catch (IOException e) {
@@ -510,7 +545,7 @@ public class Main extends Application {
                 // Insert elements and properties into database
 //                convertDBtoElementTree.recursivelyInsertElementsIntoDB(convertDBtoElementTree.greatGrandParent);
 
-                Element root = convertDBtoElementTree.greatGrandParent;
+                Element root = ConvertDBtoElementTree.greatGrandParent;
                 if (root == null)
                     return null;
 
@@ -525,7 +560,7 @@ public class Main extends Application {
                             element.getElementId());
 
                     if (element.getChildren() != null) {
-                        element.getChildren().stream().forEachOrdered(queue::add);
+                        element.getChildren().forEach(queue::add);
                     }
 
                     linesInserted.insertedSoFar++;
@@ -534,7 +569,7 @@ public class Main extends Application {
                 }
 
                 // Insert lines and properties into database.
-                convertDBtoElementTree.recursivelyInsertEdgeElementsIntoDB(convertDBtoElementTree.greatGrandParent);
+                convertDBtoElementTree.recursivelyInsertEdgeElementsIntoDB(ConvertDBtoElementTree.greatGrandParent);
                 return null;
             }
 
@@ -555,7 +590,7 @@ public class Main extends Application {
         new Thread(task).start();
     }
 
-    public void setUpProgressBar() {
+    private void setUpProgressBar() {
         progressBar = new ProgressBar();
         progressBar.setPrefWidth(PROGRESS_BAR_WIDTH);
 
@@ -572,20 +607,21 @@ public class Main extends Application {
 
         pScene = new Scene(pVBox);
         pStage.setScene(pScene);
+        pStage.setTitle("Please wait while we crunch the logs");
         pStage.show();
     }
 
-    public void updateProgress(BytesRead bytesRead) {
+    private void updateProgress(BytesRead bytesRead) {
     }
 
-    public void postDatabaseLoad() {
+    private void postDatabaseLoad() {
         resetCenterLayout();
         setUpThreadsView();
         // setUpCheckTreeView();
 
         Graph.drawPlaceHolderLines();
 
-        updateUi();
+        updateUi("postDatabaseLoad");
 
         String firstThreadID = threadsObsList.get(0).split(" ")[1];
         showThread(firstThreadID);
@@ -643,19 +679,34 @@ public class Main extends Application {
     // }
 
     public void showThread(String threadId) {
+
+
+        // Prevent triggering listeners from modifying circleCellsOnUI, edgesOnUI and highlightsOnUI HashMaps
+        ZoomableScrollPane.turnOffListeners();
+
+        // graph.getModel().uiUpdateRequired = true;
+        System.out.println("Main::showThread: new updates show");
         convertDBtoElementTree.setCurrentThreadId(threadId);
+        System.out.println("Main::showThread: before clearUI");
         convertDBtoElementTree.clearUI();
-        updateUi();
+        System.out.println("Main::showThread: after clearUI");
+        updateUi("showThread");
+        System.out.println("Main::showThread: END");
+
+        // Prevent triggering listeners from modifying circleCellsOnUI, edgesOnUI and highlightsOnUI HashMaps
+        ZoomableScrollPane.turnOnListeners();
+        graph.getModel().stackRectangles("showThread");
     }
 
-    public void updateUi() {
+    public void updateUi(String caller) {
         if (convertDBtoElementTree != null && graph != null) {
-
+            System.out.println("Main::updateUi: called by " + caller + " thread " + Thread.currentThread().getName());
             convertDBtoElementTree.loadUIComponentsInsideVisibleViewPort(graph);
             convertDBtoElementTree.removeUIComponentsFromInvisibleViewPort(graph);
             // graph.myEndUpdate();
             graph.updateCellLayer();
         }
+        System.out.println("Main::updateUi: END called by " + caller);
     }
 
     // private void addGraphComponents() {
@@ -706,7 +757,7 @@ public class Main extends Application {
         Platform.runLater(() -> threadListView.getSelectionModel().select("Thread: " + threadId));
     }
 
-    public File chooseLogFile(String logType) {
+    private File chooseLogFile(String logType) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Text Files", "*.txt"));
 
@@ -724,7 +775,7 @@ public class Main extends Application {
         return null;
     }
 
-    public void changeBool(String type, boolean val) {
+    private void changeBool(String type, boolean val) {
         if (type.equalsIgnoreCase("methodDefnFileSet"))
             methodDefnFileSet = val;
         else if (type.equalsIgnoreCase("callTraceFileSet"))
@@ -742,13 +793,13 @@ public class Main extends Application {
         }
     }
 
-    public void resetInstructionsPanel() {
+    private void resetInstructionsPanel() {
         changeBool("methodDefnFileSet", false);
         changeBool("callTraceFileSet", false);
         populateInstructions();
     }
 
-    public void populateInstructions() {
+    private void populateInstructions() {
         instructionsNode = new FlowPane();
         root.setCenter(instructionsNode);
 
@@ -762,7 +813,8 @@ public class Main extends Application {
 
         runInfoGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.ARROW_RIGHT);
         runInfoGlyph.setColor(ColorProp.DISABLED);
-        runInfoLabel = new Label(runInfoString, runInfoGlyph);
+        String runInfoString = "Click run.";
+        Label runInfoLabel = new Label(runInfoString, runInfoGlyph);
 
         instructionsNode.getChildren().addAll(methodDefnInfoLabel, callTraceInfoLabel, runInfoLabel);
         instructionsNode.setAlignment(Pos.CENTER);
@@ -773,7 +825,7 @@ public class Main extends Application {
 
     public class BytesRead {
         public long readSoFar = 0;
-        public long total = 0;
+        long total = 0;
 
         BytesRead(long readSoFar, long totalBytes) {
             this.readSoFar = readSoFar;
@@ -782,8 +834,8 @@ public class Main extends Application {
     }
 
     public class LinesInserted {
-        public long insertedSoFar = 0;
-        public long total = 0;
+        long insertedSoFar = 0;
+        long total = 0;
 
         LinesInserted(long insertedSoFar, long totalBytes) {
             this.insertedSoFar = insertedSoFar;
@@ -792,13 +844,10 @@ public class Main extends Application {
     }
 
 
-    Stage mStage;
-    Scene mScene;
-    Group mRootGroup;
-    Button applyButton;
-    Button cancelButton;
-    HBox hBox;
-    VBox vBox;
+    private Stage mStage;
+    private Button applyButton;
+    private Button cancelButton;
+    private VBox vBox;
 
     // ObservableList<String> strings ;
     // CheckListView<String> checkListView;
@@ -948,8 +997,7 @@ public class Main extends Application {
     //
     //
 
-
-    boolean firstTimeSetUpHighlightsWindowCall = true;
+    private boolean firstTimeSetUpHighlightsWindowCall = true;
 
     private Map<String, CheckBox> firstCBMap;
     private Map<String, CheckBox> secondCBMap;
@@ -967,45 +1015,85 @@ public class Main extends Application {
         colorsMap = new HashMap<>();
         anyColorChange = false;
 
-
         GridPane gridPane = new GridPane();
         gridPane.setPadding(SizeProp.INSETS);
-        gridPane.setHgap(60);
-        gridPane.setVgap(30);
+        gridPane.setHgap(10);
+        gridPane.setVgap(10);
+        gridPane.setMinHeight(GridPane.USE_PREF_SIZE);
+        gridPane.setAlignment(Pos.TOP_CENTER);
 
         Label headingCol1 = new Label("Package and method name");
+        headingCol1.setWrapText(true);
+        headingCol1.setFont(Font.font("Verdana", FontWeight.BOLD, headingCol1.getFont().getSize()*1.1));
         GridPane.setConstraints(headingCol1, 0, 0);
+        GridPane.setHalignment(headingCol1, HPos.CENTER);
 
         Label headingCol2 = new Label("Highlight method only");
+        headingCol2.setWrapText(true);
+        headingCol2.setFont(Font.font("Verdana", FontWeight.BOLD, headingCol2.getFont().getSize()*1.1));
         GridPane.setConstraints(headingCol2, 1, 0);
+        GridPane.setHalignment(headingCol2, HPos.CENTER);
 
         Label headingCol3 = new Label("Highlight subtree");
+        headingCol3.setWrapText(true);
+        headingCol3.setFont(Font.font("Verdana", FontWeight.BOLD, headingCol3.getFont().getSize()*1.1));
         GridPane.setConstraints(headingCol3, 2, 0);
+        GridPane.setHalignment(headingCol3, HPos.CENTER);
+
 
         Label headingCol4 = new Label("Choose color");
+        headingCol4.setWrapText(true);
+        headingCol4.setFont(Font.font("Verdana", FontWeight.BOLD, headingCol4.getFont().getSize()*1.1));
         GridPane.setConstraints(headingCol4, 3,0);
+        GridPane.setHalignment(headingCol4, HPos.CENTER);
+
 
         gridPane.getChildren().addAll(
                 headingCol1, headingCol2, headingCol3, headingCol4
         );
 
-        mRootGroup = new Group();
-
         applyButton = new Button("Apply");
-        applyButton.setAlignment(Pos.BASELINE_RIGHT);
+        applyButton.setAlignment(Pos.CENTER_RIGHT);
 
         cancelButton = new Button("Cancel");
-        cancelButton.setAlignment(Pos.BASELINE_RIGHT);
+        cancelButton.setAlignment(Pos.CENTER_RIGHT);
 
-        hBox = new HBox(cancelButton, applyButton);
-        hBox.setSpacing(SizeProp.SPACING);
+        Pane hSpacer = new Pane();
+        hSpacer.setMinSize(10, 1);
+        HBox.setHgrow(hSpacer, Priority.ALWAYS);
+
+
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setContent(gridPane);
+        scrollPane.setFitToHeight(true);
+        scrollPane.setFitToWidth(true);
+
+        Pane vSpacer = new Pane();
+        vSpacer.setMinSize(10, 1);
+        VBox.setVgrow(vSpacer, Priority.ALWAYS);
+
+        HBox hBox = new HBox(hSpacer, cancelButton, applyButton);
+        hBox.setPadding(SizeProp.INSETS);
+        hBox.setSpacing(20);
+        hBox.setAlignment(Pos.BOTTOM_CENTER);
 
         vBox = new VBox(SizeProp.SPACING);
-        vBox.getChildren().addAll(gridPane, hBox);
+        vBox.setPrefHeight(VBox.USE_PREF_SIZE);
+        vBox.setPadding(SizeProp.INSETS);
 
-        mRootGroup.getChildren().add(vBox);
-        mScene = new Scene(mRootGroup, 500, 500);
+        vBox.getChildren().addAll(scrollPane, vSpacer, hBox);
+
+        // For debugging purposes. Shows backgrounds in colors.
+        // hBox.setStyle("-fx-background-color: #ffb85f");
+        // vBox.setStyle("-fx-background-color: yellow");
+        // gridPane.setStyle("-fx-background-color: #4dfff3");
+        // scrollPane.setStyle("-fx-background-color: #ffb2b3");
+
+
+        // mRootGroup.getChildren().add();
+        Scene mScene = new Scene(vBox, 1000, 500);
         mStage = new Stage();
+        mStage.setTitle("Choose highlighting options");
         mStage.setScene(mScene);
 
         LinkedList<String> methodNamesList = new LinkedList<>();
@@ -1033,11 +1121,21 @@ public class Main extends Application {
                 // Display the methods on UI
                 methodNamesList.forEach(fullName -> {
 
+                    // Label
                     Label name = new Label(fullName);
+                    name.setWrapText(true);
+                    // name.setMaxWidth(250);
                     GridPane.setConstraints(name, 0, rowInd.get());
+                    GridPane.setHalignment(name, HPos.CENTER);
+                    GridPane.setHgrow(name, Priority.ALWAYS);
 
+
+                    // First checkbox
                     CheckBox firstCB = new CheckBox();
                     GridPane.setConstraints(firstCB, 1, rowInd.get());
+                    GridPane.setHalignment(firstCB, HPos.CENTER);
+                    GridPane.setValignment(firstCB, VPos.CENTER);
+                    GridPane.setHgrow(firstCB, Priority.ALWAYS);
                     firstCB.selectedProperty().addListener((observable, oldValue, newValue) -> {
                         if (newValue) {
                             firstCBMap.put(fullName, firstCB);
@@ -1046,16 +1144,21 @@ public class Main extends Application {
                         }
                     });
 
+
+                    // Second checkbox
                     CheckBox secondCB = new CheckBox();
+                    // secondCB.setAlignment(Pos.CENTER);
                     GridPane.setConstraints(secondCB, 2, rowInd.get());
+                    GridPane.setHalignment(secondCB, HPos.CENTER);
+                    GridPane.setValignment(secondCB, VPos.CENTER);
+                    GridPane.setHgrow(secondCB, Priority.ALWAYS);
                     secondCB.selectedProperty().addListener((observable, oldValue, newValue) -> {
-                        if (newValue) {
-                            secondCBMap.put(fullName, secondCB);
-                        } else {
-                            secondCBMap.remove(fullName);
-                        }
+                        if (newValue) secondCBMap.put(fullName, secondCB);
+                        else secondCBMap.remove(fullName);
                     });
 
+
+                    // Color picker
                     ColorPicker colorPicker = new ColorPicker(Color.AQUAMARINE);
                     colorPicker.setOnAction(event -> {
                         anyColorChange = true;
@@ -1063,11 +1166,29 @@ public class Main extends Application {
                         System.out.println(colorPicker.getValue());
                         System.out.println(colorPicker.getValue().toString());
                     });
+                    colorPicker.getStyleClass().add("button");
+                    colorPicker.setStyle(
+                            "-fx-color-label-visible: false; " +
+                                    "-fx-background-radius: 15 15 15 15;");
                     GridPane.setConstraints(colorPicker, 3, rowInd.get());
+                    GridPane.setHalignment(colorPicker, HPos.CENTER);
+                    GridPane.setValignment(colorPicker, VPos.CENTER);
+                    GridPane.setHgrow(colorPicker, Priority.ALWAYS);
 
-                    gridPane.getChildren().addAll(name, firstCB, secondCB, colorPicker);
+                    // For debugging.
+                    // Pane colorPane = new Pane();
+                    // colorPane.setStyle("-fx-background-color: #99ff85");
+                    // GridPane.setConstraints(colorPane, 2, rowInd.get());
+                    // Pane colorPane2 = new Pane();
+                    // colorPane2.setStyle("-fx-background-color: #e383ff");
+                    // GridPane.setConstraints(colorPane2, 1, rowInd.get());
+                    // gridPane.getChildren().addAll(name, colorPane2, firstCB, colorPane, secondCB, colorPicker);
 
                     rowInd.incrementAndGet();
+
+                    // Put every thing together
+                    gridPane.getChildren().addAll(name, firstCB, secondCB, colorPicker);
+
                 });
             }
         };
@@ -1076,7 +1197,7 @@ public class Main extends Application {
 
     }
 
-    public void setUpHighlightsWindow() {
+    private void setUpHighlightsWindow() {
 
         if (firstTimeSetUpHighlightsWindowCall)
             firstTimeSetUpHighlightsWindow();
@@ -1096,13 +1217,9 @@ public class Main extends Application {
 
                 // For each of the selected methods, insert the bound box properties into Highlights table if not already present.
                 Statement statement = DatabaseUtil.getConnection().createStatement();
-                firstCBMap.forEach((fullName, checkBox) -> {
-                    addInsertQueryToStatement(fullName, statement, "SINGLE");
-                });
+                firstCBMap.forEach((fullName, checkBox) -> addInsertQueryToStatement(fullName, statement, "SINGLE"));
 
-                secondCBMap.forEach((fullName, checkBox) -> {
-                    addInsertQueryToStatement(fullName, statement, "FULL");
-                });
+                secondCBMap.forEach((fullName, checkBox) -> addInsertQueryToStatement(fullName, statement, "FULL"));
 
                 // Delete records from HIGHLIGHT_ELEMENT if that method is not checked in the stage.
                 StringJoiner firstSJ = new StringJoiner("','", "'", "'");
@@ -1123,8 +1240,12 @@ public class Main extends Application {
             @Override
             protected void succeeded() {
                 super.succeeded();
-                graph.getModel().highlightsUpdated = true;
-                updateUi();
+                System.out.println("Main::setUpHighlightsWindow::succeeded");
+                graph.getModel().uiUpdateRequired = true;
+                updateUi("taskOnApply");
+
+                // Stack highlights so that the larger ones are behind smaller ones.
+                graph.getModel().stackRectangles("succeeded");
             }
         };
 
@@ -1133,12 +1254,10 @@ public class Main extends Application {
             mStage.close();
         });
 
-        cancelButton.setOnAction(event -> {
-            mStage.close();
-        });
+        cancelButton.setOnAction(event -> mStage.close());
     }
 
-    public void addInsertQueryToStatement(String fullName, Statement statement, String highlightType) {
+    private void addInsertQueryToStatement(String fullName, Statement statement, String highlightType) {
 
         String[] arr = fullName.split("\\.");
         String methodName = arr[arr.length - 1];
@@ -1146,14 +1265,35 @@ public class Main extends Application {
 
         String sqlSingle = "INSERT INTO " + TableNames.HIGHLIGHT_ELEMENT + " " +
                 "(METHOD_ID, THREAD_ID, HIGHLIGHT_TYPE, START_X, START_Y, WIDTH, HEIGHT, COLOR) " +
-                "SELECT " + TableNames.METHOD_DEFINITION_TABLE + ".ID, " +
+
+                "SELECT " +
+
+                // METHOD_ID
+                TableNames.METHOD_DEFINITION_TABLE + ".ID, " +
+
+                // THREAD_ID
                 TableNames.CALL_TRACE_TABLE + ".THREAD_ID, " +
+
+                // HIGHLIGHT_TYPE
                 "'" + highlightType + "', " +
-                TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT, " +
-                TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT, " +
-                "(" + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_RIGHT - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT), " +
-                "(" + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_BOTTOM_LEFT - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT), " +
+
+                // START_X
+                TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_COORDINATE - 15 , " +
+
+                // START_X
+                TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_COORDINATE - 15, " +
+
+                // WIDTH
+                (BoundBox.unitWidthFactor - 15) + ", " +
+
+                // HEIGHT
+                (BoundBox.unitHeightFactor - 15) + ", " +
+                // "(" + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_RIGHT - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT), " +
+                // "(" + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_BOTTOM_LEFT - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT), " +
+
+                // HIGHLIGHT COLOR
                 "'" + colorsMap.getOrDefault(fullName, Color.AQUAMARINE) + "' " +
+
                 "FROM " + TableNames.ELEMENT_TABLE + " " +
                 "JOIN " + TableNames.CALL_TRACE_TABLE + " ON " + TableNames.ELEMENT_TABLE + ".ID_ENTER_CALL_TRACE = " + TableNames.CALL_TRACE_TABLE + ".ID " +
                 "JOIN " + TableNames.METHOD_DEFINITION_TABLE + " ON " + TableNames.CALL_TRACE_TABLE + ".METHOD_ID = " + TableNames.METHOD_DEFINITION_TABLE + ".ID " +
@@ -1165,22 +1305,66 @@ public class Main extends Application {
                 "AND " + TableNames.HIGHLIGHT_ELEMENT + ".HIGHLIGHT_TYPE = '" + highlightType + "')";
 
 
+        // Get thread id for the method. There can only be a single thread.
+        // If method with same name was invoked by another thread, then its package name would different.
+        String getThreadSQL = "SELECT thread_id " +
+                "FROM " + TableNames.CALL_TRACE_TABLE + " " +
+                "JOIN method_defn ON " + TableNames.CALL_TRACE_TABLE + ".method_id " +
+                "= " +
+                TableNames.METHOD_DEFINITION_TABLE + ".id " +
+                "AND " + TableNames.METHOD_DEFINITION_TABLE + ".METHOD_NAME = '" + methodName + "' " +
+                "AND " + TableNames.METHOD_DEFINITION_TABLE + ".PACKAGE_NAME = '" + packageName + "'";
+
+        ResultSet getThreadInfoRS = DatabaseUtil.select(getThreadSQL);
+
+        System.out.println("get thread query:");
+        System.out.println(getThreadSQL);
+
+        int threadId=0;
+        try {
+            while (getThreadInfoRS.next()) {
+                threadId = getThreadInfoRS.getInt("THREAD_ID");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("Result threadId " + threadId);
+
         String sqlFull = "INSERT INTO " + TableNames.HIGHLIGHT_ELEMENT + " " +
                 "(METHOD_ID, THREAD_ID, HIGHLIGHT_TYPE, START_X, START_Y, WIDTH, HEIGHT, COLOR) " +
-                "SELECT " + TableNames.METHOD_DEFINITION_TABLE + ".ID, " +
+                "SELECT " +
+                // METHOD_ID
+                TableNames.METHOD_DEFINITION_TABLE + ".ID, " +
+
+                // THREAD_ID
                 TableNames.CALL_TRACE_TABLE + ".THREAD_ID, " +
+
+                // HIGHLIGHT_TYPE
                 "'" + highlightType + "', " +
-                TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT, " +
-                TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT, " +
 
+                // START_X
+                TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT + 30, " +
+
+                // START_Y
+                TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT + 30, " +
+
+                // WIDTH
                 "(SELECT MAX(E1.BOUND_BOX_X_TOP_RIGHT) FROM " + TableNames.ELEMENT_TABLE + " AS E1 " +
+                "JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT ON E1.ID_ENTER_CALL_TRACE = CT.ID " +
                 "WHERE E1.BOUND_BOX_Y_COORDINATE >= " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT " +
-                "AND E1.BOUND_BOX_Y_COORDINATE <= " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_BOTTOM_LEFT), " +
+                "AND E1.BOUND_BOX_Y_COORDINATE <= " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_BOTTOM_LEFT " +
+                "AND CT.THREAD_ID = " + threadId + ") - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT - 15, " +
 
-                "(SELECT MAX(E1.BOUND_BOX_X_BOTTOM_RIGHT) FROM " + TableNames.ELEMENT_TABLE + " AS E1 " +
+                // HEIGHT
+                "(SELECT MAX(E1.BOUND_BOX_Y_BOTTOM_RIGHT) FROM " + TableNames.ELEMENT_TABLE + " AS E1 " +
+                "JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT ON E1.ID_ENTER_CALL_TRACE = CT.ID " +
                 "WHERE E1.BOUND_BOX_Y_COORDINATE >= " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT " +
-                "AND E1.BOUND_BOX_Y_COORDINATE <= " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_BOTTOM_LEFT), "+
+                "AND E1.BOUND_BOX_Y_COORDINATE <= " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_BOTTOM_LEFT " +
+                "AND E1.BOUND_BOX_X_COORDINATE >= " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT " +
+                "AND CT.THREAD_ID = " + threadId + ") - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT - 15, " +
 
+                // COLOR
                 "'" + colorsMap.getOrDefault(fullName, Color.AQUAMARINE) + "' " +
 
                 "FROM " + TableNames.ELEMENT_TABLE + " " +
@@ -1204,7 +1388,7 @@ public class Main extends Application {
         }
     }
 
-    public void addDeleteQueryToStatement(String fullNames, Statement statement, String highlightType) {
+    private void addDeleteQueryToStatement(String fullNames, Statement statement, String highlightType) {
         String sql = "DELETE FROM " + TableNames.HIGHLIGHT_ELEMENT + " " +
                 "WHERE HIGHLIGHT_TYPE = '" + highlightType + "' AND METHOD_ID NOT IN " +
                 "(SELECT ID FROM " + TableNames.METHOD_DEFINITION_TABLE + " " +
@@ -1239,7 +1423,7 @@ public class Main extends Application {
         });
     }
 
-    public void resetHighlights() {
+    private void resetHighlights() {
         // firstTimeSetUpMethodsWindowCall = true;
         firstTimeSetUpHighlightsWindowCall = true;
         highlight.setDisable(true);
@@ -1257,5 +1441,4 @@ public class Main extends Application {
     // Save to db on clicking apply button.
     // background color will be loaded like elements and lines.
     //
-
 }

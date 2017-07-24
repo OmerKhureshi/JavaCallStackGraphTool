@@ -1,15 +1,15 @@
 package com.application.fxgraph.graph;
 
+import com.application.Main;
 import com.application.fxgraph.ElementHelpers.Element;
 import com.application.fxgraph.cells.CircleCell;
 import com.application.fxgraph.cells.RectangleCell;
 import com.application.fxgraph.cells.TriangleCell;
+import javafx.scene.Node;
 import javafx.scene.shape.Rectangle;
+import org.w3c.dom.css.Rect;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Model {
 
@@ -45,14 +45,30 @@ public class Model {
      * new/modified methods start
      */
 
+
     // Adders
+
+    public boolean uiUpdateRequired = true;
+
+    public void stackRectangles(String from) {
+
+        List<Rectangle> list = new ArrayList<>(highlightsOnUI.values());
+
+        // Sort the list of rectangles according to area.
+        Collections.sort(list, (o1, o2) -> (int) (o1.getWidth() * o1.getHeight() - o2.getWidth() * o2.getHeight()));
+
+        // In order of smaller to larger rectangles, send each to back. Results in larger highlights behind or below smaller ones.
+        list.forEach(Node::toBack);
+    }
 
     public void addCell(CircleCell circleCell) {
         // circleCell.toFront();
         // circleCell.setTranslateZ(10);
         // synchronized (Main.getLock()) {
             if (!circleCellsOnUI.containsKey(circleCell.getCellId())) {
+                // System.out.println( "Model::addCell: " + circleCell.getCellId());
                 circleCellsOnUI.put(circleCell.getCellId(), circleCell);
+                // System.out.println( "Model::addCell: circleCellsOnUI.size() " +circleCellsOnUI.size());
                 listCircleCellsOnUI.add(circleCell);
             }
         // }
@@ -91,16 +107,17 @@ public class Model {
         }
     }
 
-    public boolean highlightsUpdated = true;
-
     public void addHighlight(Integer id, Rectangle rectangle) {
-        highlightsUpdated = true;
+        // uiUpdateRequired = true;
+        System.out.println("Model::addHighlight: adding highlight to map " + id);
         highlightsOnUI.putIfAbsent(id, rectangle);
     }
+
 
     // Clear methods.
 
     public void clearMaps() {
+        System.out.println("Model::clearMaps");
         circleCellsOnUI.clear();
         edgesOnUI.clear();
         highlightsOnUI.clear();
@@ -140,6 +157,7 @@ public class Model {
     /**
      * new methods end
      */
+
 
     public void clear() {
 

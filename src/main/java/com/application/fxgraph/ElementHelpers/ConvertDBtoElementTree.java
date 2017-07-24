@@ -1,5 +1,6 @@
 package com.application.fxgraph.ElementHelpers;
 
+import com.application.Main;
 import com.application.db.DAOImplementation.*;
 import com.application.db.DatabaseUtil;
 import com.application.db.TableNames;
@@ -174,6 +175,8 @@ public class ConvertDBtoElementTree {
             return;
         }
 
+        System.out.println("ConvertDBtoElementTree::loadUIComponentsInsideVisibleViewPort: ");
+
         // Add circle cells
         addCircleCells();
 
@@ -186,6 +189,7 @@ public class ConvertDBtoElementTree {
     }
 
     private void addHighlights() {
+        System.out.println("ConvertDBtoElementTree::addHighlights: ");
 
         Map<Integer, Rectangle> highlightsOnUI = model.getHighlightsOnUI();
 
@@ -221,6 +225,8 @@ public class ConvertDBtoElementTree {
                     // System.out.println("Drawing rectangle: " + id);
                     Rectangle rectangle = new Rectangle(startX, startY, width, height);
                     rectangle.setFill(Color.web(color));
+                    rectangle.setArcHeight(20);
+                    rectangle.setArcWidth(20);
 
                     model.addHighlight(id, rectangle);
                 }
@@ -228,6 +234,7 @@ public class ConvertDBtoElementTree {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
 
     }
 
@@ -252,10 +259,13 @@ public class ConvertDBtoElementTree {
                 " AND E.bound_box_y_coordinate > " + (viewPortMinY - heightOffset) +
                 " AND E.bound_box_y_coordinate < " + (viewPortMaxY + heightOffset) +
                 " AND E.LEVEL_COUNT > 1";
-
+        System.out.println();
+        System.out.println(sql);
+        System.out.println();
 
         CircleCell curCircleCell;
         CircleCell parentCircleCell;
+
 
         try (ResultSet rs = DatabaseUtil.select(sql)) {
             while (rs.next()) {
@@ -391,6 +401,7 @@ public class ConvertDBtoElementTree {
     }
 
     private void removeCircleCells(BoundingBox preloadBox) {
+        System.out.println("ConvertDBtoElementTree::removeCircleCells: ");
         CellLayer cellLayer = (CellLayer) graph.getCellLayer();
 
         Map<String, CircleCell> mapCircleCellsOnUI = model.getCircleCellsOnUI();
@@ -408,13 +419,13 @@ public class ConvertDBtoElementTree {
             }
         }
 
-        removeCircleCells.stream()
-                .forEach(cellId -> {
-                    CircleCell circleCell = mapCircleCellsOnUI.get(cellId);
-                    Platform.runLater(() -> cellLayer.getChildren().remove(circleCell));
-                    mapCircleCellsOnUI.remove(cellId);
-                    listCircleCellsOnUI.remove(circleCell);
-                });
+        removeCircleCells.forEach(cellId -> {
+            CircleCell circleCell = mapCircleCellsOnUI.get(cellId);
+            Platform.runLater(() -> cellLayer.getChildren().remove(circleCell));
+            System.out.println("ConvertDBtoElementTree::removeCircleCells: removing cell " + cellId);
+            mapCircleCellsOnUI.remove(cellId);
+            listCircleCellsOnUI.remove(circleCell);
+        });
     }
 
     private void removeEdges(BoundingBox preloadBox) {
@@ -445,11 +456,11 @@ public class ConvertDBtoElementTree {
         }
 
         removeEdges.forEach(edgeId -> {
-                    Edge edge = mapEdgesOnUI.get(edgeId);
-                    Platform.runLater(() -> cellLayer.getChildren().remove(edge));
-                    mapEdgesOnUI.remove(edgeId);
-                    listEdgesOnUI.remove(edge);
-                });
+            Edge edge = mapEdgesOnUI.get(edgeId);
+            Platform.runLater(() -> cellLayer.getChildren().remove(edge));
+            mapEdgesOnUI.remove(edgeId);
+            listEdgesOnUI.remove(edge);
+        });
 
         // clearUI();
     }
@@ -493,6 +504,7 @@ public class ConvertDBtoElementTree {
             return;
         }
 
+        System.out.println("removeUIComponentsFromInvisibleViewPort:: after isUIDrawingRequired");
         double minX = viewPortDims.getMinX();
         double minY = viewPortDims.getMinY();
         double maxX = viewPortDims.getWidth();
@@ -516,11 +528,19 @@ public class ConvertDBtoElementTree {
 
         // CellLayer cellLayer = (CellLayer) graph.getCellLayer();
         // cellLayer.getChildren().clear();
+        // synchronized (Main.getLock()) {
 
-        graph.clearCellLayer();
-        if (model != null) {
-            model.clearMaps();
-        }
+            System.out.println("ConvertDBtoElementTree::clearUI");
+            graph.clearCellLayer();
+            System.out.println("ConvertDBtoElementTree::clearUI: getHighlightsOnUI.size() " + graph.getModel().getHighlightsOnUI().size());
+
+            if (graph.getModel() != null) {
+                graph.getModel().clearMaps();
+
+                System.out.println("ConvertDBtoElementTree::clearUI: getHighlightsOnUI.size() " + graph.getModel().getHighlightsOnUI().size());
+            }
+
+        // }
 
         // if (model != null && model.getCircleCellsOnUI() != null)
         //     model.getCircleCellsOnUI().clear();
@@ -564,7 +584,9 @@ public class ConvertDBtoElementTree {
             e.printStackTrace();
         }
 
-        graph.drawPlaceHolderLines(height, width);
+        Graph.drawPlaceHolderLines(height, width);
+
+        System.out.println("ConvertDBtoElementTree::clearUI: END");
     }
 
     public void setCurrentThreadId(String currentThreadId) {
@@ -588,6 +610,8 @@ public class ConvertDBtoElementTree {
     static boolean firstLoad = true;
 
     public boolean isUIDrawingRequired(BoundingBox viewPort) {
+        System.out.println("ConvertDBtoElementTree::UiUpdateRequired:");
+
         if (firstLoad) {
             firstLoad = false;
             return true;
@@ -599,12 +623,14 @@ public class ConvertDBtoElementTree {
         if (triggerRegion == null)
             setTriggerRegion(viewPort);
 
-        if (!triggerRegion.contains(viewPort)){
+        if (!triggerRegion.contains(viewPort)) {
             setActiveRegion(viewPort);
             setTriggerRegion(viewPort);
             return true;
         }
-        if (model.highlightsUpdated) {
+
+        if (graph.getModel().uiUpdateRequired) {
+            System.out.println("ConvertDBtoElementTree::UiUpdateRequired: passed true");
             return true;
         }
 

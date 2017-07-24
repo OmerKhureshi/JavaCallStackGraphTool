@@ -36,34 +36,46 @@ public class EventHandlers {
         this.graph = graph;
     }
 
-    public void makeDraggable(final Node node) {
+    public void setCustomMouseEventHandlers(final Node node) {
+        // *****************
+        // Show popup to display element details on mouse hover on an element.
+        // node.setOnMouseEntered(onMouseHoverToShowInfoEventHandler);
+        node.setOnMousePressed(onMouseHoverToShowInfoEventHandler);
+        // *****************
+
+
+        // *****************
+        // For debugging. Prints all mouse events.
         // node.addEventFilter(MouseEvent.ANY, onMouseHoverToShowInfoEventHandler);
         // node.addEventFilter(MouseEvent.ANY, event -> System.out.println(event));
+        // *****************
 
+        
         // *****************
         // Click on an element to collapse the subtree rooted at clicked element.
         // node.setOnMousePressed(onMousePressedToCollapseTree);
         // *****************
 
-        // Show popup to display element details on mouse hover on an element.
-        node.setOnMouseEntered(onMouseHoverToShowInfoEventHandler);
-//        node.setOnMousePressed(onMouseHoverToShowInfoEventHandler);
 
         // *****************
         // To dismiss the pop over when cursor leaves the circle. But this makes it impossible to click buttons on pop
         // over because the pop over hides when the cursor is moved to click the button.
         // node.setOnMouseExited(onMouseExitToDismissPopover);
         // *****************
+        
 
-        // Make elements dragable.
-        node.setOnMousePressed(onMousePressedEventHandler);
-        node.setOnMouseDragged(onMouseDraggedEventHandler);
-        node.setOnMouseReleased(onMouseReleasedEventHandler);
+        // *****************
+        // Make elements draggable.
+        // node.setOnMousePressed(onMousePressedEventHandler);
+        // node.setOnMouseDragged(onMouseDraggedEventHandler);
+        // node.setOnMouseReleased(onMouseReleasedEventHandler);
+        // *****************
+        
     }
 
-    PopOver popOver;
+    private PopOver popOver;
 
-    EventHandler<MouseEvent> onMouseHoverToShowInfoEventHandler = new EventHandler<MouseEvent>() {
+    private EventHandler<MouseEvent> onMouseHoverToShowInfoEventHandler = new EventHandler<MouseEvent>() {
 
         @Override
         public void handle(MouseEvent event) {
@@ -76,7 +88,7 @@ public class EventHandlers {
             String timeStamp;
             int methodId, processId, threadId;
             String parameters, packageName = "", methodName = "", parameterTypes = "", eventType, lockObjectId;
-            double xCord=0, yCord=0;
+            double xCord, yCord;
 
 
             // Do Not Uncomment
