@@ -117,7 +117,7 @@ public class Model {
     // Clear methods.
 
     public void clearMaps() {
-        System.out.println("Model::clearMaps");
+        // System.out.println("Model::clearMaps");
         circleCellsOnUI.clear();
         edgesOnUI.clear();
         highlightsOnUI.clear();

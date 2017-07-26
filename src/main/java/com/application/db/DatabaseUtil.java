@@ -71,7 +71,7 @@ public class DatabaseUtil {
         } catch (SQLException e) {
             String sqlError = e.getSQLState();
             if (sqlError.equals("XJ015")) {
-                System.out.println(" Derby database shutdown successful.");
+                // System.out.println("Derby database shutdown successful.");
             }
         }
     }

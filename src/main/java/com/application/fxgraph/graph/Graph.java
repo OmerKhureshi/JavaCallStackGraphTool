@@ -40,9 +40,9 @@ public class Graph {
     }
 
     public void clearCellLayer() {
-        System.out.println("Graph::clearCellLayer:");
+        // System.out.println("Graph::clearCellLayer:");
         cellLayer.getChildren().clear();
-        System.out.println("Graph::clearCellLayer: END");
+        // System.out.println("Graph::clearCellLayer: END");
     }
 
     public static void drawPlaceHolderLines() {
@@ -104,11 +104,11 @@ public class Graph {
 
     public void updateCellLayer() {
 
-        System.out.println("Graph::updateCellLayer: ");
-        System.out.println("Graph::updateCellLayer: gighlightsOnUI.size() " + model.getHighlightsOnUI().size());
+        // System.out.println("Graph::updateCellLayer: ");
+        // System.out.println("Graph::updateCellLayer: gighlightsOnUI.size() " + model.getHighlightsOnUI().size());
         model.getCircleCellsOnUI().forEach((id, circleCell) -> {
             if (!cellLayer.getChildren().contains(circleCell)) {
-                System.out.println("Graph::updateCellLayer: Adding circleCell to cellLayer: " + circleCell.getCellId());
+                // System.out.println("Graph::updateCellLayer: Adding circleCell to cellLayer: " + circleCell.getCellId());
                 cellLayer.getChildren().add(circleCell);
                 eventHandlers.setCustomMouseEventHandlers(circleCell);
             }
@@ -122,7 +122,7 @@ public class Graph {
 
         model.getHighlightsOnUI().forEach((id, rectangle) -> {
             if (!cellLayer.getChildren().contains(rectangle)) {
-                System.out.println("Graph::updateCellLayer: Adding highlight to cellLayer: ");
+                // System.out.println("Graph::updateCellLayer: Adding highlight to cellLayer: ");
                 cellLayer.getChildren().add(rectangle);
                 rectangle.toBack();
             }
@@ -201,18 +201,18 @@ public class Graph {
         return new BoundingBox(minX, minY, scaledViewportWidth, scaledViewportHeight);
     }
 
-    public double getHValue(double xCordinate) {
+    public double getHValue(double xCoordinate) {
         double scaledContentWidth = getScrollPane().getContent().getLayoutBounds().getWidth();// * scale;
         double scaledViewportWidth = getScrollPane().getViewportBounds().getWidth(); // / scale;
 
-        return xCordinate / (scaledContentWidth - scaledViewportWidth);
+        return xCoordinate / (scaledContentWidth - scaledViewportWidth);
     }
 
-    public double getVValue(double yCordinate) {
+    public double getVValue(double yCoordinate) {
         double scaledContentHeight = getScrollPane().getContent().getLayoutBounds().getHeight();// * scale;
         double scaledViewportHeight = getScrollPane().getViewportBounds().getHeight(); // / scale;
 
-        return yCordinate / (scaledContentHeight - scaledViewportHeight);
+        return yCoordinate / (scaledContentHeight - scaledViewportHeight);
     }
 
     public void moveScrollPane(double hValue, double vValue){
@@ -220,27 +220,29 @@ public class Graph {
         getScrollPane().setVvalue(vValue);
     }
 
-    public Map<String, XYCordinate> recentLocationsMap = new HashMap<>();
+    private Map<String, XYCoordinate> recentLocationsMap = new HashMap<>();
 
-    public Map<String, XYCordinate> getRecentLocationsMap() {
+    public Map<String, XYCoordinate> getRecentLocationsMap() {
         return recentLocationsMap;
     }
 
-    public void addToRecents(String classMethodName, XYCordinate location) {
+    public void addToRecent(String classMethodName, XYCoordinate location) {
         recentLocationsMap.put(classMethodName, location);
     }
 
     public void clearRecents() {
-        recentLocationsMap = null;
+        recentLocationsMap.clear();
     }
 
-    public static class XYCordinate {
+    public static class XYCoordinate {
         public double x;
         public double y;
+        public int threadId;
 
-        XYCordinate(double x, double y) {
+        XYCoordinate(double x, double y, int threadId) {
             this.x = x;
             this.y = y;
+            this.threadId = threadId;
         }
     }
 }

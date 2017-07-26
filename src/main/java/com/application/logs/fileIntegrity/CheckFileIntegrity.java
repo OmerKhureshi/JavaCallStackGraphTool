@@ -1,11 +1,17 @@
 package com.application.logs.fileIntegrity;
 
 import com.application.Main;
+import javafx.application.Platform;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 
 import java.io.*;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 public class CheckFileIntegrity {
 
@@ -50,12 +56,42 @@ public class CheckFileIntegrity {
             e.printStackTrace();
         } catch (IOException e) {
         } catch (NoSuchElementException e) {
-            e.printStackTrace();
-            throw new NoSuchElementException("Error occurred in line due to mismatch in count of enters and exits. " +
-                    "Error at line: " + linesRead + "; Line is: " + line);
+            int finalLinesRead = linesRead;
+            String finalLine = line;
+
+
+            Platform.runLater(() -> {
+
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Problem with the call trace log file.");
+                alert.setHeaderText("An error occurred while reading the " + file.getName() + " file.");
+                alert.setContentText("This usually happens due to mismatch in count of ENTER and EXIT statements");
+                ButtonType resetButtonType = new ButtonType("Reset");
+                alert.getButtonTypes().setAll(resetButtonType);
+
+                Optional<ButtonType> res = alert.showAndWait();
+
+
+                if (res.get() == resetButtonType) {
+                    main.resetFromOutside();
+                }
+
+                e.printStackTrace();
+                throw new NoSuchElementException("Error occurred in line due to mismatch in count of enters and exits. " +
+                        "Error at line: " + finalLinesRead + "; Line is: " + finalLine);
+            });
+
+            // e.printStackTrace();
+            // throw new NoSuchElementException("Error occurred in line due to mismatch in count of enters and exits. " +
+            //         "Error at line: " + linesRead + "; Line is: " + line);
         } finally {
             System.out.println("File integrity check completed. If no exceptions were thrown, then file is good.");
         }
 
+    }
+
+    static Main main;
+    public static void saveRef(Main m) {
+        main = m;
     }
 }

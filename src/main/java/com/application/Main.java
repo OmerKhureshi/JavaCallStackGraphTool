@@ -11,7 +11,6 @@ import com.application.logs.fileHandler.CallTraceLogFile;
 import com.application.logs.fileHandler.MethodDefinitionLogFile;
 import com.application.logs.fileIntegrity.CheckFileIntegrity;
 import com.application.logs.parsers.ParseCallTrace;
-import com.sun.glass.ui.Size;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -89,7 +88,7 @@ public class Main extends Application {
     private Glyph saveImgGlyph;
 
     private Menu goToMenu;
-    private Menu recentsMenu;
+    private Menu recentMenu;
     private Glyph recentsGlyph;
     private MenuItem clearHistoryMenuItem;
     private Glyph clearHistoryGlyph;
@@ -224,14 +223,14 @@ public class Main extends Application {
         goToMenu = new Menu("Go To");
         recentsGlyph = new Glyph(font, FontAwesome.Glyph.HISTORY);
         recentsGlyph.setColor(ColorProp.ENABLED);
-        recentsMenu = new Menu("Recent nodes", recentsGlyph);
-        recentsMenu.setStyle(SizeProp.PADDING_SUBMENU);
+        recentMenu = new Menu("Recent nodes", recentsGlyph);
+        recentMenu.setStyle(SizeProp.PADDING_SUBMENU);
 
         clearHistoryGlyph = new Glyph(font, FontAwesome.Glyph.TRASH);
         clearHistoryGlyph.setColor(ColorProp.ENABLED);
         clearHistoryMenuItem = new MenuItem("Clear history", clearHistoryGlyph);
 
-        goToMenu.getItems().addAll(recentsMenu, clearHistoryMenuItem);
+        goToMenu.getItems().addAll(recentMenu, clearHistoryMenuItem);
         goToMenu.setDisable(true);
         menuItems.add(clearHistoryMenuItem);
 
@@ -319,28 +318,69 @@ public class Main extends Application {
         saveImgMenuItem.setOnAction(event -> saveUIImage());
 
 
-        // Populate recentsMenu menu.
+        // Populate recentMenu.
         goToMenu.setOnShowing(event -> {
-            recentsMenu.getItems().clear();
+            recentMenu.getItems().clear();
             graph.getRecentLocationsMap().entrySet().forEach(entry -> {
                 MenuItem nodeLocation = new MenuItem();
                 nodeLocation.setText(entry.getKey());
                 nodeLocation.setOnAction(event1 -> {
-                    graph.getRecentLocationsMap().get(entry.getKey());
+                    String targetThreadId = String.valueOf(entry.getValue().threadId);
                     double hValue = graph.getHValue(entry.getValue().x);
                     double vValue = graph.getVValue(entry.getValue().y);
-                    graph.moveScrollPane(hValue, vValue);
+
+                    ConvertDBtoElementTree.resetRegions();
+
+                    // Platform.runLater(() -> {
+                        System.out.println("---------ONE show thread");
+                        showThread(targetThreadId);
+                        System.out.println("---------ONE END");
+                    // });
+
+                    // try {
+                    //     Thread.sleep(5000);
+                    // } catch (InterruptedException e) {
+                    //     e.printStackTrace();
+                    // }
+
+
+                    // Platform.runLater(() -> {
+                        System.out.println("---------TWO make selection");
+                        makeSelection(targetThreadId);
+                        System.out.println("---------TWO END");
+                    // });
+
+
+                    // try {
+                    //     Thread.sleep(5000);
+                    // } catch (InterruptedException e) {
+                    //     e.printStackTrace();
+                    // }
+
+                    // Platform.runLater(() -> {
+                        System.out.println("---------THREE move scrollpane");
+                        graph.moveScrollPane(hValue, vValue);
+                        System.out.println("---------THREE END");
+                    // });
+
                 });
-                recentsMenu.getItems().add(nodeLocation);
+
+                recentMenu.getItems().add(nodeLocation);
             });
         });
 
-        clearHistoryMenuItem.setOnAction(event -> graph.getRecentLocationsMap().clear());
+        clearHistoryMenuItem.setOnAction(event -> graph.clearRecents());
 
-
-        // highlightMeneItem.setOnAction(event -> setUpMethodsWindow());
+        // highlightMenuItem.setOnAction(event -> setUpMethodsWindow());
         highlightMeneItem.setOnAction(event -> setUpHighlightsWindow());
     }
+
+    public void resetFromOutside() {
+        reset();
+        methodDefnGlyph.setIcon(FontAwesome.Glyph.PLUS);
+        callTraceGlyph.setIcon(FontAwesome.Glyph.PLUS);
+    }
+
 
     public void setUpStatusBar() {
         statusBar = new Group();
@@ -479,7 +519,8 @@ public class Main extends Application {
         root.setLeft(threadListView);
     }
 
-    int imgId = 0;
+    private int imgId = 0;
+
     private void saveUIImage() {
         System.out.println("In saveUIImage.");
         ScrollPane scrollPane = graph.getScrollPane();
@@ -496,6 +537,7 @@ public class Main extends Application {
 
     private void addGraphCellComponents() {
         convertDBtoElementTree = new ConvertDBtoElementTree();
+        CheckFileIntegrity.saveRef(this);
 
         task = new Task<Void>() {
             @Override
@@ -603,8 +645,9 @@ public class Main extends Application {
 
         pVBox = new VBox();
         pVBox.getChildren().addAll(title, progressText, progressBar);
+        pVBox.setSpacing(SizeProp.SPACING);
+        pVBox.setPadding(new Insets(10,5,5,5));
         pVBox.setAlignment(Pos.CENTER);
-
         pScene = new Scene(pVBox);
         pStage.setScene(pScene);
         pStage.setTitle("Please wait while we crunch the logs");
@@ -685,13 +728,13 @@ public class Main extends Application {
         ZoomableScrollPane.turnOffListeners();
 
         // graph.getModel().uiUpdateRequired = true;
-        System.out.println("Main::showThread: new updates show");
+        // System.out.println("Main::showThread: new updates show");
         convertDBtoElementTree.setCurrentThreadId(threadId);
-        System.out.println("Main::showThread: before clearUI");
+        // System.out.println("Main::showThread: before clearUI");
         convertDBtoElementTree.clearUI();
-        System.out.println("Main::showThread: after clearUI");
+        // System.out.println("Main::showThread: after clearUI");
         updateUi("showThread");
-        System.out.println("Main::showThread: END");
+        // System.out.println("Main::showThread: END");
 
         // Prevent triggering listeners from modifying circleCellsOnUI, edgesOnUI and highlightsOnUI HashMaps
         ZoomableScrollPane.turnOnListeners();
@@ -700,13 +743,13 @@ public class Main extends Application {
 
     public void updateUi(String caller) {
         if (convertDBtoElementTree != null && graph != null) {
-            System.out.println("Main::updateUi: called by " + caller + " thread " + Thread.currentThread().getName());
+            // System.out.println("Main::updateUi: called by " + caller + " thread " + Thread.currentThread().getName());
             convertDBtoElementTree.loadUIComponentsInsideVisibleViewPort(graph);
             convertDBtoElementTree.removeUIComponentsFromInvisibleViewPort(graph);
             // graph.myEndUpdate();
             graph.updateCellLayer();
         }
-        System.out.println("Main::updateUi: END called by " + caller);
+        // System.out.println("Main::updateUi: END called by " + caller);
     }
 
     // private void addGraphComponents() {
@@ -754,7 +797,8 @@ public class Main extends Application {
     }
 
     public static void makeSelection(String threadId) {
-        Platform.runLater(() -> threadListView.getSelectionModel().select("Thread: " + threadId));
+        // Platform.runLater(() -> threadListView.getSelectionModel().select("Thread: " + threadId));
+        threadListView.getSelectionModel().select("Thread: " + threadId);
     }
 
     private File chooseLogFile(String logType) {
@@ -848,154 +892,6 @@ public class Main extends Application {
     private Button applyButton;
     private Button cancelButton;
     private VBox vBox;
-
-    // ObservableList<String> strings ;
-    // CheckListView<String> checkListView;
-    // boolean firstTimeSetUpMethodsWindowCall = true;
-    //
-    // public void firstTimeSetUpMethodsWindow() {
-    //     if (!firstTimeSetUpMethodsWindowCall)
-    //         return;
-    //
-    //     firstTimeSetUpMethodsWindowCall = false;
-    //
-    //     mRootGroup = new Group();
-    //     strings = FXCollections.observableArrayList();
-    //     checkListView = new CheckListView<>(strings);
-    //     checkListView.setPrefWidth(500);
-    //     // checkListView.getCheckModel().getCheckedItems().addListener(new ListChangeListener<String>() {
-    //     //     public void onChanged(ListChangeListener.Change<? extends String> c) {
-    //     //         // Do something if item checked.
-    //     //     }
-    //     // });
-    //
-    //     applyButton = new Button("Apply");
-    //     applyButton.setAlignment(Pos.BASELINE_RIGHT);
-    //
-    //     cancelButton = new Button("Cancel");
-    //     cancelButton.setAlignment(Pos.BASELINE_RIGHT);
-    //
-    //     hBox = new HBox(cancelButton, applyButton);
-    //     hBox.setSpacing(SizeProp.SPACING);
-    //
-    //     vBox = new VBox(SizeProp.SPACING);
-    //     vBox.getChildren().addAll(checkListView, hBox);
-    //
-    //     mRootGroup.getChildren().add(vBox);
-    //     mScene = new Scene(mRootGroup);
-    //     mStage = new Stage();
-    //     mStage.setScene(mScene);
-    //
-    //     LinkedList<String> methodNamesList = new LinkedList<>();
-    //
-    //     // Fetch all methods from method definition fileMenu and display on UI.
-    //     Task<Void> onStageLoad = new Task<Void>() {
-    //         @Override
-    //         protected Void call() throws Exception {
-    //             // Fetch all methods from method definition fileMenu.
-    //             ResultSet rs = DatabaseUtil.select("SELECT * FROM " + TableNames.METHOD_DEFINITION_TABLE);
-    //             while (rs.next()) {
-    //                 String methodName = rs.getString("METHOD_NAME");
-    //                 String packageName = rs.getString("PACKAGE_NAME");
-    //                 methodNamesList.add(packageName + "." + methodName);
-    //             }
-    //             return null;
-    //         }
-    //
-    //         @Override
-    //         protected void succeeded() {
-    //             super.succeeded();
-    //             // Display the methods on UI
-    //             methodNamesList.stream().forEach(s -> {
-    //                 strings.add(s);
-    //             });
-    //         }
-    //     };
-    //
-    //     new Thread(onStageLoad).start();
-    //
-    // }
-    //
-    // public void setUpMethodsWindow() {
-    //
-    //     if(firstTimeSetUpMethodsWindowCall)
-    //         firstTimeSetUpMethodsWindow();
-    //
-    //     mStage.show();
-    //
-    //     /*
-    //     On Apply button click behaviour.
-    //     For each of the selected methods, insert the bound box properties into Highlights table if not already present.
-    //     */
-    //     Task<Void> taskOnApply = new Task<Void>() {
-    //         @Override
-    //         protected Void call() throws Exception {
-    //             if (!HighlightDAOImpl.isTableCreated()) {
-    //                 HighlightDAOImpl.createTable();
-    //             }
-    //
-    //             // For each of the selected methods, insert the bound box properties into Highlights table if not already present.
-    //             Statement statement = DatabaseUtil.getConnection().createStatement();
-    //             checkListView.getCheckModel().getCheckedItems().stream().forEach(fullName -> {
-    //                 String[] arr = fullName.split("\\.");
-    //                 String methodName = arr[arr.length - 1];
-    //                 String packageName = fullName.substring(0, fullName.length() - methodName.length() - 1);
-    //                 String sql = "INSERT INTO " + TableNames.HIGHLIGHT_ELEMENT + " (METHOD_ID, THREAD_ID, START_X, START_Y, WIDTH, HEIGHT) " +
-    //                         "SELECT " + TableNames.METHOD_DEFINITION_TABLE + ".ID, " +
-    //                         TableNames.CALL_TRACE_TABLE + ".THREAD_ID, " +
-    //                         TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT, " +
-    //                         TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT, " +
-    //                         "(" + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_RIGHT - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT), " +
-    //                         "(" + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_BOTTOM_LEFT - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT) " +
-    //                         "FROM " + TableNames.ELEMENT_TABLE + " " +
-    //                         "JOIN " + TableNames.CALL_TRACE_TABLE + " ON " + TableNames.ELEMENT_TABLE + ".ID_ENTER_CALL_TRACE = " + TableNames.CALL_TRACE_TABLE + ".ID " +
-    //                         "JOIN " + TableNames.METHOD_DEFINITION_TABLE + " ON " + TableNames.CALL_TRACE_TABLE + ".METHOD_ID = " + TableNames.METHOD_DEFINITION_TABLE + ".ID " +
-    //                         "WHERE " + TableNames.METHOD_DEFINITION_TABLE + ".METHOD_NAME = '" + methodName + "' " +
-    //                         "AND " + TableNames.METHOD_DEFINITION_TABLE + ".PACKAGE_NAME = '" + packageName + "' " +
-    //                         "AND NOT EXISTS " +
-    //                         "(SELECT * FROM " + TableNames.HIGHLIGHT_ELEMENT + " " +
-    //                         "WHERE " + TableNames.HIGHLIGHT_ELEMENT + ".METHOD_ID = " + TableNames.METHOD_DEFINITION_TABLE + ".ID)";
-    //
-    //                 try {
-    //                 statement.addBatch(sql);
-    //                 } catch (SQLException e) {e.printStackTrace();}
-    //             });
-    //
-    //             // Delete records from HIGHLIGHT_ELEMENT if that method is not checked in the stage.
-    //             StringJoiner sj = new StringJoiner("','", "'", "'");
-    //             checkListView.getCheckModel().getCheckedItems().stream().forEach(sj::add);
-    //
-    //             String sql = "DELETE FROM " + TableNames.HIGHLIGHT_ELEMENT + " WHERE ID IN " +
-    //                     "(SELECT ID FROM " + TableNames.HIGHLIGHT_ELEMENT + " " +
-    //                     "WHERE METHOD_ID NOT IN " +
-    //                     "(SELECT ID FROM " + TableNames.METHOD_DEFINITION_TABLE + " " +
-    //                     "WHERE (" + TableNames.METHOD_DEFINITION_TABLE + ".PACKAGE_NAME || '.' || " + TableNames.METHOD_DEFINITION_TABLE + ".METHOD_NAME) " +
-    //                     "IN (" + sj.toString() + ")))";
-    //
-    //             statement.addBatch(sql);
-    //             statement.executeBatch();
-    //
-    //             return null;
-    //         }
-    //
-    //         @Override
-    //         protected void succeeded() {
-    //             super.succeeded();
-    //             updateUi();
-    //         }
-    //     };
-    //
-    //     applyButton.setOnAction(event -> {
-    //         new Thread(taskOnApply).start();
-    //         mStage.close();
-    //     });
-    //
-    //     cancelButton.setOnAction(event -> {
-    //         mStage.close();
-    //     });
-    // }
-    //
-    //
 
     private boolean firstTimeSetUpHighlightsWindowCall = true;
 
@@ -1240,7 +1136,7 @@ public class Main extends Application {
             @Override
             protected void succeeded() {
                 super.succeeded();
-                System.out.println("Main::setUpHighlightsWindow::succeeded");
+                // System.out.println("Main::setUpHighlightsWindow::succeeded");
                 graph.getModel().uiUpdateRequired = true;
                 updateUi("taskOnApply");
 
@@ -1317,8 +1213,8 @@ public class Main extends Application {
 
         ResultSet getThreadInfoRS = DatabaseUtil.select(getThreadSQL);
 
-        System.out.println("get thread query:");
-        System.out.println(getThreadSQL);
+        // System.out.println("get thread query:");
+        // System.out.println(getThreadSQL);
 
         int threadId=0;
         try {
@@ -1329,7 +1225,7 @@ public class Main extends Application {
             e.printStackTrace();
         }
 
-        System.out.println("Result threadId " + threadId);
+        // System.out.println("Result threadId " + threadId);
 
         String sqlFull = "INSERT INTO " + TableNames.HIGHLIGHT_ELEMENT + " " +
                 "(METHOD_ID, THREAD_ID, HIGHLIGHT_TYPE, START_X, START_Y, WIDTH, HEIGHT, COLOR) " +
@@ -1379,8 +1275,8 @@ public class Main extends Application {
 
         String sql = highlightType.equalsIgnoreCase("SINGLE") ? sqlSingle : sqlFull;
 
-        System.out.println("-------------");
-        System.out.println(sql);
+        // System.out.println("-------------");
+        // System.out.println(sql);
         try {
             statement.addBatch(sql);
         } catch (SQLException e) {
@@ -1395,8 +1291,8 @@ public class Main extends Application {
                 "WHERE (" + TableNames.METHOD_DEFINITION_TABLE + ".PACKAGE_NAME || '.' || " + TableNames.METHOD_DEFINITION_TABLE + ".METHOD_NAME) " +
                 "IN (" + fullNames + "))";
 
-        System.out.println("-------------");
-        System.out.println(sql);
+        // System.out.println("-------------");
+        // System.out.println(sql);
 
         try {
             statement.addBatch(sql);
@@ -1429,16 +1325,4 @@ public class Main extends Application {
         highlight.setDisable(true);
     }
 
-    // Color coding.
-    // Method selection screen
-    //      Show all methods from method definition
-    //          with colors assigned.
-    //          wheather single cell or complete subtree is highlighted.
-    //      loads on a background thread.
-    //      enaled/disables mode for buttons.
-    //      apply button.
-
-    // Save to db on clicking apply button.
-    // background color will be loaded like elements and lines.
-    //
 }

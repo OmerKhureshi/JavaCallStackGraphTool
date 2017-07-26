@@ -2,9 +2,11 @@ package com.application.fxgraph.cells;
 
 import com.application.fxgraph.ElementHelpers.Element;
 import com.application.fxgraph.graph.Cell;
+import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.text.TextAlignment;
 
 public class CircleCell extends Cell {
 
@@ -21,8 +23,13 @@ public class CircleCell extends Cell {
         circle = new Circle(20);
         label = new Label("This is a long string");
         methodName = new Label("");
-        circle.setStroke(Color.GRAY);
-        circle.setFill(Color.RED);
+        methodName.setPrefWidth(85);
+        methodName.setWrapText(true);
+        methodName.setStyle("-fx-background-color: papayawhip; -fx-background-radius: 7; -fx-border-color: burlywood; -fx-border-radius: 7; -fx-border-width: 2");
+        methodName.setAlignment(Pos.CENTER);
+        methodName.setTextAlignment(TextAlignment.CENTER);
+        circle.setStroke(Color.web("#003366"));
+        circle.setFill(Color.web("#6699CC"));
         circle.relocate(0,0);
 
         // getChildren().setAll(circle, label);
@@ -60,8 +67,8 @@ public class CircleCell extends Cell {
         this.methodName.setText(methodName);
 
         // Center the method name label below the circle.
-        this.methodName.setMinWidth(this.methodName.getText().length()*2);
-        this.methodName.relocate(-this.methodName.getMinWidth()/2, 40);//-this.methodName.getMinHeight()/2);
+        // this.methodName.setMinWidth(this.methodName.getText().length()*2);
+        this.methodName.relocate(-this.methodName.getPrefWidth() * .25, 45);//-this.methodName.getMinHeight()/2);
 
     }
 

@@ -118,7 +118,6 @@ public class EventHandlers {
                     xCord = callTraceRS.getFloat("bound_box_x_coordinate");
                     yCord = callTraceRS.getFloat("bound_box_y_coordinate");
 
-                    System.out.println("Clicked on cell: " + methodName + " " + cell.getCellId());
 
                     try (ResultSet methodDefRS = MethodDefnDAOImpl.selectWhere("id = " + methodId)) {
                         if (methodDefRS.next()) {
@@ -135,8 +134,11 @@ public class EventHandlers {
                         }
                     } catch (SQLException e) {}
 
-                    // Save the clicked element into recents menu.
-                    graph.addToRecents(packageName + "." + methodName, new Graph.XYCordinate(xCord, yCord));
+                    // Save the clicked element into recent menu.
+                    graph.addToRecent(packageName + "." + methodName, new Graph.XYCoordinate(xCord, yCord, threadId));
+
+                    System.out.println("hValue: " + graph.getScrollPane().getHvalue());
+                    System.out.println("vValue: " + graph.getScrollPane().getVvalue());
 
 
                     Label lMethodName = new Label(methodName);
