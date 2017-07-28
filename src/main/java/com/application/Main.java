@@ -11,12 +11,16 @@ import com.application.logs.fileHandler.CallTraceLogFile;
 import com.application.logs.fileHandler.MethodDefinitionLogFile;
 import com.application.logs.fileIntegrity.CheckFileIntegrity;
 import com.application.logs.parsers.ParseCallTrace;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.embed.swing.SwingFXUtils;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.*;
 import javafx.scene.Group;
 import javafx.scene.Node;
@@ -31,6 +35,7 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import org.controlsfx.glyphfont.FontAwesome;
 import org.controlsfx.glyphfont.Glyph;
 
@@ -129,9 +134,9 @@ public class Main extends Application {
         // Layout layout = new RandomLayout(graph);
         // layout.execute();
 
-        System.out.println("Max memory: " + Runtime.getRuntime().maxMemory() / 1000000);
-        System.out.println("Free memory: " + Runtime.getRuntime().freeMemory() / 1000000);
-        System.out.println("Total memory: " + Runtime.getRuntime().totalMemory() / 1000000);
+        // System.out.println("Max memory: " + Runtime.getRuntime().maxMemory() / 1000000);
+        // System.out.println("Free memory: " + Runtime.getRuntime().freeMemory() / 1000000);
+        // System.out.println("Total memory: " + Runtime.getRuntime().totalMemory() / 1000000);
 
         // Create Menu Bar
         setUpMenu();
@@ -326,42 +331,25 @@ public class Main extends Application {
                 nodeLocation.setText(entry.getKey());
                 nodeLocation.setOnAction(event1 -> {
                     String targetThreadId = String.valueOf(entry.getValue().threadId);
-                    double hValue = graph.getHValue(entry.getValue().x);
-                    double vValue = graph.getVValue(entry.getValue().y);
+                    if (!targetThreadId.equals(currentSelectedThread))
+                        showThread(targetThreadId);
 
                     ConvertDBtoElementTree.resetRegions();
 
-                    // Platform.runLater(() -> {
-                        System.out.println("---------ONE show thread");
-                        showThread(targetThreadId);
-                        System.out.println("---------ONE END");
-                    // });
+                    Timeline idleWait = new Timeline(new KeyFrame(Duration.millis(100), new EventHandler<ActionEvent>() {
+                        @Override
+                        public void handle(ActionEvent event) {
+                            graph.moveScrollPane(
+                                    graph.getHValue(entry.getValue().x),
+                                    graph.getVValue(entry.getValue().y)
+                            );
+                        }
+                    }));
 
-                    // try {
-                    //     Thread.sleep(5000);
-                    // } catch (InterruptedException e) {
-                    //     e.printStackTrace();
-                    // }
+                    idleWait.setCycleCount(1);
 
-
-                    // Platform.runLater(() -> {
-                        System.out.println("---------TWO make selection");
-                        makeSelection(targetThreadId);
-                        System.out.println("---------TWO END");
-                    // });
-
-
-                    // try {
-                    //     Thread.sleep(5000);
-                    // } catch (InterruptedException e) {
-                    //     e.printStackTrace();
-                    // }
-
-                    // Platform.runLater(() -> {
-                        System.out.println("---------THREE move scrollpane");
-                        graph.moveScrollPane(hValue, vValue);
-                        System.out.println("---------THREE END");
-                    // });
+                    makeSelection(targetThreadId);
+                    idleWait.play();
 
                 });
 
@@ -374,6 +362,8 @@ public class Main extends Application {
         // highlightMenuItem.setOnAction(event -> setUpMethodsWindow());
         highlightMeneItem.setOnAction(event -> setUpHighlightsWindow());
     }
+
+    String currentSelectedThread;
 
     public void resetFromOutside() {
         reset();
@@ -497,7 +487,9 @@ public class Main extends Application {
             String selectedItem = threadListView.getSelectionModel().getSelectedItem();
             String threadId = selectedItem.split(" ")[1];
             ConvertDBtoElementTree.resetRegions();
-            showThread(threadId);
+            if (!currentSelectedThread.equalsIgnoreCase(threadId)) {
+                showThread(threadId);
+            }
         });
 
         // Get thread list and populate
@@ -516,8 +508,7 @@ public class Main extends Application {
             }
         });
 
-        root.setLeft(threadListView);
-    }
+        root.setLeft(threadListView);    }
 
     private int imgId = 0;
 
@@ -662,11 +653,11 @@ public class Main extends Application {
         setUpThreadsView();
         // setUpCheckTreeView();
 
-        Graph.drawPlaceHolderLines();
+        // Graph.drawPlaceHolderLines();
 
         updateUi("postDatabaseLoad");
 
-        String firstThreadID = threadsObsList.get(0).split(" ")[1];
+        String firstThreadID = currentSelectedThread = threadsObsList.get(0).split(" ")[1];
         showThread(firstThreadID);
         threadListView.getSelectionModel().select(0);
     }
@@ -722,7 +713,7 @@ public class Main extends Application {
     // }
 
     public void showThread(String threadId) {
-
+        currentSelectedThread = threadId;
 
         // Prevent triggering listeners from modifying circleCellsOnUI, edgesOnUI and highlightsOnUI HashMaps
         ZoomableScrollPane.turnOffListeners();

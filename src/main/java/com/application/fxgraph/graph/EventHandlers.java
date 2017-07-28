@@ -137,8 +137,8 @@ public class EventHandlers {
                     // Save the clicked element into recent menu.
                     graph.addToRecent(packageName + "." + methodName, new Graph.XYCoordinate(xCord, yCord, threadId));
 
-                    System.out.println("hValue: " + graph.getScrollPane().getHvalue());
-                    System.out.println("vValue: " + graph.getScrollPane().getVvalue());
+                    // System.out.println("hValue: " + graph.getScrollPane().getHvalue());
+                    // System.out.println("vValue: " + graph.getScrollPane().getVvalue());
 
 
                     Label lMethodName = new Label(methodName);

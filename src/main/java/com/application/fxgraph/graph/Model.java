@@ -109,7 +109,6 @@ public class Model {
 
     public void addHighlight(Integer id, Rectangle rectangle) {
         // uiUpdateRequired = true;
-        System.out.println("Model::addHighlight: adding highlight to map " + id);
         highlightsOnUI.putIfAbsent(id, rectangle);
     }
 
