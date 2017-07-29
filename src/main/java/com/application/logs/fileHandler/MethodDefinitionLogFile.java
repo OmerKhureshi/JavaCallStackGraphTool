@@ -1,15 +1,18 @@
 package com.application.logs.fileHandler;
 
+import com.application.db.DAOImplementation.FilesDAOImpl;
+import com.application.db.DatabaseUtil;
+
 import java.io.File;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class MethodDefinitionLogFile {
-    // private static String fileName = "L-Instrumentation_method_definitions.txt";
-//     private static String fileName = "logs/L-Instrumentation_method_definitions_Demo_2.txt";
-//     private static String fileName = "/home/omer/iTool_319011496624389544_method_definitions.txt";
     private static String fileName = "";
+    public static final String FILE_TYPE = "METHODDEFN";
+
     MethodDefinitionLogFile() {
         // Get the resources
-        // http://stackoverflow.com/a/21722773/3690248
         file = new File(Thread.currentThread().getContextClassLoader().getResource(fileName).getFile());
     }
 
@@ -19,6 +22,15 @@ public class MethodDefinitionLogFile {
 
     public static void setFile(File newFile) {
         file = newFile;
+
+        ResultSet rs = FilesDAOImpl.selectWhere("FILE_TYPE = '" + FILE_TYPE + "'");
+        try {
+            if (!rs.next()) {
+                FilesDAOImpl.insert(FILE_TYPE, file.getPath());
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     private static File file = new File(Thread.currentThread().getContextClassLoader().getResource(fileName).getFile());

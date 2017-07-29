@@ -545,15 +545,19 @@ public class ConvertDBtoElementTree {
         // cellLayer.getChildren().clear();
         // synchronized (Main.getLock()) {
 
-            // System.out.println("ConvertDBtoElementTree::clearUI");
-            graph.clearCellLayer();
+        if (graph == null){
+            System.out.println("------> graph is null.");
+
+        }
+        // System.out.println("ConvertDBtoElementTree::clearUI");
+        graph.clearCellLayer();
+        // System.out.println("ConvertDBtoElementTree::clearUI: getHighlightsOnUI.size() " + graph.getModel().getHighlightsOnUI().size());
+
+        if (graph.getModel() != null) {
+            graph.getModel().clearMaps();
+
             // System.out.println("ConvertDBtoElementTree::clearUI: getHighlightsOnUI.size() " + graph.getModel().getHighlightsOnUI().size());
-
-            if (graph.getModel() != null) {
-                graph.getModel().clearMaps();
-
-                // System.out.println("ConvertDBtoElementTree::clearUI: getHighlightsOnUI.size() " + graph.getModel().getHighlightsOnUI().size());
-            }
+        }
 
         // }
 
@@ -688,6 +692,10 @@ public class ConvertDBtoElementTree {
         activeRegion = null;
         triggerRegion = null;
         firstLoad = true;
+    }
+
+    public void setGraph(Graph graph) {
+        this.graph = graph;
     }
 }
 

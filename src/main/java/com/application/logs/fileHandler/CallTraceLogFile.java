@@ -1,14 +1,16 @@
 package com.application.logs.fileHandler;
 
+import com.application.db.DAOImplementation.FilesDAOImpl;
+
 import java.io.File;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class CallTraceLogFile {
 
-    // private static String fileName = "L-Instrumentation_call_trace_B1.txt";
-    // private static String fileName = "logs/L-Instrumentation_call_trace_Demo_2.txt";
-//     private static String fileName = "/home/omer/iTool_319011496624389544_call_trace.txt";
     private static String fileName = "";
-    // private static String fileName = "L-Instrumentation_call_trace_W.txt";
+    public static final String FILE_TYPE = "CALL_TRACE";
+
     private static File file = new File(Thread.currentThread().getContextClassLoader().getResource(fileName).getFile());
 
     CallTraceLogFile() {
@@ -22,6 +24,15 @@ public class CallTraceLogFile {
 
     public static void setFile(File newFile) {
         file = newFile;
+
+        ResultSet rs = FilesDAOImpl.selectWhere("FILE_TYPE = '" + FILE_TYPE + "'");
+        try {
+            if (!rs.next()) {
+                FilesDAOImpl.insert(FILE_TYPE, file.getPath());
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public static String getFileName() {

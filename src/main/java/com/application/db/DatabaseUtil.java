@@ -1,9 +1,14 @@
 package com.application.db;
 
 import com.application.db.DAOImplementation.*;
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 
 import java.sql.*;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
 public class DatabaseUtil {
 
@@ -365,6 +370,7 @@ public class DatabaseUtil {
         ElementToChildDAOImpl.dropTable();
         EdgeDAOImpl.dropTable();
         HighlightDAOImpl.dropTable();
+        FilesDAOImpl.dropTable();
 
         CallTraceDAOImpl.createTable();
         MethodDefnDAOImpl.createTable();

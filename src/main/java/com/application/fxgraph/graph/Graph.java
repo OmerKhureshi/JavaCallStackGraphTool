@@ -110,6 +110,7 @@ public class Graph {
             if (!cellLayer.getChildren().contains(circleCell)) {
                 // System.out.println("Graph::updateCellLayer: Adding circleCell to cellLayer: " + circleCell.getCellId());
                 cellLayer.getChildren().add(circleCell);
+                circleCell.toFront();
                 eventHandlers.setCustomMouseEventHandlers(circleCell);
             }
         });
@@ -117,6 +118,7 @@ public class Graph {
         model.getEdgesOnUI().forEach((id, edge) -> {
             if (!cellLayer.getChildren().contains(edge)) {
                 cellLayer.getChildren().add(edge);
+                edge.toBack();
             }
         });
 

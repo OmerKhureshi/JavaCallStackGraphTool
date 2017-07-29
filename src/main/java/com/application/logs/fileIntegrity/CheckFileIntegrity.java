@@ -6,6 +6,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.layout.Region;
 
 import java.io.*;
 import java.util.Deque;
@@ -65,9 +66,13 @@ public class CheckFileIntegrity {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Problem with the call trace log file.");
                 alert.setHeaderText("An error occurred while reading the " + file.getName() + " file.");
-                alert.setContentText("This usually happens due to mismatch in count of ENTER and EXIT statements");
+                alert.setContentText("This usually happens either due to the log files not conforming to the syntax rules " +
+                        "or due to a mismatch in the count of ENTER and EXIT statements. Please load a different set of log files.");
                 ButtonType resetButtonType = new ButtonType("Reset");
                 alert.getButtonTypes().setAll(resetButtonType);
+
+                alert.getDialogPane().setMinWidth(Region.USE_PREF_SIZE);
+                alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
 
                 Optional<ButtonType> res = alert.showAndWait();
 

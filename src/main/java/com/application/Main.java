@@ -14,7 +14,6 @@ import com.application.logs.parsers.ParseCallTrace;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -42,6 +41,7 @@ import org.controlsfx.glyphfont.Glyph;
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
+import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -122,30 +122,15 @@ public class Main extends Application {
     // Background tasks
     Task task;
 
+    private boolean firstTimeLoad = true;
+
+
+
     @Override
     public void start(Stage primaryStage) {
         this.primaryStage = primaryStage;
-        // graph = new Graph();
         root = new BorderPane();
         EventHandlers.saveRef(this);
-
-        // Original.
-        // addGraphComponents();
-        // Layout layout = new RandomLayout(graph);
-        // layout.execute();
-
-        // System.out.println("Max memory: " + Runtime.getRuntime().maxMemory() / 1000000);
-        // System.out.println("Free memory: " + Runtime.getRuntime().freeMemory() / 1000000);
-        // System.out.println("Total memory: " + Runtime.getRuntime().totalMemory() / 1000000);
-
-        // Create Menu Bar
-        setUpMenu();
-
-        // Create Status Bar
-        // setUpStatusBar();
-
-        // Create a navigation bar. Future release
-        // setUpNavigationBar();
 
         Scene scene = new Scene(root, 1000, 300);
 
@@ -157,6 +142,88 @@ public class Main extends Application {
         primaryStage.setScene(scene);
         primaryStage.setTitle("Call Stack Visualization");
         primaryStage.show();
+
+
+        // *****************
+        // Display user confirmation window to reset or reload the application.
+        // *****************
+        Task<Void> userConfirmation = new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                firstTimeLoad = isFirstLoad();
+                System.out.println("Is first time load? : " + firstTimeLoad);
+                return null;
+            }
+
+            @Override
+            protected void succeeded() {
+                super.succeeded();
+                chooseReloadOrReset(firstTimeLoad);
+            }
+
+            @Override
+            protected void failed() {
+                super.failed();
+
+                System.out.println("*******************************");
+                System.out.println("FAILED BACKGROUND DB CHECK.");
+                System.out.println("*******************************");
+            }
+        };
+
+        new Thread(userConfirmation).run();
+
+
+    }
+
+    private boolean isFirstLoad() {
+        try {
+            DatabaseMetaData dbm = DatabaseUtil.getConnection().getMetaData();
+            ResultSet tables = dbm.getTables(null, null, TableNames.ELEMENT_TABLE, null);
+            if (tables.next()) {
+                methodDefnFileSet = callTraceFileSet = true;
+                return false;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return true;
+    }
+
+    private void chooseReloadOrReset(boolean firstTimeLoad) {
+        if (firstTimeLoad) {
+            setUpInfoPanel();
+            setUpMenu();
+            setUpMenuActions();
+            return;
+        }
+
+        Alert userChoiceAlert = new Alert(Alert.AlertType.CONFIRMATION);
+        userChoiceAlert.setTitle("Start up options");
+        userChoiceAlert.setHeaderText("Start new or reload previous log files?");
+        userChoiceAlert.setContentText("You can either start fresh and load new log files or you may choose to reload previously loaded log files. If the log files are large, you can avoid long load times after the first load by clicking Reload previous in the successive use of this application.");
+
+        ButtonType  startFreshButtonType = new ButtonType("Start new");
+        ButtonType reloadButtonType = new ButtonType("Reload previous");
+        userChoiceAlert.getButtonTypes().setAll(startFreshButtonType, reloadButtonType);
+        userChoiceAlert.getDialogPane().setMinWidth(Region.USE_PREF_SIZE);
+        userChoiceAlert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+
+        Optional<ButtonType> res = userChoiceAlert.showAndWait();
+
+        if (res.isPresent() && res.get() == startFreshButtonType) {
+            // Start fresh. Load new configuration.
+            this.firstTimeLoad = true;
+            setUpInfoPanel();
+            setUpMenu();
+            setUpMenuActions();
+        } else if (res.isPresent() && res.get() == reloadButtonType) {
+            // Reload previous configuration.
+            setUpMenuForReloads();
+            setUpMenuActions();
+            reload();
+        }
     }
 
     private void setUpMenu() {
@@ -251,50 +318,143 @@ public class Main extends Application {
 
         // Main menu
         menuBar.getMenus().addAll(fileMenu, runMenu, saveImgMenu, goToMenu, highlight);
-        glyphs.addAll(Arrays.asList(methodDefnGlyph, callTraceGlyph, resetGlyph, runAnalysisGlyph, saveImgGlyph, recentsGlyph, clearHistoryGlyph, highlightItemsGlyph));
+        glyphs.addAll(Arrays.asList(methodDefnGlyph, callTraceGlyph, resetGlyph, runAnalysisGlyph,
+                saveImgGlyph, recentsGlyph, clearHistoryGlyph, highlightItemsGlyph));
 
         menuItems.forEach(menuItem -> menuItem.setStyle(SizeProp.PADDING_SUBMENU));
         glyphs.forEach(glyph -> glyph.setStyle(SizeProp.PADDING_ICONS));
-
-        populateInstructions();
-        setMenuActions();
-
         root.setTop(menuBar);
     }
 
-    private void setMenuActions() {
+    private void setUpMenuForReloads() {
+        List<Glyph> glyphs = new ArrayList<>();
+        List<MenuItem> menuItems = new ArrayList<>();
+        String font = "FontAwesome";
+
+        menuBar = new MenuBar();
+        menuBar.setStyle(SizeProp.PADDING_MENU);
+
+        // *****************
+        // File Menu
+        // *****************
+
+        fileMenu = new Menu("File");
+        methodDefnGlyph = new Glyph(font, FontAwesome.Glyph.CHECK);
+        methodDefnGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+        chooseMethodDefnMenuItem = new MenuItem("Select Method Definition log file", methodDefnGlyph);
+
+        callTraceGlyph = new Glyph(font, FontAwesome.Glyph.CHECK);
+        callTraceGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+        chooseCallTraceMenuItem = new MenuItem("Select Call Trace log file", callTraceGlyph);
+
+        fileMenu.getItems().addAll(chooseMethodDefnMenuItem, chooseCallTraceMenuItem);
+        menuItems.add(chooseMethodDefnMenuItem);
+        menuItems.add(chooseCallTraceMenuItem);
+
+
+        // *****************
+        // Run Menu
+        // *****************
+        runMenu = new Menu("Run");
+
+        runAnalysisGlyph = new Glyph(font, FontAwesome.Glyph.PLAY);
+        runAnalysisGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+        runAnalysisMenuItem = new MenuItem("Run", runAnalysisGlyph);
+
+        resetGlyph = new Glyph(font, FontAwesome.Glyph.RETWEET);
+        resetGlyph.setColor(ColorProp.ENABLED);
+        resetMenuItem = new MenuItem("Reset", resetGlyph);
+
+        runMenu.getItems().addAll(runAnalysisMenuItem, resetMenuItem);
+        menuItems.add(runAnalysisMenuItem);
+        menuItems.add(resetMenuItem);
+
+
+        // *****************
+        // Save Image Menu
+        // *****************
+        saveImgMenu = new Menu("Save Image");
+        saveImgGlyph = new Glyph(font, FontAwesome.Glyph.PICTURE_ALT);
+        saveImgGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+        saveImgMenuItem = new MenuItem("Save Image", saveImgGlyph);
+
+        saveImgMenu.getItems().add(saveImgMenuItem);
+        menuItems.add(saveImgMenuItem);
+
+
+        // *****************
+        // Go To Menu
+        // *****************
+        goToMenu = new Menu("Go To");
+        recentsGlyph = new Glyph(font, FontAwesome.Glyph.HISTORY);
+        recentsGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+        recentMenu = new Menu("Recent nodes", recentsGlyph);
+        recentMenu.setStyle(SizeProp.PADDING_SUBMENU);
+
+        clearHistoryGlyph = new Glyph(font, FontAwesome.Glyph.TRASH);
+        clearHistoryGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+        clearHistoryMenuItem = new MenuItem("Clear history", clearHistoryGlyph);
+
+        goToMenu.getItems().addAll(recentMenu, clearHistoryMenuItem);
+        menuItems.add(clearHistoryMenuItem);
+
+        // Highlight method invocations menu.
+        highlight = new Menu("Highlights");
+        highlightItemsGlyph = new Glyph(font, FontAwesome.Glyph.FLAG);
+        highlightItemsGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+        highlightMeneItem = new MenuItem("Highlight method invocations", highlightItemsGlyph);
+
+        highlight.getItems().add(highlightMeneItem);
+        menuItems.add(highlightMeneItem);
+
+        // Main menu
+        menuBar.getMenus().addAll(fileMenu, runMenu, saveImgMenu, goToMenu, highlight);
+        glyphs.addAll(Arrays.asList(methodDefnGlyph, callTraceGlyph, resetGlyph, runAnalysisGlyph,
+                saveImgGlyph, recentsGlyph, clearHistoryGlyph, highlightItemsGlyph));
+
+        menuItems.forEach(menuItem -> menuItem.setStyle(SizeProp.PADDING_SUBMENU));
+        glyphs.forEach(glyph -> glyph.setStyle(SizeProp.PADDING_ICONS));
+        root.setTop(menuBar);
+    }
+
+    private void setUpMenuActions() {
+
         chooseMethodDefnMenuItem.setOnAction(event -> {
-//            DatabaseUtil.resetDB();
             File methodDefnFile = chooseLogFile("MethodDefinition");
             if (methodDefnFile != null) {
 
                 // Menu buttons related
                 MethodDefinitionLogFile.setFile(methodDefnFile);
                 methodDefnGlyph.setIcon(FontAwesome.Glyph.CHECK);
-                methodDefnInfoLabel.setText(methodDefnInfoString + "  File selected : " + methodDefnFile.getName());
 
-                // Change icons and colors in instructions panel
-                methodDefnInfoGlyph.setIcon(FontAwesome.Glyph.CHECK);
-                methodDefnInfoGlyph.setColor(ColorProp.ENABLED_COLORFUL);
-                callTraceInfoGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+                if (firstTimeLoad) {
+                    // Change icons and colors in instructions panel
+                    methodDefnInfoLabel.setText(methodDefnInfoString + "  File selected : " + methodDefnFile.getName());
+
+                    methodDefnInfoGlyph.setIcon(FontAwesome.Glyph.CHECK);
+                    methodDefnInfoGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+                    callTraceInfoGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+                }
 
                 changeBool("methodDefnFileSet", true);
             }
         });
 
         chooseCallTraceMenuItem.setOnAction(event -> {
-//            DatabaseUtil.resetDB();
             File callTraceFile = chooseLogFile("CallTrace");
             if (callTraceFile != null) {
                 // Menu buttons related
                 CallTraceLogFile.setFile(callTraceFile);
                 callTraceGlyph.setIcon(FontAwesome.Glyph.CHECK);
-                callTraceInfoLabel.setText(callTraceInfoString + "  File selected : " + callTraceFile.getName());
 
-                // Change icons and colors in instructions panel
-                methodDefnInfoGlyph.setColor(ColorProp.ENABLED_COLORFUL);
-                callTraceInfoGlyph.setIcon(FontAwesome.Glyph.CHECK);
-                callTraceInfoGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+                if (firstTimeLoad) {
+                    // Change icons and colors in instructions panel
+                    methodDefnInfoGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+
+                    callTraceInfoLabel.setText(callTraceInfoString + "  File selected : " + callTraceFile.getName());
+                    callTraceInfoGlyph.setIcon(FontAwesome.Glyph.CHECK);
+                    callTraceInfoGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+                }
 
                 changeBool("callTraceFileSet", true);
             }
@@ -304,13 +464,16 @@ public class Main extends Application {
             setUpProgressBar();
             reload();
 
-            // Change icons and colors in instructions panel
-            runInfoGlyph.setIcon(FontAwesome.Glyph.CHECK);
-            runInfoGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+            if (firstTimeLoad) {
+                // Change icons and colors in instructions panel
+                runInfoGlyph.setIcon(FontAwesome.Glyph.CHECK);
+                runInfoGlyph.setColor(ColorProp.ENABLED_COLORFUL);
 
-            saveImgMenu.setDisable(false);
-            goToMenu.setDisable(false);
-            highlight.setDisable(false);
+                saveImgMenu.setDisable(false);
+                goToMenu.setDisable(false);
+                highlight.setDisable(false);
+            }
+
         });
 
         resetMenuItem.setOnAction(event -> {
@@ -363,14 +526,13 @@ public class Main extends Application {
         highlightMeneItem.setOnAction(event -> setUpHighlightsWindow());
     }
 
-    String currentSelectedThread;
+    private String currentSelectedThread;
 
     public void resetFromOutside() {
         reset();
         methodDefnGlyph.setIcon(FontAwesome.Glyph.PLUS);
         callTraceGlyph.setIcon(FontAwesome.Glyph.PLUS);
     }
-
 
     public void setUpStatusBar() {
         statusBar = new Group();
@@ -394,8 +556,6 @@ public class Main extends Application {
     }
 
     private void reload() {
-        // statusBarLabel.setText("Loading. Please wait.");
-
         if (!methodDefnFileSet || !callTraceFileSet) {
             System.out.println("Returning without effect");
             return;
@@ -410,6 +570,7 @@ public class Main extends Application {
         root.setCenter(null);
 
         graph = new Graph();
+        convertDBtoElementTree.setGraph(graph);
         root.setCenter(graph.getScrollPane());
         ((ZoomableScrollPane) graph.getScrollPane()).saveRef(this);
     }
@@ -478,8 +639,14 @@ public class Main extends Application {
     }
 
     private void setUpThreadsView() {
-        // Layout Left
+        /*
+            Setup the threads list view on the left.
+        */
+
+        // List to back the UI List view
         threadsObsList = FXCollections.observableArrayList();
+
+        // UI List View to display all threads
         threadListView = new ListView<>();
         threadListView.setItems(threadsObsList);
 
@@ -495,20 +662,36 @@ public class Main extends Application {
         // Get thread list and populate
         threadsObsList.clear();
 
-        ConvertDBtoElementTree.greatGrandParent.getChildren().forEach(element -> {
-            Element child = element.getChildren().get(0);
-            int callTraceId = -1;
-            if (child != null) callTraceId = child.getFkEnterCallTrace();
-            try (ResultSet rs = CallTraceDAOImpl.selectWhere("id = " + callTraceId)) {
-                if (rs.next()) {
-                    int threadId = rs.getInt("thread_id");
+        if (!firstTimeLoad) {
+            try (ResultSet threadsRS = DatabaseUtil.select("SELECT DISTINCT(THREAD_ID) FROM CALL_TRACE")) {
+                while (threadsRS.next()) {
+                    int threadId = threadsRS.getInt("thread_id");
                     threadsObsList.add("Thread: " + threadId);
                 }
-            } catch (SQLException ignored) {
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
-        });
 
-        root.setLeft(threadListView);    }
+        } else {
+
+            ConvertDBtoElementTree.greatGrandParent.getChildren().forEach(element -> {
+                Element child = element.getChildren().get(0);
+                int callTraceId = -1;
+                if (child != null) callTraceId = child.getFkEnterCallTrace();
+                try (ResultSet rs = CallTraceDAOImpl.selectWhere("id = " + callTraceId)) {
+                    if (rs.next()) {
+                        int threadId = rs.getInt("thread_id");
+                        threadsObsList.add("Thread: " + threadId);
+                    }
+                } catch (SQLException ignored) {
+                }
+            });
+        }
+
+        root.setLeft(threadListView);
+
+    }
+
 
     private int imgId = 0;
 
@@ -576,7 +759,7 @@ public class Main extends Application {
                 convertDBtoElementTree.calculateElementProperties();
 
                 // Insert elements and properties into database
-//                convertDBtoElementTree.recursivelyInsertElementsIntoDB(convertDBtoElementTree.greatGrandParent);
+                // convertDBtoElementTree.recursivelyInsertElementsIntoDB(convertDBtoElementTree.greatGrandParent);
 
                 Element root = ConvertDBtoElementTree.greatGrandParent;
                 if (root == null)
@@ -617,10 +800,15 @@ public class Main extends Application {
             }
         };
 
-        progressBar.progressProperty().bind(task.progressProperty());
-        title.textProperty().bind(task.titleProperty());
-        progressText.textProperty().bind(task.messageProperty());
-        new Thread(task).start();
+        if (firstTimeLoad) {
+            progressBar.progressProperty().bind(task.progressProperty());
+            title.textProperty().bind(task.titleProperty());
+            progressText.textProperty().bind(task.messageProperty());
+
+            new Thread(task).start();
+        } else {
+            postDatabaseLoad();
+        }
     }
 
     private void setUpProgressBar() {
@@ -651,7 +839,6 @@ public class Main extends Application {
     private void postDatabaseLoad() {
         resetCenterLayout();
         setUpThreadsView();
-        // setUpCheckTreeView();
 
         // Graph.drawPlaceHolderLines();
 
@@ -733,6 +920,7 @@ public class Main extends Application {
     }
 
     public void updateUi(String caller) {
+
         if (convertDBtoElementTree != null && graph != null) {
             // System.out.println("Main::updateUi: called by " + caller + " thread " + Thread.currentThread().getName());
             convertDBtoElementTree.loadUIComponentsInsideVisibleViewPort(graph);
@@ -811,10 +999,12 @@ public class Main extends Application {
     }
 
     private void changeBool(String type, boolean val) {
-        if (type.equalsIgnoreCase("methodDefnFileSet"))
+        if (type.equalsIgnoreCase("methodDefnFileSet")) {
             methodDefnFileSet = val;
-        else if (type.equalsIgnoreCase("callTraceFileSet"))
-            callTraceFileSet = val;
+        } else {
+            if (type.equalsIgnoreCase("callTraceFileSet"))
+                callTraceFileSet = val;
+        }
 
         if (methodDefnFileSet && callTraceFileSet) {
             runAnalysisMenuItem.setDisable(false);
@@ -831,11 +1021,16 @@ public class Main extends Application {
     private void resetInstructionsPanel() {
         changeBool("methodDefnFileSet", false);
         changeBool("callTraceFileSet", false);
-        populateInstructions();
+        setUpInfoPanel();
     }
 
-    private void populateInstructions() {
+    private void setUpInfoPanel() {
         instructionsNode = new FlowPane();
+
+        /*
+        * root.setCenter() has to be invoked before root.setTop(). Otherwise, methodDefnInfoLabel will go blank.
+        * I do not know the reason why this is happening.
+        * */
         root.setCenter(instructionsNode);
 
         methodDefnInfoGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.ARROW_RIGHT);
@@ -845,6 +1040,7 @@ public class Main extends Application {
         callTraceInfoGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.ARROW_RIGHT);
         callTraceInfoGlyph.setColor(ColorProp.ENABLED);
         callTraceInfoLabel = new Label(callTraceInfoString, callTraceInfoGlyph);
+
 
         runInfoGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.ARROW_RIGHT);
         runInfoGlyph.setColor(ColorProp.DISABLED);

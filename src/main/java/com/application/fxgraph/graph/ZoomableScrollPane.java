@@ -36,10 +36,6 @@ public class ZoomableScrollPane extends ScrollPane {
         zoomGroup.getTransforms().add(scaleTransform);
         zoomGroup.setOnScroll(new ZoomHandler());
 
-//        hvalueProperty().addListener((observable, oldValue, newValue) -> main.updateUi());
-//        vvalueProperty().addListener((observable, oldValue, newValue) -> main.updateUi());
-
-
         hValProperty = hvalueProperty();
         hValListener = (observable, oldValue, newValue) -> main.updateUi("hvalueListener");
 
@@ -57,6 +53,9 @@ public class ZoomableScrollPane extends ScrollPane {
                 main.updateUi("viewportBoundsListener");
             }
         });
+
+        setStyle("-fx-background-color: transparent;");
+
     }
 
     public static void turnOffListeners() {
