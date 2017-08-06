@@ -56,6 +56,7 @@ public class CheckFileIntegrity {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
+            e.printStackTrace();
         } catch (NoSuchElementException e) {
             int finalLinesRead = linesRead;
             String finalLine = line;

@@ -2,15 +2,18 @@ package com.application.fxgraph.graph;
 
 import com.application.fxgraph.ElementHelpers.ConvertDBtoElementTree;
 import com.application.fxgraph.ElementHelpers.Element;
+import com.application.fxgraph.cells.CircleCell;
 import javafx.application.Platform;
 import javafx.geometry.BoundingBox;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Line;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class Graph {
 
@@ -67,6 +70,91 @@ public class Graph {
         cellLayer.getChildren().add(vPlaceHolderLine);
     }
 
+
+    public void moveCirclesAfterMinimization() {
+
+        DeltaMap.isAnyCircleMinimized = false;
+
+        // For all the circles on UI.
+        System.out.println("Graph::moveCirclesAfterMinimization");
+
+        System.out.println("yMin: " + DeltaMap.yMin + " : upper delta: " + DeltaMap.upperDelta);
+        System.out.println("yMax: " + DeltaMap.yMax + " : lower delta: " + DeltaMap.lowerDelta);
+
+
+        cellLayer.getChildren().forEach(item -> {
+            if (item instanceof CircleCell) {
+                CircleCell node = (CircleCell) item;
+
+                if (node.getLayoutY() >= DeltaMap.yMin && node.getLayoutY() < DeltaMap.yMax) {
+                    System.out.println("Moving by half shift: " + node.getCellId() + " : " + DeltaMap.yMin + " : " + DeltaMap.upperDelta);
+                    node.relocate(node.getLayoutX(), node.getLayoutY() - DeltaMap.upperDelta);
+
+                } else if (node.getLayoutY() >= DeltaMap.yMax) {
+                    System.out.println("Moving by full shift: " + node.getCellId() + " : " + DeltaMap.yMax + " : "  + DeltaMap.lowerDelta);
+                    node.relocate(node.getLayoutX(), node.getLayoutY() - DeltaMap.lowerDelta);
+
+                }
+
+
+                //
+                //     if (DeltaMap.getDelta(node.getLayoutY()) != null) {
+                //         double delta = (double) DeltaMap.getDelta(node.getLayoutY());
+                //
+                //         System.out.println("Relocated Circle:");
+                //         System.out.println(((CircleCell) node).getCellId() + " from " + node.getLayoutY());
+                //         node.relocate(node.getLayoutX(), node.getLayoutY() - delta);
+            //         System.out.println(((CircleCell) node).getCellId() + " to " + node.getLayoutY());
+            //         System.out.println();
+            //     }
+            //
+            // } else if(item instanceof Edge) {
+            //     Edge node = (Edge) item;
+            //
+            //     if (DeltaMap.getDelta(node.getLayoutY()) != null) {
+            //         double delta = (double) DeltaMap.getDelta(node.getLayoutY());
+            //
+            //         System.out.println("Relocated Edge:");
+            //         System.out.println(((Edge) node).getEdgeId() + " from " + node.getLayoutY());
+            //         node.relocate(node.getLayoutX(), node.getLayoutY() - delta);
+            //         System.out.println(((Edge) node).getEdgeId() + " to " + node.getLayoutY());
+            //         System.out.println();
+            //     }
+            //
+            }
+        });
+
+    }
+
+    public void moveCirclesAfterMaximization() {
+        // For all the circles on UI.
+
+        DeltaMap.isAnyCircleMaximized = false;
+
+        System.out.println("Graph::moveCirclesAfterMaximization");
+        // System.out.println("yMin: " + DeltaMap.yMin + " : upper delta: " + DeltaMap.upperDelta);
+        System.out.println("yMax: " + DeltaMap.yMax + " : lower delta" + DeltaMap.lowerDelta);
+
+        cellLayer.getChildren().forEach(item -> {
+            if (item instanceof CircleCell) {
+                CircleCell node = (CircleCell) item;
+
+                // if (node.getLayoutY() >= DeltaMap.yMin && node.getLayoutY() < DeltaMap.yMax) {
+                //     System.out.println("Moving by half shift: " + node.getCellId() + " : " + DeltaMap.yMin + " : " + DeltaMap.upperDelta);
+                //     node.relocate(node.getLayoutX(), node.getLayoutY() + DeltaMap.upperDelta);
+                //
+                // } else
+
+                if (node.getLayoutY() >= DeltaMap.yMax) {
+                    System.out.println("Moving by full shift: " + node.getCellId() + " : " + DeltaMap.yMax + " : "  + DeltaMap.lowerDelta);
+                    node.relocate(node.getLayoutX(), node.getLayoutY() + DeltaMap.lowerDelta);
+
+                }
+            }
+        });
+    }
+
+
     public ScrollPane getScrollPane() {
         return this.scrollPane;
     }
@@ -95,8 +183,8 @@ public class Graph {
         // getCellLayer().getChildren().addAll(model.listEdgesOnUI);
 
         model.listCircleCellsOnUI.forEach(circleCell -> {
-                    eventHandlers.setCustomMouseEventHandlers(circleCell);
-                });
+            eventHandlers.setCustomMouseEventHandlers(circleCell);
+        });
 
         model.clearListCircleCellsOnUI();
         model.clearListEdgesOnUI();

@@ -27,6 +27,9 @@ import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.*;
 import javafx.scene.image.WritableImage;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -99,7 +102,7 @@ public class Main extends Application {
     private Glyph clearHistoryGlyph;
 
     private Menu highlight;
-    private MenuItem highlightMeneItem;
+    private MenuItem highlightMenuItem;
     private Glyph highlightItemsGlyph;
 
     // Status bar
@@ -237,7 +240,7 @@ public class Main extends Application {
         // File Menu
         // *****************
 
-        fileMenu = new Menu("File");
+        fileMenu = new Menu("_File");
         methodDefnGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.PLUS);
         methodDefnGlyph.setColor(ColorProp.ENABLED);
         // methodDefnGlyph.setPadding(SizeProp.INSETS_ICONS);
@@ -258,7 +261,7 @@ public class Main extends Application {
         // *****************
         // Run Menu
         // *****************
-        runMenu = new Menu("Run");
+        runMenu = new Menu("_Run");
 
         resetGlyph = new Glyph(font, FontAwesome.Glyph.RETWEET);
         resetGlyph.setColor(ColorProp.ENABLED);
@@ -279,7 +282,7 @@ public class Main extends Application {
         // *****************
         // Save Image Menu
         // *****************
-        saveImgMenu = new Menu("Save Image");
+        saveImgMenu = new Menu("_Save Image");
         saveImgGlyph = new Glyph(font, FontAwesome.Glyph.PICTURE_ALT);
         saveImgGlyph.setColor(ColorProp.ENABLED);
         saveImgMenuItem = new MenuItem("Save Image", saveImgGlyph);
@@ -292,7 +295,7 @@ public class Main extends Application {
         // *****************
         // Go To Menu
         // *****************
-        goToMenu = new Menu("Go To");
+        goToMenu = new Menu("_Go To");
         recentsGlyph = new Glyph(font, FontAwesome.Glyph.HISTORY);
         recentsGlyph.setColor(ColorProp.ENABLED);
         recentMenu = new Menu("Recent nodes", recentsGlyph);
@@ -307,14 +310,14 @@ public class Main extends Application {
         menuItems.add(clearHistoryMenuItem);
 
         // Highlight method invocations menu.
-        highlight = new Menu("Highlights");
+        highlight = new Menu("_Highlights");
         highlightItemsGlyph = new Glyph(font, FontAwesome.Glyph.FLAG);
         highlightItemsGlyph.setColor(ColorProp.ENABLED);
-        highlightMeneItem = new MenuItem("Highlight method invocations", highlightItemsGlyph);
+        highlightMenuItem = new MenuItem("Highlight method invocations", highlightItemsGlyph);
 
-        highlight.getItems().add(highlightMeneItem);
+        highlight.getItems().add(highlightMenuItem);
         highlight.setDisable(true);
-        menuItems.add(highlightMeneItem);
+        menuItems.add(highlightMenuItem);
 
         // Main menu
         menuBar.getMenus().addAll(fileMenu, runMenu, saveImgMenu, goToMenu, highlight);
@@ -359,10 +362,10 @@ public class Main extends Application {
 
         runAnalysisGlyph = new Glyph(font, FontAwesome.Glyph.PLAY);
         runAnalysisGlyph.setColor(ColorProp.ENABLED_COLORFUL);
-        runAnalysisMenuItem = new MenuItem("Run", runAnalysisGlyph);
+        runAnalysisMenuItem = new MenuItem("_Run", runAnalysisGlyph);
 
         resetGlyph = new Glyph(font, FontAwesome.Glyph.RETWEET);
-        resetGlyph.setColor(ColorProp.ENABLED);
+        resetGlyph.setColor(ColorProp.ENABLED_COLORFUL);
         resetMenuItem = new MenuItem("Reset", resetGlyph);
 
         runMenu.getItems().addAll(runAnalysisMenuItem, resetMenuItem);
@@ -402,10 +405,10 @@ public class Main extends Application {
         highlight = new Menu("Highlights");
         highlightItemsGlyph = new Glyph(font, FontAwesome.Glyph.FLAG);
         highlightItemsGlyph.setColor(ColorProp.ENABLED_COLORFUL);
-        highlightMeneItem = new MenuItem("Highlight method invocations", highlightItemsGlyph);
+        highlightMenuItem = new MenuItem("Highlight method invocations", highlightItemsGlyph);
 
-        highlight.getItems().add(highlightMeneItem);
-        menuItems.add(highlightMeneItem);
+        highlight.getItems().add(highlightMenuItem);
+        menuItems.add(highlightMenuItem);
 
         // Main menu
         menuBar.getMenus().addAll(fileMenu, runMenu, saveImgMenu, goToMenu, highlight);
@@ -477,7 +480,11 @@ public class Main extends Application {
         });
 
         resetMenuItem.setOnAction(event -> {
+            firstTimeLoad = true;
             reset();
+            DeltaMap.isAnyCircleMinimized = false;
+            DeltaMap.isAnyCircleMaximized = false;
+
             methodDefnGlyph.setIcon(FontAwesome.Glyph.PLUS);
             callTraceGlyph.setIcon(FontAwesome.Glyph.PLUS);
         });
@@ -523,7 +530,13 @@ public class Main extends Application {
         clearHistoryMenuItem.setOnAction(event -> graph.clearRecents());
 
         // highlightMenuItem.setOnAction(event -> setUpMethodsWindow());
-        highlightMeneItem.setOnAction(event -> setUpHighlightsWindow());
+        highlightMenuItem.setOnAction(event -> setUpHighlightsWindow());
+
+        chooseMethodDefnMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.M, KeyCombination.SHIFT_DOWN, KeyCombination.CONTROL_DOWN));
+        chooseCallTraceMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.C, KeyCombination.SHIFT_DOWN, KeyCombination.CONTROL_DOWN));
+        runAnalysisMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.R, KeyCombination.SHIFT_DOWN, KeyCombination.CONTROL_DOWN));
+        highlightMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.H, KeyCombination.SHIFT_DOWN, KeyCombination.CONTROL_DOWN));
+
     }
 
     private String currentSelectedThread;
@@ -550,7 +563,6 @@ public class Main extends Application {
 
         resetInstructionsPanel();
         resetHighlights();
-
 
         ConvertDBtoElementTree.resetRegions();
     }
@@ -712,6 +724,7 @@ public class Main extends Application {
     private void addGraphCellComponents() {
         convertDBtoElementTree = new ConvertDBtoElementTree();
         CheckFileIntegrity.saveRef(this);
+        EventHandlers.saveRef(convertDBtoElementTree);
 
         task = new Task<Void>() {
             @Override

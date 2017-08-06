@@ -45,6 +45,16 @@ public class Model {
      * new/modified methods start
      */
 
+    // Modifiers
+
+
+    public void moveCirclesAfterMin() {
+        // For all the circles on UI.
+
+        circleCellsOnUI.forEach((cellId, circleCell) -> {
+
+        });
+    }
 
     // Adders
 
@@ -201,36 +211,36 @@ public class Model {
         return allEdges;
     }
 
-    public void addCell(String id, CellType type) {
+    // public void addCell(String id, CellType type) {
+    //
+    //     switch (type) {
+    //
+    //         case RECTANGLE:
+    //             RectangleCell rectangleCell = new RectangleCell(id);
+    //             addCell(rectangleCell);
+    //             break;
+    //
+    //         case TRIANGLE:
+    //             TriangleCell triangleCell = new TriangleCell(id);
+    //             addCell(triangleCell);
+    //             break;
+    //
+    //         case CIRCLE:
+    //             CircleCell circleCell = new CircleCell(id);
+    //             addCell(circleCell);
+    //             break;
+    //
+    //         default:
+    //             throw new UnsupportedOperationException("Unsupported type: " + type);
+    //     }
+    // }
 
-        switch (type) {
-
-            case RECTANGLE:
-                RectangleCell rectangleCell = new RectangleCell(id);
-                addCell(rectangleCell);
-                break;
-
-            case TRIANGLE:
-                TriangleCell triangleCell = new TriangleCell(id);
-                addCell(triangleCell);
-                break;
-
-            case CIRCLE:
-                CircleCell circleCell = new CircleCell(id);
-                addCell(circleCell);
-                break;
-
-            default:
-                throw new UnsupportedOperationException("Unsupported type: " + type);
-        }
-    }
-
-    public CircleCell addCircleCell(String id, Element element) {
-        CircleCell circleCell = new CircleCell(id, element);
-        element.setCircleCell(circleCell);
-        addCell(circleCell);
-        return circleCell;
-    }
+    // public CircleCell addCircleCell(String id, Element element) {
+    //     CircleCell circleCell = new CircleCell(id, element);
+    //     element.setCircleCell(circleCell);
+    //     addCell(circleCell);
+    //     return circleCell;
+    // }
 
     public void addCell(Cell cell) {
         addedCells.add(cell);
@@ -242,16 +252,16 @@ public class Model {
         addedEdges.add(edge);
     }
 
-    public void addEdge(String sourceId, String targetId) {
-
-        Cell sourceCell = cellMap.get(sourceId);
-        Cell targetCell = cellMap.get(targetId);
-
-        Edge edge = new Edge(sourceCell, targetCell);
-
-        addedEdges.add(edge);
-
-    }
+    // public void addEdge(String sourceId, String targetId) {
+    //
+    //     Cell sourceCell = cellMap.get(sourceId);
+    //     Cell targetCell = cellMap.get(targetId);
+    //
+    //     Edge edge = new Edge(sourceCell, targetCell);
+    //
+    //     addedEdges.add(edge);
+    //
+    // }
 
     /**
      * Attach all cells which don't have a parent to graphParent

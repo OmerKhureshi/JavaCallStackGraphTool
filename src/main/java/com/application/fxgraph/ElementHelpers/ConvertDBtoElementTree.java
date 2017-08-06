@@ -5,10 +5,7 @@ import com.application.db.DAOImplementation.*;
 import com.application.db.DatabaseUtil;
 import com.application.db.TableNames;
 import com.application.fxgraph.cells.CircleCell;
-import com.application.fxgraph.graph.CellLayer;
-import com.application.fxgraph.graph.Edge;
-import com.application.fxgraph.graph.Graph;
-import com.application.fxgraph.graph.Model;
+import com.application.fxgraph.graph.*;
 import com.sun.org.apache.xpath.internal.SourceTree;
 import javafx.application.Platform;
 import javafx.geometry.BoundingBox;
@@ -158,7 +155,7 @@ public class ConvertDBtoElementTree {
             return;
 
         if (root.getChildren() != null)
-            root.getChildren().stream().forEachOrdered(targetElement -> {
+            root.getChildren().forEach(targetElement -> {
                 EdgeElement edgeElement = new EdgeElement(root, targetElement);
                 edgeElement.calculateEndPoints();
                 EdgeDAOImpl.insert(edgeElement);
@@ -169,6 +166,7 @@ public class ConvertDBtoElementTree {
 
 
     public void loadUIComponentsInsideVisibleViewPort(Graph graph) {
+        // System.out.println("ConvertDBtoElementTree::loadUIComponentsInsideVisibleViewPort");
         this.graph = graph;
         this.model = graph.getModel();
 
@@ -262,6 +260,20 @@ public class ConvertDBtoElementTree {
                 " AND E.bound_box_y_coordinate > " + (viewPortMinY - heightOffset) +
                 " AND E.bound_box_y_coordinate < " + (viewPortMaxY + heightOffset) +
                 " AND E.LEVEL_COUNT > 1";
+
+
+        double lowerBound = (viewPortMaxY + heightOffset) + DeltaMap.getMaxDelta(viewPortMaxY + heightOffset);
+
+        String sqlWithDelta = "SELECT E.ID AS EID, parent_id, collapsed, bound_box_x_coordinate, bound_box_y_coordinate, message, id_enter_call_trace, method_id " +
+                "FROM " + TableNames.CALL_TRACE_TABLE + " AS CT JOIN " + TableNames.ELEMENT_TABLE + " AS E ON CT.ID = E.ID_ENTER_CALL_TRACE " +
+                "WHERE CT.THREAD_ID = " + currentThreadId +
+                " AND E.bound_box_x_coordinate > " + (viewPortMinX - widthOffset) +
+                " AND E.bound_box_x_coordinate < " + (viewPortMaxX + widthOffset) +
+                " AND E.bound_box_y_coordinate > " + (viewPortMinY - heightOffset) +
+                " AND E.bound_box_y_coordinate < " + lowerBound +
+                " AND E.LEVEL_COUNT > 1";
+
+        // System.out.println("------ lower bound : " + lowerBound );
 
         CircleCell curCircleCell;
         CircleCell parentCircleCell;
@@ -384,15 +396,19 @@ public class ConvertDBtoElementTree {
         Edge curEdge;
         try {
             while (rs.next()) {
-                String targetEdgeId = String.valueOf(rs.getInt("fk_target_element_id"));
+                String targetElementId = String.valueOf(rs.getInt("fk_target_element_id"));
+                String sourceElementId = String.valueOf(rs.getInt("fk_source_element_id"));
                 double startX = rs.getFloat("start_x");
                 double endX = rs.getFloat("end_x");
                 double startY = rs.getFloat("start_y");
                 double endY = rs.getFloat("end_y");
-                // System.out.println("ConvertDBtoElementTree::getEdgesFromResultSet: adding edge: " + targetEdgeId);
-                curEdge = new Edge(targetEdgeId, startX, endX, startY, endY);
+                // System.out.println("ConvertDBtoElementTree::getEdgesFromResultSet: adding edge: " + targetElementId);
+                curEdge = new Edge(targetElementId, startX, endX, startY, endY);
                 model.addEdge(curEdge);
 
+                CircleCell source = model.getCircleCellsOnUI().get(sourceElementId);
+                CircleCell target = model.getCircleCellsOnUI().get(targetElementId);
+                curEdge.bindEdgeToCircles(source, target);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -448,12 +464,14 @@ public class ConvertDBtoElementTree {
             //     removeEdges.add(edge.getEdgeId());
             // }
             if (!preloadBox.intersects(lineBB)) {
+                System.out.println("Detected line intersect.");
                 removeEdges.add(edge.getEdgeId());
             }
         }
 
         removeEdges.forEach(edgeId -> {
             Edge edge = mapEdgesOnUI.get(edgeId);
+            System.out.println("Removing edge: " + edgeId);
             Platform.runLater(() -> cellLayer.getChildren().remove(edge));
             mapEdgesOnUI.remove(edgeId);
             listEdgesOnUI.remove(edge);
