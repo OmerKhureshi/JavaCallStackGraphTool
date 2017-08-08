@@ -74,9 +74,6 @@ public class ElementToChildDAOImpl {
                 ps = conn.createStatement();
                 sql = "SELECT * FROM " + TableNames.ELEMENT_TO_CHILD_TABLE + " WHERE " + where;
                 ResultSet resultSet = ps.executeQuery(sql);
-                System.out.println();
-                System.out.println(sql);
-                System.out.println();
                 return resultSet;
             } catch (SQLException e) {
                 System.out.println("Line that threw error: " + sql);

@@ -34,9 +34,12 @@ public class EventHandlers {
 
     private static ConvertDBtoElementTree convertDBtoElementTree;
     private final DragContext dragContext = new DragContext();
-
+    private List<CircleCell> addLaterCircle = new LinkedList<>();
+    private List<Edge> addLaterEdge = new LinkedList<>();
     Graph graph;
     private static Main main;
+    private PopOver popOver;
+
 
     public EventHandlers(Graph graph) {
         this.graph = graph;
@@ -45,14 +48,14 @@ public class EventHandlers {
     void setCustomMouseEventHandlers(final Node node) {
         // *****************
         // Show popup to display element details on mouse hover on an element.
-        node.setOnMouseEntered(onMouseHoverToShowInfoEventHandler);
+        // node.setOnMouseEntered(onMouseHoverToShowInfoEventHandler);
         // node.setOnMousePressed(onMouseHoverToShowInfoEventHandler);
         // *****************
 
 
         // *****************
         // Click on an element to collapse the subtree rooted at clicked element.
-        // node.setOnMousePressed(onMousePressedToCollapseTree);
+        node.setOnMousePressed(onMousePressedToCollapseTree);
         // *****************
 
 
@@ -72,16 +75,13 @@ public class EventHandlers {
 
         // *****************
         // Make elements draggable.
-        node.setOnMousePressed(onMousePressedEventHandler);
-        node.setOnMouseDragged(onMouseDraggedEventHandler);
-        node.setOnMouseReleased(onMouseReleasedEventHandler);
+        // node.setOnMousePressed(onMousePressedEventHandler);
+        // node.setOnMouseDragged(onMouseDraggedEventHandler);
+        // node.setOnMouseReleased(onMouseReleasedEventHandler);
         // *****************
 
     }
 
-    private PopOver popOver;
-
-    @SuppressWarnings("unused")
     private EventHandler<MouseEvent> onMouseHoverToShowInfoEventHandler = new EventHandler<MouseEvent>() {
 
         @Override
@@ -385,12 +385,12 @@ public class EventHandlers {
         String cellId =  cell.getCellId();
         int collapsed = 0;
         double BBYTopLeft = 0, BBYBottomLeft = 0;
+
         System.out.println("Clicked cell: " + cellId);
         System.out.println("Layout Y of " + cellId + " id " + cell.getLayoutY());
 
         // Get element row from Element table.
         try (ResultSet cellRS = ElementDAOImpl.selectWhere("id = " + cellId)) {
-            // Get element properties from element row.
             if (cellRS.next()) {
                 collapsed = cellRS.getInt("collapsed");
                 BBYTopLeft = cellRS.getDouble("BOUND_BOX_Y_TOP_LEFT");
@@ -399,17 +399,42 @@ public class EventHandlers {
         } catch (SQLException ignored) {}
 
             /*
-             * collapsed - actions
-             *     0     - Classic Visible Circle - Show cell on UI. Starting value for all cells.
-             *     1     - Classic Invisible Circle - parent of this cell was minimized. Don't show on UI
-             *     2     - Classic Minimized Circle - this cell was minimized. Show on UI. Don't show children on UI.
-             *     3     - Minimized circle with Parent Minimized - parent of this cell was minimized. This cell was also minimized. Don't expand this cell's children. Don't show on UI.
+             * Valid statuses of a circle based on whether it is maximized or minimized/collapsed.
+             * --------------------
+             * Status - Description
+             * --------------------
+             *   0    - Classic Visible Circle - Show cell on UI. Starting value for all cells.
+             *   1    - Classic Invisible Circle - parent of this cell was minimized. Don't show on UI
+             *   2    - Classic Minimized Circle - this cell was minimized. Show on UI. Don't show children on UI.
+             *   3    - Minimized circle with Parent Minimized - parent of this cell was minimized. This cell was also minimized. Don't expand this cell's children. Don't show on UI.
              */
 
-            /* Collapsed - Delta
-             * 0 -> 2    - new delta at this position = existing delta at this range + cell.height - BoundBox.height
+
+            /*
+             * Statuses of circles.
+             * -----------------------------
+             * Status : Visible : Minimized
+             * -----------------------------
+             *    0   :   YES   :   NO
+             *    1   :   NO    :   NO
+             *    2   :   YES   :   YES
+             *    3   :   NO    :   YES
              */
-        //noinspection StatementWithEmptyBody
+
+
+            /*
+             * When Minimizing.
+             *  Circles that can be clicked: 0 (2 handled while maximizing)
+             *  Children of clicked cell: 0, 2
+             */
+
+
+            /*
+             * When Maximizing.
+             *  Circles that can be clicked: 2 (0 handled while minimizing)
+             *  Children of clicked cell: 1, 3
+             */
+
         if (collapsed == 1) {
             // expand sub tree.
             // This does not happen because there is no circle with collapsed = 1 that is visible on UI.
@@ -417,10 +442,9 @@ public class EventHandlers {
             throw new IllegalStateException("This cell should not have been on the UI.");
         } else if (collapsed == 0) {
             // Minimize now.
+
             cell.setColorWhenMinimized();
-
             // cell.setLabel("+");
-
             ElementDAOImpl.updateWhere("collapsed", "2", "id = " + cellId);
 
             Map<String, CircleCell> mapCircleCellsOnUI = graph.getModel().getCircleCellsOnUI();
@@ -431,23 +455,18 @@ public class EventHandlers {
             List<Edge> listEdgesOnUI = graph.getModel().getListEdgesOnUI();
             List<String> removeEdges = new ArrayList<>();
 
-                /*
-                 * For circles going 0 -> 2, calculate upper and lower Delta.
-                 * Later while iterating through the tree rooted at this cell,
-                 * modify delta values for child circles going 2 -> 3
-                 */
             double fullCellHeight = BBYBottomLeft - BBYTopLeft;  // BoundBox height of the cell.
-            DeltaMap.yMin = cell.getLayoutY() - fullCellHeight / 2;  // Actual yMin of the BoundBox after any shifts.
-            DeltaMap.yMax = DeltaMap.yMin + fullCellHeight;  // Actual yMax of the BoundBox after any shifts.
+            // DeltaMap.yMin = cell.getLayoutY() - fullCellHeight / 2;  // Actual yMin of the BoundBox after any shifts.
 
-            DeltaMap.upperDelta = fullCellHeight / 2 - BoundBox.unitHeightFactor/2;
-            DeltaMap.upperDelta = DeltaMap.upperDelta < BoundBox.unitHeightFactor? 0 : DeltaMap.upperDelta;
+            DeltaMap.yMax = cell.getLayoutY() + fullCellHeight;  // Actual yMax of the BoundBox after any shifts. May not be same as BBYBottomLeft.
+            // DeltaMap.upperDelta = fullCellHeight / 2 - BoundBox.unitHeightFactor/2;
+            // DeltaMap.upperDelta = DeltaMap.upperDelta < BoundBox.unitHeightFactor? 0 : DeltaMap.upperDelta;
 
             DeltaMap.lowerDelta = fullCellHeight - BoundBox.unitHeightFactor;
 
 
             System.out.println("0 -> 2 : ");
-            System.out.println("yMin: " + DeltaMap.yMin + " : upperDelta: " + DeltaMap.upperDelta);
+            // System.out.println("yMin: " + DeltaMap.yMin + " : upperDelta: " + DeltaMap.upperDelta);
             System.out.println("yMax: " + DeltaMap.yMax + " : upperDelta: " + DeltaMap.lowerDelta);
 
             DeltaMap.isAnyCircleMinimized = true;
@@ -457,7 +476,6 @@ public class EventHandlers {
 
             removeCircleCells.forEach(circleCellId -> {
                 if (mapCircleCellsOnUI.containsKey(circleCellId)) {
-
                     CircleCell circleCell = mapCircleCellsOnUI.get(circleCellId);
                     cellLayer.getChildren().remove(circleCell);
                     mapCircleCellsOnUI.remove(circleCellId);
@@ -481,6 +499,10 @@ public class EventHandlers {
 
 
         } else if (collapsed == 2) {
+            /*
+             * This node was collapsed earlier. Expand now.
+             */
+
             cell.setColorWhenMaximized();
             // cell.setLabel("-");
 
@@ -493,19 +515,22 @@ public class EventHandlers {
              * modify delta values for child circles going 3 -> 2
              */
             double fullCellHeight = BBYBottomLeft - BBYTopLeft;  // BoundBox height of the cell.
+            // DeltaMap.yMin = cell.getLayoutY() - BoundBox.unitHeightFactor / 2;
 
-            DeltaMap.yMin = cell.getLayoutY() - BoundBox.unitHeightFactor / 2;
-            DeltaMap.yMax = cell.getLayoutY() + BoundBox.unitHeightFactor / 2;
+            DeltaMap.yMax = cell.getLayoutY() + BoundBox.unitHeightFactor;
+            // DeltaMap.yMax = cell.getLayoutY() + fullCellHeight;
+            System.out.println("yMax at start : " + DeltaMap.yMax);
 
             // DeltaMap.upperDelta = fullCellHeight / 2;
-            double height = addAndUpdate(cellId, DeltaMap.yMin);
-            DeltaMap.lowerDelta = height * BoundBox.unitHeightFactor - BoundBox.unitHeightFactor;
+            double height = addAndUpdate(cellId, cell.getLayoutY());
+
+            // Handling case for single circles with status 0 when minimized and then maximized
+            DeltaMap.lowerDelta = height == 0 ? 0 :  (height - 1) * BoundBox.unitHeightFactor;
 
             System.out.println("2 -> 0 : ");
-            System.out.println("yMin: " + DeltaMap.yMin + " : upperDelta: " + DeltaMap.upperDelta);
+            // System.out.println("yMin: " + DeltaMap.yMin + " : upperDelta: " + DeltaMap.upperDelta);
             System.out.println("yMax: " + DeltaMap.yMax + " : lowerDelta: " + DeltaMap.lowerDelta);
             System.out.println();
-
 
         } else if (collapsed == 3) {
             System.out.println("onMousePressedToCollapseTree: cell: " + cellId + " ; collapsed: " + collapsed);
@@ -516,186 +541,27 @@ public class EventHandlers {
         if (DeltaMap.isAnyCircleMinimized) graph.moveCirclesAfterMinimization();
         if (DeltaMap.isAnyCircleMaximized) graph.moveCirclesAfterMaximization();
 
-        graph.updateCellLayer();
-
-        System.out.println();
-        System.out.println("Adding addLaterCircle to UI");
         addLaterCircle.forEach(circle -> {
             graph.getModel().addCell(circle);
-            System.out.println("cellId: " + circle.getCellId());
         });
+
         addLaterCircle.clear();
         addLaterEdge.forEach(edge -> graph.getModel().addEdge(edge));
         addLaterEdge.clear();
-        System.out.println();
-        System.out.println("cleared addLaterCircle");
-        System.out.println();
 
+        graph.updateCellLayer();
     }
 
-    @SuppressWarnings("unused")
-    EventHandler<MouseEvent> onMouseExitToDismissPopover = new EventHandler<MouseEvent>() {
+
+
+    private EventHandler<MouseEvent> onMousePressedToCollapseTree = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {
-            if (popOver != null)
-                popOver.hide();
+            CircleCell cell = (CircleCell) event.getSource();
+            collapseThisTree(cell);
         }
     };
 
-
-    // private EventHandler<MouseEvent> onMousePressedToCollapseTree = new EventHandler<MouseEvent>() {
-    //     @Override
-    //     public void handle(MouseEvent event) {
-    //
-    //         CellLayer cellLayer = (CellLayer) graph.getCellLayer();
-    //         CircleCell cell = (CircleCell) event.getSource();
-    //         String cellId =  cell.getCellId();
-    //         int collapsed = 0;
-    //         double yMin = 0, yMax = 0;
-    //
-    //         // Get element row from Element table.
-    //         try (ResultSet cellRS = ElementDAOImpl.selectWhere("id = " + cellId)) {
-    //             // Get element properties from element row.
-    //             if (cellRS.next()) {
-    //                 collapsed = cellRS.getInt("collapsed");
-    //                 yMin = cellRS.getDouble("BOUND_BOX_Y_TOP_LEFT");
-    //                 yMax = cellRS.getDouble("BOUND_BOX_Y_BOTTOM_LEFT");
-    //                 System.out.println("Clicked cell: " + cellId);
-    //             }
-    //         } catch (SQLException ignored) {}
-    //
-    //         /*
-    //          * collapsed - actions
-    //          *     0     - Classic Visible Circle - Show cell on UI. Starting value for all cells.
-    //          *     1     - Classic Invisible Circle - parent of this cell was minimized. Don't show on UI
-    //          *     2     - Classic Minimized Circle - this cell was minimized. Show on UI. Don't show children on UI.
-    //          *     3     - Minimized circle with Parent Minimized - parent of this cell was minimized. This cell was also minimized. Don't expand this cell's children. Don't show on UI.
-    //          */
-    //
-    //
-    //
-    //         /* Collapsed - Delta
-    //          * 0 -> 2    - new delta at this position = existing delta at this range + cell.height - BoundBox.height
-    //          */
-    //         //noinspection StatementWithEmptyBody
-    //         if (collapsed == 1) {
-    //             // expand sub tree.
-    //             // This does not happen because there is no circle with collapsed = 1 that is visible on UI.
-    //             System.out.println("onMousePressedToCollapseTree: cell: " + cellId + " ; collapsed: " + collapsed);
-    //             throw new IllegalStateException("This cell should not have been on the UI.");
-    //         } else if (collapsed == 0) {
-    //             // Minimize now.
-    //             cell.setColorWhenMinimized();
-    //
-    //             // cell.setLabel("+");
-    //
-    //             ElementDAOImpl.updateWhere("collapsed", "2", "id = " + cellId);
-    //
-    //             Map<String, CircleCell> mapCircleCellsOnUI = graph.getModel().getCircleCellsOnUI();
-    //             List<CircleCell> listCircleCellsOnUI = graph.getModel().getListCircleCellsOnUI();
-    //             List<String> removeCircleCells = new ArrayList<>();
-    //
-    //             Map<String, Edge> mapEdgesOnUI = graph.getModel().getEdgesOnUI();
-    //             List<Edge> listEdgesOnUI = graph.getModel().getListEdgesOnUI();
-    //             List<String> removeEdges = new ArrayList<>();
-    //
-    //             /*
-    //              * For circles going 0 -> 2, calculate upper and lower Delta.
-    //              * Later while iterating through the tree rooted at this cell,
-    //              * modify delta values for child circles going 2 -> 3
-    //              */
-    //             double fullCellHeight = yMax - yMin;  // BoundBox height of the cell.
-    //             DeltaMap.yMin = cell.getLayoutY() - fullCellHeight / 2;  // Actual yMin of the BoundBox after any shifts.
-    //             DeltaMap.yMax = DeltaMap.yMin + fullCellHeight;  // Actual yMax of the BoundBox after any shifts.
-    //
-    //             DeltaMap.upperDelta = fullCellHeight / 2;// - BoundBox.unitHeightFactor;
-    //             DeltaMap.lowerDelta = fullCellHeight;// - BoundBox.unitHeightFactor;
-    //
-    //
-    //             System.out.println("0 -> 2 : ");
-    //             System.out.println("yMin: " + DeltaMap.yMin + " : upperDelta: " + DeltaMap.upperDelta);
-    //             System.out.println("yMax: " + DeltaMap.yMax + " : upperDelta: " + DeltaMap.lowerDelta);
-    //
-    //             DeltaMap.isAnyCircleMinimized = true;
-    //
-    //             removeAndUpdate(cellId, removeCircleCells, removeEdges);
-    //             // recursivelyRemove(cellId, removeCircleCells, removeEdges);
-    //
-    //             removeCircleCells.forEach(circleCellId -> {
-    //                 if (mapCircleCellsOnUI.containsKey(circleCellId)) {
-    //
-    //                     System.out.println("Removing circle:  " + circleCellId);
-    //                     CircleCell circleCell = mapCircleCellsOnUI.get(circleCellId);
-    //                     cellLayer.getChildren().remove(circleCell);
-    //                     mapCircleCellsOnUI.remove(circleCellId);
-    //                     listCircleCellsOnUI.remove(circleCell);
-    //                 }
-    //             });
-    //
-    //             removeEdges.forEach(edgeId -> {
-    //                 if (mapEdgesOnUI.containsKey(edgeId)) {
-    //                     Edge edge = mapEdgesOnUI.get(edgeId);
-    //                     cellLayer.getChildren().remove(edge);
-    //                     mapEdgesOnUI.remove(edgeId);
-    //                     listEdgesOnUI.remove(edge);
-    //                 }
-    //             });
-    //
-    //             // Collapsed: 0 -> 2, i.e., from visible to visible + minimized.
-    //             // Create a new delta value = (previous delta at this position) - cell.height + BoundBox.height
-    //             if (yMax == 0) {
-    //                 System.out.println(" Probably: not clicked on circle but still put new delta in map");
-    //             }
-    //
-    //             // // For those element between yMin and yMax
-    //             // double deltaForThisTree = ((yMax - yMin) - BoundBox.unitHeightFactor) / 2;
-    //             // DeltaMap.put(yMin, deltaForThisTree);
-    //             //
-    //             // // For the subtrees below yMax.
-    //             // double deltaForTreesBelow = ((yMax - yMin) - BoundBox.unitHeightFactor) / 2;
-    //             // DeltaMap.put(yMax, deltaForTreesBelow);
-    //
-    //         } else if (collapsed == 2) {
-    //             cell.setColorWhenMaximized();
-    //             // cell.setLabel("-");
-    //
-    //
-    //             /*
-    //              * For circles going 2 -> 0, calculate upper and lower Delta.
-    //              * Later while iterating through the tree rooted at this cell,
-    //              * modify delta values for child circles going 3 -> 2
-    //              */
-    //             double fullCellHeight = yMax - yMin;  // BoundBox height of the cell.
-    //
-    //             DeltaMap.yMin = cell.getLayoutY() - BoundBox.unitHeightFactor / 2;
-    //             DeltaMap.yMax = cell.getLayoutY() + BoundBox.unitHeightFactor / 2;
-    //
-    //             DeltaMap.upperDelta = fullCellHeight / 2;// - BoundBox.unitHeightFactor;
-    //             DeltaMap.lowerDelta = fullCellHeight;// - BoundBox.unitHeightFactor;
-    //             System.out.println("2 -> 0 : ");
-    //             System.out.println("yMin: " + DeltaMap.yMin + " : upperDelta: " + DeltaMap.upperDelta);
-    //             System.out.println("yMax: " + DeltaMap.yMax + " : lowerDelta: " + DeltaMap.lowerDelta);
-    //
-    //             DeltaMap.isAnyCircleMaximized = true;
-    //
-    //             addAndUpdate(cellId);
-    //
-    //         } else if (collapsed == 3) {
-    //             System.out.println("onMousePressedToCollapseTree: cell: " + cellId + " ; collapsed: " + collapsed);
-    //             throw new IllegalStateException("This cell should not have been on the UI.");
-    //         }
-    //
-    //         // convertDBtoElementTree.loadUIComponentsInsideVisibleViewPort(graph);
-    //         if (DeltaMap.isAnyCircleMinimized) graph.moveCirclesAfterMinimization();
-    //         if (DeltaMap.isAnyCircleMaximized) graph.moveCirclesAfterMaximization();
-    //
-    //         graph.updateCellLayer();
-    //     }
-    // };
-
-
-    List<CircleCell> addLaterCircle = new LinkedList<>();
-    List<Edge> addLaterEdge = new LinkedList<>();
 
 
     private double addAndUpdate(String cellId, double yMin) {
@@ -704,8 +570,8 @@ public class EventHandlers {
         addLaterEdge.clear();
         try {
             Statement statement = DatabaseUtil.getConnection().createStatement();
-            height = recursivelyAdd(cellId, statement, 0 + yMin);
-            System.out.println("Total children height: " + height);
+            height = recursivelyAdd(cellId, statement, yMin);
+            // System.out.println("Total children height: " + height);
             statement.executeBatch();
 
         } catch (SQLException e) {
@@ -715,25 +581,17 @@ public class EventHandlers {
         return height;
     }
 
-
     private double recursivelyAdd(String cellId, Statement statement, double upperSiblingHeight) {
         double height = 0;
 
-        /*
-         * collapsed - actions
-         *     0     - Classic Visible Circle - Show cell on UI. Starting value for all cells.
-         *     1     - Classic Invisible Circle - parent of this cell was minimized. Don't show on UI
-         *     2     - Classic Minimized Circle - this cell was minimized. Show on UI. Don't show children on UI.
-         *     3     - Minimized circle with Parent Minimized - parent of this cell was minimized. This cell was also minimized. Don't expand this cell's children. Don't show on UI.
-         */
+        System.out.println();
+        System.out.println("EventHandlers::recursivelyAdd ");
+        System.out.println("at cell: " + cellId);
+        System.out.println("received upperSiblingHeight:  " + upperSiblingHeight);
 
         // Get element row from Element table.
-        System.out.println();
-        System.out.println("EventHandlers::recursivelyAdd: addLaterCircle size: " + addLaterCircle.size());
-        System.out.println("at cell: " + cellId);
-
         try (ResultSet elementRS = ElementDAOImpl.selectWhere("id = " + cellId)) {
-            System.out.println(" cellId: " + cellId);
+
             if (elementRS.next()) {
                 int collapsed = elementRS.getInt("collapsed");
                 if (collapsed == 0) {
@@ -747,10 +605,12 @@ public class EventHandlers {
                     float yCoordinateTemp = elementRS.getFloat("bound_box_y_coordinate");
                     // CircleCell cell = new CircleCell(cellId, xCoordinateTemp, yCoordinateTemp);
 
-                    CircleCell cell = new CircleCell(cellId, xCoordinateTemp, (float) (upperSiblingHeight + BoundBox.unitHeightFactor/2));
+                    CircleCell cell = new CircleCell(cellId, xCoordinateTemp, (float)upperSiblingHeight);
                     cell.setMethodName(getMethodNameFromDB(cellId));
+
                     addLaterCircle.add(cell);
                     System.out.println("Added cell to addLaterCircle: " + cellId);
+                    System.out.println("At: " + upperSiblingHeight);
                     // graph.getModel().addCell(cell);
 
 
@@ -778,28 +638,44 @@ public class EventHandlers {
                     // graph.updateCellLayer();
 
                     try (ResultSet childrenRS = ElementToChildDAOImpl.selectWhere("parent_id = " + cellId)) {
-                        if (!childrenRS.next()) {
-                            height = 1;
-                        }
+                        boolean empty = false;
                         while (childrenRS.next()) {
+                            empty = true;
                             String childId = String.valueOf(childrenRS.getInt("child_id"));
-                            upperSiblingHeight += height*BoundBox.unitHeightFactor;
-                            height += recursivelyAdd(childId, statement,  upperSiblingHeight);
+                            // upperSiblingHeight += height * BoundBox.unitHeightFactor;
+                            System.out.println("passing on for cellId: " + childId + " upperSiblingHeight: " + (upperSiblingHeight + (height * BoundBox.unitHeightFactor)));
+                            System.out.println("passing on to next recursion height: " + height);
+
+                            height += recursivelyAdd(childId, statement, upperSiblingHeight + (height * BoundBox.unitHeightFactor));
+                        }
+
+                        if (!empty) {
+                            height = 1;
                         }
                     }
 
                 } else if (collapsed == 2) {
-                    System.out.println("Collapsed 2");
                     // Here only for the one time during the circle click.
+
+                    System.out.println("Collapsed 2");
+
                     // update collapsed=0
                     // ElementDAOImpl.updateWhere("collapsed", "0", "id = " + cellId);
                     statement.addBatch("UPDATE " + ELEMENT_TABLE + " SET COLLAPSED = 0 WHERE id = " + cellId);
+
                     // for all children with collapsed=1, show and update collapsed=0
                     try (ResultSet childrenRS = ElementToChildDAOImpl.selectWhere("parent_id = " + cellId)) {
                         while (childrenRS.next()) {
                             String childId = String.valueOf(childrenRS.getInt("child_id"));
-                            upperSiblingHeight += height*BoundBox.unitHeightFactor;
-                            height += recursivelyAdd(childId, statement, upperSiblingHeight);
+                            // upperSiblingHeight += height * BoundBox.unitHeightFactor;
+                            System.out.println("passing on for cellId: " + childId + " upperSiblingHeight: " + (upperSiblingHeight + (height * BoundBox.unitHeightFactor)));
+                            System.out.println("passing on to next recursion height: " + height);
+
+                            height += recursivelyAdd(
+                                    childId, statement,
+                                    upperSiblingHeight + (height * BoundBox.unitHeightFactor)
+                            );
+
                         }
                     }
 
@@ -812,13 +688,12 @@ public class EventHandlers {
                     float xCoordinateTemp = elementRS.getFloat("bound_box_x_coordinate");
                     float yCoordinateTemp = elementRS.getFloat("bound_box_y_coordinate");
                     // CircleCell cell = new CircleCell(cellId, xCoordinateTemp, yCoordinateTemp);
-                    CircleCell cell = new CircleCell(cellId, xCoordinateTemp, (float) (upperSiblingHeight*BoundBox.unitHeightFactor));
+                    CircleCell cell = new CircleCell(cellId, xCoordinateTemp, (float)upperSiblingHeight);
                     cell.setMethodName(getMethodNameFromDB(cellId));
                     addLaterCircle.add(cell);
+
                     System.out.println("Added cell to addLaterCircle: " + cellId);
-
                     // graph.getModel().addCell(cell);
-
 
                     try (ResultSet parentRS = ElementToChildDAOImpl.selectWhere("child_id = " + cellId)) {
                         if (parentRS.next()) {
@@ -847,13 +722,12 @@ public class EventHandlers {
                     double cellYMin =  elementRS.getInt("BOUND_BOX_Y_TOP_LEFT");
                     double cellYMax =  elementRS.getInt("BOUND_BOX_Y_BOTTOM_LEFT");
                     double fullCellHeight = cellYMax - cellYMin;
-                    DeltaMap.yMax -= fullCellHeight;
-                    DeltaMap.upperDelta -= fullCellHeight/2;
-                    DeltaMap.lowerDelta -= fullCellHeight;
+                    // DeltaMap.yMax -= fullCellHeight - BoundBox.unitHeightFactor;
+                    // DeltaMap.upperDelta -= fullCellHeight/2;
+                    // DeltaMap.lowerDelta -= fullCellHeight - BoundBox.unitHeightFactor;
 
-                    // System.out.println("3 -> 2 : fullCellHeight: " + + fullCellHeight);
-                    // System.out.println("yMin: " + DeltaMap.yMin + " : upperDelta: " + DeltaMap.upperDelta);
-                    // System.out.println("yMax: " + DeltaMap.yMax + " : upperDelta: " + DeltaMap.lowerDelta);
+                    System.out.println("3 -> 2 : fullCellHeight: " + fullCellHeight);
+                    // System.out.println("yMax: " + DeltaMap.yMax);
 
 
                     height = 1;
@@ -866,27 +740,8 @@ public class EventHandlers {
             e.printStackTrace();
         }
 
+        System.out.println("Exiting recursivelyAdd for : " + cellId);
         return height;
-    }
-
-    private String getMethodNameFromDB(String cellId) {
-        String methodName = "";
-        try {
-            ResultSet rs = DatabaseUtil.select("SELECT METHOD_NAME " +
-                    "FROM " + METHOD_DEFINITION_TABLE + " AS MD " +
-                    "WHERE ID = (SELECT METHOD_ID " +
-                    "            FROM " + CALL_TRACE_TABLE + " AS CT " +
-                    "            WHERE CT.ID = (SELECT ID_ENTER_CALL_TRACE " +
-                    "                           FROM " + ELEMENT_TABLE + " AS E " +
-                    "                           WHERE E.ID = " + cellId + "))");
-            if (rs.next()) {
-                methodName = rs.getString("METHOD_NAME");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return methodName;
     }
 
     private void removeAndUpdate(String cellId, List<String> removeCircleCells, List<String> removeEdges ) {
@@ -898,7 +753,6 @@ public class EventHandlers {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
     }
 
     private void recursivelyRemove(String cellId, List<String> removeCircleCells, List<String> removeEdges, Statement statement) {
@@ -907,12 +761,10 @@ public class EventHandlers {
                 "FROM " + ELEMENT_TABLE + " AS E JOIN " + ELEMENT_TO_CHILD_TABLE + " AS EC ON E.ID = EC.CHILD_ID " +
                 "WHERE EC.PARENT_ID = " + cellId;
 
-        System.out.println("EventHandlers::recursivelyRemove: looking at " + cellId);
         try (ResultSet childrenRS = DatabaseUtil.select(sql)) {
             try {
                 while (childrenRS.next()) {
                     String childId = String.valueOf(childrenRS.getInt("child_id"));
-                    System.out.println("Child id: " + childId);
                     int collapsed = childrenRS.getInt("COLLAPSED");
                     removeCircleCells.add(childId);
                     removeEdges.add(childId);
@@ -937,14 +789,14 @@ public class EventHandlers {
                         double cellYMin =  childrenRS.getInt("BOUND_BOX_Y_TOP_LEFT");
                         double cellYMax =  childrenRS.getInt("BOUND_BOX_Y_BOTTOM_LEFT");
                         double fullCellHeight = cellYMax - cellYMin;
-                        DeltaMap.yMax -= fullCellHeight;
-                        double temp = fullCellHeight/2 - BoundBox.unitHeightFactor / 2;
-                        temp = temp < BoundBox.unitHeightFactor? 0 : temp;
-                        DeltaMap.upperDelta -= temp;
+                        DeltaMap.yMax -= (fullCellHeight - BoundBox.unitHeightFactor);
+                        // double temp = fullCellHeight/2 - BoundBox.unitHeightFactor / 2;
+                        // temp = temp < BoundBox.unitHeightFactor? 0 : temp;
+                        // DeltaMap.upperDelta -= temp;
                         DeltaMap.lowerDelta -= (fullCellHeight - BoundBox.unitHeightFactor);
 
-                        System.out.println("0 -> 2 : fullCellHeight: " + + fullCellHeight);
-                        System.out.println("yMin: " + DeltaMap.yMin + " : upperDelta: " + DeltaMap.upperDelta);
+                        System.out.println("2 -> 3 : fullCellHeight: " + + fullCellHeight);
+                        // System.out.println("yMin: " + DeltaMap.yMin + " : upperDelta: " + DeltaMap.upperDelta);
                         System.out.println("yMax: " + DeltaMap.yMax + " : upperDelta: " + DeltaMap.lowerDelta);
                     }
 
@@ -955,6 +807,39 @@ public class EventHandlers {
             }
         } catch (SQLException ignored) {}
     }
+
+
+
+
+    private String getMethodNameFromDB(String cellId) {
+        String methodName = "";
+        try {
+            ResultSet rs = DatabaseUtil.select("SELECT METHOD_NAME " +
+                    "FROM " + METHOD_DEFINITION_TABLE + " AS MD " +
+                    "WHERE ID = (SELECT METHOD_ID " +
+                    "            FROM " + CALL_TRACE_TABLE + " AS CT " +
+                    "            WHERE CT.ID = (SELECT ID_ENTER_CALL_TRACE " +
+                    "                           FROM " + ELEMENT_TABLE + " AS E " +
+                    "                           WHERE E.ID = " + cellId + "))");
+            if (rs.next()) {
+                methodName = rs.getString("METHOD_NAME");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return methodName;
+    }
+
+    @SuppressWarnings("unused")
+    EventHandler<MouseEvent> onMouseExitToDismissPopover = new EventHandler<MouseEvent>() {
+        @Override
+        public void handle(MouseEvent event) {
+            if (popOver != null)
+                popOver.hide();
+        }
+    };
+
 
     @SuppressWarnings("unused")
     EventHandler<MouseEvent> onMousePressedEventHandler = new EventHandler<MouseEvent>() {

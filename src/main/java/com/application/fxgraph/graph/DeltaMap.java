@@ -11,9 +11,9 @@ public class DeltaMap {
      */
     private static TreeMap<Double, Double> deltaMap = new TreeMap<>();
 
-    public static double yMin;
+    // public static double yMin;
     public static double yMax;
-    public static double upperDelta;
+    // public static double upperDelta;
     public static double lowerDelta;
 
     public static boolean isAnyCircleMinimized = false;

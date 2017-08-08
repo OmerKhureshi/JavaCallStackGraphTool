@@ -51,6 +51,7 @@ import java.sql.Statement;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+
 public class Main extends Application {
 
     // Main UI screen
@@ -154,7 +155,7 @@ public class Main extends Application {
             @Override
             protected Void call() throws Exception {
                 firstTimeLoad = isFirstLoad();
-                System.out.println("Is first time load? : " + firstTimeLoad);
+                System.out.println("First load? : " + firstTimeLoad);
                 return null;
             }
 

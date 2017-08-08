@@ -78,7 +78,7 @@ public class Graph {
         // For all the circles on UI.
         System.out.println("Graph::moveCirclesAfterMinimization");
 
-        System.out.println("yMin: " + DeltaMap.yMin + " : upper delta: " + DeltaMap.upperDelta);
+        // System.out.println("yMin: " + DeltaMap.yMin + " : upper delta: " + DeltaMap.upperDelta);
         System.out.println("yMax: " + DeltaMap.yMax + " : lower delta: " + DeltaMap.lowerDelta);
 
 
@@ -86,16 +86,17 @@ public class Graph {
             if (item instanceof CircleCell) {
                 CircleCell node = (CircleCell) item;
 
-                if (node.getLayoutY() >= DeltaMap.yMin && node.getLayoutY() < DeltaMap.yMax) {
-                    System.out.println("Moving by half shift: " + node.getCellId() + " : " + DeltaMap.yMin + " : " + DeltaMap.upperDelta);
-                    node.relocate(node.getLayoutX(), node.getLayoutY() - DeltaMap.upperDelta);
+                // if (node.getLayoutY() >= DeltaMap.yMin && node.getLayoutY() < DeltaMap.yMax) {
+                //     System.out.println("Moving by half shift: " + node.getCellId() + " : " + DeltaMap.yMin + " : " + DeltaMap.upperDelta);
+                //     node.relocate(node.getLayoutX(), node.getLayoutY() - DeltaMap.upperDelta);
+                //
+                // } else
 
-                } else if (node.getLayoutY() >= DeltaMap.yMax) {
+                if (node.getLayoutY() >= DeltaMap.yMax) {
                     System.out.println("Moving by full shift: " + node.getCellId() + " : " + DeltaMap.yMax + " : "  + DeltaMap.lowerDelta);
                     node.relocate(node.getLayoutX(), node.getLayoutY() - DeltaMap.lowerDelta);
 
                 }
-
 
                 //
                 //     if (DeltaMap.getDelta(node.getLayoutY()) != null) {

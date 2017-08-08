@@ -23,11 +23,13 @@ public class Edge extends Group {
         // Label label = new Label("111111");
         line = new Line();
 
-        line.setStartX    (source.getLayoutX        () + source.getPrefWidth       () * .5 );
-        line.setStartY    (source.getLayoutY        () + source.getPrefHeight      () * .5 );
-        line.setEndX      (target.getLayoutX        () + source.getPrefWidth       () * .5 );
-        line.setEndY      (target.getLayoutY        () + source.getPrefHeight      () * .5 );
 
+        line.setStartX(source.getLayoutX() + source.getPrefWidth() * .5);
+        line.setStartY(source.getLayoutY() + source.getPrefHeight() * .5);
+        line.setEndX(target.getLayoutX() + source.getPrefWidth() * .5);
+        line.setEndY(target.getLayoutY() + source.getPrefHeight() * .5);
+
+        // System.out.println("Setting startY for " + edgeId + " = " + source.getLayoutY() + " + " + (source.getPrefHeight()*.5));
         bindEdgeToCircles(source, target);
 
         // line.startXProperty().bind( source.layoutXProperty().add(source.getLayoutX()));
@@ -60,7 +62,9 @@ public class Edge extends Group {
         line.setStartX(startX + Cell.prefWidth * .5 ) ;
         line.setStartY(startY + Cell.prefHeight * .5 );
         line.setEndX(endX + Cell.prefWidth * .5 );
-        line.setEndY(endY + Cell.prefHeight * .5 );
+        line.setEndY(endY + Cell.prefHeight * .5);
+
+        // System.out.println("Setting startY for " + edgeId + " = " + startY + " + " + (Cell.prefHeight * .5));
 
         // System.out.println("Adding edge: target id: " + edgeId);
         // line.startXProperty().bind( source.layoutXProperty().add(source.getLayoutX()));
