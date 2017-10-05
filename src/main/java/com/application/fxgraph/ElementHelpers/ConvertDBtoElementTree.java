@@ -175,8 +175,6 @@ public class ConvertDBtoElementTree {
             return;
         }
 
-        // System.out.println("ConvertDBtoElementTree::loadUIComponentsInsideVisibleViewPort: ");
-
         // Add circle cells
         addCircleCells();
 
@@ -249,7 +247,6 @@ public class ConvertDBtoElementTree {
         double viewPortMaxY = viewPortDims.getMaxY();
         double widthOffset = viewPortDims.getWidth() * multiplierForVisibleViewPort;
         double heightOffset = viewPortDims.getHeight() * multiplierForVisibleViewPort ;
-
 
         // Get element properties for those elements that are inside the current viewport.
         String sql = "SELECT E.ID AS EID, parent_id, collapsed, bound_box_x_coordinate, bound_box_y_coordinate, message, id_enter_call_trace, method_id " +
@@ -641,7 +638,7 @@ public class ConvertDBtoElementTree {
     // Region where UI components are loaded.
     private static BoundingBox activeRegion;
 
-    // Trigger UI components to be reloaded when visible viewport is outside this region. triggerRegion < activeRegion
+    // Triggers the UI components to be loaded when visible viewport is outside this region. triggerRegion < activeRegion
     private static BoundingBox triggerRegion;
 
     static boolean firstLoad = true;
@@ -660,6 +657,7 @@ public class ConvertDBtoElementTree {
         if (triggerRegion == null)
             setTriggerRegion(viewPort);
 
+        // return true if  current viewport is outside trigger region
         if (!triggerRegion.contains(viewPort)) {
             setActiveRegion(viewPort);
             setTriggerRegion(viewPort);
@@ -675,7 +673,7 @@ public class ConvertDBtoElementTree {
     }
 
     private void setActiveRegion(BoundingBox viewPort) {
-        this.activeRegion = new BoundingBox(
+        activeRegion = new BoundingBox(
                 viewPort.getMinX() - viewPort.getWidth() * 3,
                 viewPort.getMinY() - viewPort.getHeight() * 3,
                 viewPort.getWidth() * 7,

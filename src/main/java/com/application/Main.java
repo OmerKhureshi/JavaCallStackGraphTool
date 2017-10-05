@@ -934,15 +934,11 @@ public class Main extends Application {
     }
 
     public void updateUi(String caller) {
-
         if (convertDBtoElementTree != null && graph != null) {
-            // System.out.println("Main::updateUi: called by " + caller + " thread " + Thread.currentThread().getName());
             convertDBtoElementTree.loadUIComponentsInsideVisibleViewPort(graph);
             convertDBtoElementTree.removeUIComponentsFromInvisibleViewPort(graph);
-            // graph.myEndUpdate();
             graph.updateCellLayer();
         }
-        // System.out.println("Main::updateUi: END called by " + caller);
     }
 
     // private void addGraphComponents() {

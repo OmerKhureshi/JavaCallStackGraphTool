@@ -11,9 +11,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Line;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class Graph {
 
@@ -21,14 +19,14 @@ public class Graph {
     private Group canvas;
     private ZoomableScrollPane scrollPane;
     //    private ScrollPane scrollPane;
-    EventHandlers eventHandlers;
+    private EventHandlers eventHandlers;
 
     /**
      * the pane wrapper is necessary or else the scrollpane would always align
      * the top-most and left-most child to the top and left eg when you drag the
      * top child down, the entire scrollpane would move down
      */
-    static CellLayer cellLayer;
+    private static CellLayer cellLayer;
 
     public Graph() {
         this.model = new Model();
@@ -105,23 +103,23 @@ public class Graph {
                 //         System.out.println("Relocated Circle:");
                 //         System.out.println(((CircleCell) node).getCellId() + " from " + node.getLayoutY());
                 //         node.relocate(node.getLayoutX(), node.getLayoutY() - delta);
-            //         System.out.println(((CircleCell) node).getCellId() + " to " + node.getLayoutY());
-            //         System.out.println();
-            //     }
-            //
-            // } else if(item instanceof Edge) {
-            //     Edge node = (Edge) item;
-            //
-            //     if (DeltaMap.getDelta(node.getLayoutY()) != null) {
-            //         double delta = (double) DeltaMap.getDelta(node.getLayoutY());
-            //
-            //         System.out.println("Relocated Edge:");
-            //         System.out.println(((Edge) node).getEdgeId() + " from " + node.getLayoutY());
-            //         node.relocate(node.getLayoutX(), node.getLayoutY() - delta);
-            //         System.out.println(((Edge) node).getEdgeId() + " to " + node.getLayoutY());
-            //         System.out.println();
-            //     }
-            //
+                //         System.out.println(((CircleCell) node).getCellId() + " to " + node.getLayoutY());
+                //         System.out.println();
+                //     }
+                //
+                // } else if(item instanceof Edge) {
+                //     Edge node = (Edge) item;
+                //
+                //     if (DeltaMap.getDelta(node.getLayoutY()) != null) {
+                //         double delta = (double) DeltaMap.getDelta(node.getLayoutY());
+                //
+                //         System.out.println("Relocated Edge:");
+                //         System.out.println(((Edge) node).getEdgeId() + " from " + node.getLayoutY());
+                //         node.relocate(node.getLayoutX(), node.getLayoutY() - delta);
+                //         System.out.println(((Edge) node).getEdgeId() + " to " + node.getLayoutY());
+                //         System.out.println();
+                //     }
+                //
             }
         });
 
@@ -191,19 +189,25 @@ public class Graph {
         model.clearListEdgesOnUI();
     }
 
+
+    /**
+     * This method adds UI elements such as circles, lines and highlights from CircleCellsOnUI,
+     * EdgesOnUI and HighlightsOnUI maps respectively if they were not previously added.
+     *
+     * @return void
+     */
     public void updateCellLayer() {
 
-        // System.out.println("Graph::updateCellLayer: ");
-        // System.out.println("Graph::updateCellLayer: gighlightsOnUI.size() " + model.getHighlightsOnUI().size());
+        // Iterate circleCellsOnUI and add circles that are not previously added to the cellLayer.
         model.getCircleCellsOnUI().forEach((id, circleCell) -> {
             if (!cellLayer.getChildren().contains(circleCell)) {
-                // System.out.println("Graph::updateCellLayer: Adding circleCell to cellLayer: " + circleCell.getCellId());
                 cellLayer.getChildren().add(circleCell);
                 circleCell.toFront();
                 eventHandlers.setCustomMouseEventHandlers(circleCell);
             }
         });
 
+        // Iterate edgesOnUI and add edges that are not previously added to the cellLayer.
         model.getEdgesOnUI().forEach((id, edge) -> {
             if (!cellLayer.getChildren().contains(edge)) {
                 cellLayer.getChildren().add(edge);
@@ -211,16 +215,16 @@ public class Graph {
             }
         });
 
+        // Iterate highlightsOnUI and add highlights that are not previously added to the cellLayer.
         model.getHighlightsOnUI().forEach((id, rectangle) -> {
             if (!cellLayer.getChildren().contains(rectangle)) {
-                // System.out.println("Graph::updateCellLayer: Adding highlight to cellLayer: ");
                 cellLayer.getChildren().add(rectangle);
                 rectangle.toBack();
             }
         });
 
+        // Update the global flag.
         model.uiUpdateRequired = false;
-
     }
 
 
@@ -272,21 +276,17 @@ public class Graph {
         double minY = vValue * (scaledContentHeight - scaledViewportHeight);
 
         // System.out.println("Scale: " + scale);
-//        System.out.println("vValue: " + vValue + " : hValue: " + hValue);
-//        System.out.println("Content height: " + scaledContentHeight + " : width: " + scaledContentWidth);
-//        System.out.println("Viewport height: " + scaledViewportHeight + " : width: " + scaledViewportWidth);
-//        System.out.println("minY: " + minY + " : minX: " + minX);
-//        System.out.println();
-        /*
+        // System.out.println("vValue: " + vValue + " : hValue: " + hValue);
+        // System.out.println("Content height: " + scaledContentHeight + " : width: " + scaledContentWidth);
+        // System.out.println("Viewport height: " + scaledViewportHeight + " : width: " + scaledViewportWidth);
+        // System.out.println("minY: " + minY + " : minX: " + minX);
+        // System.out.println();
 
+        /*
             1 -> contentWidth - viewPortWidth
             ? -> x cord
 
             ? = xCord/contentWidth
-
-
-
-
 
         */
         return new BoundingBox(minX, minY, scaledViewportWidth, scaledViewportHeight);
@@ -336,4 +336,69 @@ public class Graph {
             this.threadId = threadId;
         }
     }
+
+    /**
+     * This method return true if the view port was partially scrolled, that is if the circles loaded in
+     * previous cycle are visible on the screen after scroll. Otherwise it returns false.
+     *
+     * @return boolean
+     */
+    public boolean checkIfPartialScroll() {
+        if (DeltaMap.getLastStoredViewPort().intersects(getViewPortDims())) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * This method return the top most circle if view port is scrolled to a new random position. Else in case of a partial scroll,
+     * this method returns the top most loaded circle.
+     *
+     * @return an array of size 2 containing top and bottom preloaded circles on UI.
+     */
+    public CircleCell[]  getTopAndBottomCircles() {
+        System.out.println("Graph::getTopMostCircle");
+        CircleCell topMost = null, bottomMost = null;
+
+        if (checkIfPartialScroll()) {
+            // If the scroll was a partial scroll, get the top most and bottom most circles that are already loaded on UI.
+            double maxY = Double.MIN_VALUE,
+                    minY = Double.MAX_VALUE;
+
+
+            // Iterate through the circles cells on UI and get the top and bottom circles.
+            for (Node node: cellLayer.getChildren()) {
+                if (node instanceof CircleCell) {
+                    if (node.getLayoutY() > maxY) {
+                        maxY = node.getLayoutY();
+                        bottomMost = (CircleCell) node;
+                    }
+
+                    if (node.getLayoutY() < minY) {
+                        minY = node.getLayoutY();
+                        topMost = (CircleCell)node;
+                    }
+                }
+            }
+
+            System.out.println("topmost circle: " + topMost.getCellId() + " : " + topMost.getLayoutY());
+            System.out.println("bottom most circle: " + bottomMost.getCellId() + " : " + bottomMost.getLayoutY());
+
+        } else return null;
+
+        return new CircleCell[]{topMost, bottomMost};
+    }
+
+    /**
+     * This method returns the yMin coordinate of the region to load the circles
+     */
+    public double getTopCoordinate() {
+
+        return getViewPortDims().getMinY()
+                - getViewPortDims().getHeight() * 2
+                - DeltaMap.getGlobalDeltaValuse()[0];
+
+    }
+
+
 }
