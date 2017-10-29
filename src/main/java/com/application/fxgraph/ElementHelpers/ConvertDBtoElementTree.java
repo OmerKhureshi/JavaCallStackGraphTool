@@ -44,6 +44,10 @@ public class ConvertDBtoElementTree {
         threadMapToRoot = new LinkedHashMap<>();
     }
 
+    /**
+     * This method converts the string to an element tree.
+     *
+     */
     public void StringToElementList(List<String> line, int fkCallTrace) {
         String msg = line.get(3);  // ToDo replace hardcoded indices with universal indices.
         Integer threadId = Integer.valueOf(line.get(2));

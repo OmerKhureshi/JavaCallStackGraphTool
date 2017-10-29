@@ -52,7 +52,7 @@ public class EventHandlers {
 
         
         // *****************
-        // Click on an element to collapse the subtree rooted at clicked element.
+        // Click on an element to collapse the subtree rooted at that element.
         // node.setOnMousePressed(onMousePressedToCollapseTree);
         // *****************
 
@@ -383,7 +383,7 @@ public class EventHandlers {
 
             /*
              * collapsed - actions
-             *     0     - Show cell on UI. Starting value for all cells.
+             *     0     - Cell visible on UI. Starting value for all cells.
              *     1     - parent of this cell was minimized. Don't show on UI
              *     2     - this cell was minimized. Show on UI. Don't show children on UI.
              *     3     - parent of this cell was minimized. This cell was also minimized. Don't expand this cell's children. Don't show on UI.
@@ -447,6 +447,26 @@ public class EventHandlers {
             }
         }
     };
+
+    public void removeChildrenFromUI (String cellId) {
+        Map<String, CircleCell> mapCircleCellsOnUI = graph.getModel().getCircleCellsOnUI();
+        List<CircleCell> listCircleCellsOnUI = graph.getModel().getListCircleCellsOnUI();
+        List<String> removeCircleCells = new ArrayList<>();
+
+        Map<String, Edge> mapEdgesOnUI = graph.getModel().getEdgesOnUI();
+        List<Edge> listEdgesOnUI = graph.getModel().getListEdgesOnUI();
+        List<String> removeEdges = new ArrayList<>();
+
+
+    }
+
+    public void rearrangeLowerTree () {
+
+    }
+
+    public void updateDB(){
+
+    }
 
     public void recursivelyAdd(String cellId) {
 
