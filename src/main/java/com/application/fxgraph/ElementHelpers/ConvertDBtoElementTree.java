@@ -380,7 +380,7 @@ public class ConvertDBtoElementTree {
             getEdgesFromResultSet(rsDownEdges);
         } catch (SQLException e) {
             e.printStackTrace();
-        }
+       }
     }
 
 

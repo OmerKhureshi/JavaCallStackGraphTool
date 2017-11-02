@@ -6,7 +6,9 @@ import com.application.db.DAOImplementation.*;
 import com.application.db.DatabaseUtil;
 import com.application.db.TableNames;
 import com.application.fxgraph.cells.CircleCell;
+import javafx.concurrent.Task;
 import javafx.event.EventHandler;
+import javafx.geometry.BoundingBox;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -16,6 +18,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import org.controlsfx.control.PopOver;
+import org.omg.CORBA._IDLTypeStub;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -24,6 +27,8 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static com.application.fxgraph.graph.Graph.cellLayer;
 
 public class EventHandlers {
 
@@ -40,7 +45,7 @@ public class EventHandlers {
         // *****************
         // Show popup to display element details on mouse hover on an element.
         // node.setOnMouseEntered(onMouseHoverToShowInfoEventHandler);
-        node.setOnMousePressed(onMouseHoverToShowInfoEventHandler);
+        // node.setOnMousePressed(onMouseHoverToShowInfoEventHandler);
         // *****************
 
 
@@ -53,7 +58,7 @@ public class EventHandlers {
         
         // *****************
         // Click on an element to collapse the subtree rooted at that element.
-        // node.setOnMousePressed(onMousePressedToCollapseTree);
+        node.setOnMousePressed(onMousePressedToCollapseTree);
         // *****************
 
 
@@ -368,7 +373,7 @@ public class EventHandlers {
         }
     };
 
-    EventHandler<MouseEvent> onMousePressedToCollapseTree = new EventHandler<MouseEvent>() {
+    private EventHandler<MouseEvent> onMousePressedToCollapseTree = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {
             CellLayer cellLayer = (CellLayer) graph.getCellLayer();
@@ -379,7 +384,7 @@ public class EventHandlers {
                 if (cellRS.next()) {
                     collapsed = cellRS.getInt("collapsed");
                 }
-            } catch (SQLException e) {}
+            } catch (SQLException ignored) {}
 
             /*
              * collapsed - actions
@@ -394,8 +399,7 @@ public class EventHandlers {
             } else if (collapsed == 0) {
                 // Minimize now.
                 // System.out.println(">>>> clicked on a collapsed = 0  cell.");
-                if (cell != null)
-                    ((Circle)cell.getChildren().get(0)).setFill(Color.BLUE);
+                ((Circle)cell.getChildren().get(0)).setFill(Color.BLUE);
 
                 // ((Circle) ( (Group)cell.getView() )
                 //             .getChildren().get(0))
@@ -404,6 +408,12 @@ public class EventHandlers {
                 // cell.setStyle("-fx-background-color: blue");
                 cell.setLabel("+");
                 ElementDAOImpl.updateWhere("collapsed", "2", "id = " + cellId);
+
+                removeChildrenFromUI(cellId);
+                updateDBRootedAt(cellId);
+
+         /*
+                //Original functionality
                 Map<String, CircleCell> mapCircleCellsOnUI = graph.getModel().getCircleCellsOnUI();
                 List<CircleCell> listCircleCellsOnUI = graph.getModel().getListCircleCellsOnUI();
                 List<String> removeCircleCells = new ArrayList<>();
@@ -431,7 +441,7 @@ public class EventHandlers {
                         mapEdgesOnUI.remove(edgeId);
                         listEdgesOnUI.remove(edge);
                     }
-                });
+                });*/
                 // listEdgesOnUI.forEach(edge -> System.out.print(" : " + edge));
                 // System.out.println();
 
@@ -458,13 +468,83 @@ public class EventHandlers {
         List<String> removeEdges = new ArrayList<>();
 
 
+        System.out.println("removeChildrenFromUI: click on cellid : " + cellId);
+        try (ResultSet rs = ElementDAOImpl.selectWhere("id = " + cellId)) {
+            if (rs.next()) {
+                float y = rs.getFloat("bound_box_y_top_left");
+                float leafCount = rs.getInt("leaf_count");
+                float height = leafCount * BoundBox.unitHeightFactor;
+                float width = BoundBox.unitWidthFactor;
+
+                float x = rs.getFloat("bound_box_x_top_left");
+
+                System.out.println("removeChildrenFromUI: y top: " + y + " ; y bottom: " + height);
+
+                // add a x condition as well.
+                mapCircleCellsOnUI.forEach((id, circleCell) -> {
+                    double topY = circleCell.getLayoutY();
+                    double rightX = circleCell.getLayoutX() + width;
+
+                    if (topY >= y && topY < (y + height) && rightX >= x) {
+                        System.out.println("adding to remove list: cellId" + id);
+                        removeCircleCells.add(id);
+                        removeEdges.add(id);
+                    }
+                });
+
+                removeCircleCells.forEach((id) -> {
+                    if (mapCircleCellsOnUI.containsKey(id)) {
+                        System.out.println("removeChildrenFromUI: removing cellId: " + id);
+                        CircleCell cell = mapCircleCellsOnUI.get(id);
+                        cellLayer.getChildren().remove(cell);
+                        mapCircleCellsOnUI.remove(id);
+                    }
+                });
+
+                removeEdges.forEach((id) -> {
+                    Edge edge = mapEdgesOnUI.get(id);
+                    if (edge != null) {
+                        System.out.println("removing edge: edgeId: " + id + "; edge targetid: " + edge.getEdgeId());
+                        mapEdgesOnUI.remove(id);
+                        cellLayer.getChildren().remove(edge);
+                    }
+                });
+
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public void rearrangeLowerTree () {
 
     }
 
-    public void updateDB(){
+    public void updateDBRootedAt(String cellId){
+
+        Task<Void> updateDBTask = new Task<Void>() {
+
+            @Override
+            protected Void call() throws Exception {
+                recursivelyRemove(cellId);
+                return null;
+            }
+
+            @Override
+            protected void succeeded() {
+                super.succeeded();
+                System.out.println("EventHandler::updateDBRootedAt: Updated db in backgrount thread");
+            }
+
+            @Override
+            protected void failed() {
+                super.failed();
+
+                System.out.println("EventHandler::updateDBRootedAt: Updating db in background failed");
+            }
+        };
+
+        new Thread(updateDBTask).run();
 
     }
 
@@ -561,6 +641,31 @@ public class EventHandlers {
                             "fk_target_element_id = " + childId);
 
                     recursivelyRemove(childId, removeCircleCells, removeEdges);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } catch (SQLException e) {}
+    }
+
+    // overloaded version.
+    public void recursivelyRemove(String cellId) {
+        try (ResultSet childrenRS = ElementToChildDAOImpl.selectWhere("parent_id = " + cellId)) {
+            try {
+                while (childrenRS.next()) {
+                    String childId = String.valueOf(childrenRS.getInt("child_id"));
+
+                    System.out.println("EventHandler::recursivelyRemove: removing child: " + childId);
+
+                    ElementDAOImpl.updateWhere("collapsed", "1",
+                            "id = " + childId + " AND collapsed = 0");
+                    ElementDAOImpl.updateWhere("collapsed", "3",
+                            "id = " + childId + " AND collapsed = 2");
+
+                    EdgeDAOImpl.updateWhere("collapsed", "1",
+                            "fk_target_element_id = " + childId);
+
+                    recursivelyRemove(childId);
                 }
             } catch (SQLException e) {
                 e.printStackTrace();

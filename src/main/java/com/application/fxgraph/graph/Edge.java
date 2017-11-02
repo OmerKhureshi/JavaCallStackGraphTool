@@ -8,6 +8,7 @@ public class Edge extends Group {
     protected Cell source;
     protected Cell target;
 
+    // EdgeId is also the CircleCellId for the target/end circle cell.
     private String edgeId;
     Line line;
 

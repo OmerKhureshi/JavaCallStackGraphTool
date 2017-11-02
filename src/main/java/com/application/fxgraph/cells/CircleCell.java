@@ -10,9 +10,10 @@ import javafx.scene.text.TextAlignment;
 
 public class CircleCell extends Cell {
 
-    Label label;
-    Label methodName;
-    Circle circle;
+    private Label label;
+    private Label idLabel;
+    private Label methodName;
+    private Circle circle;
 
     public CircleCell(String id) {
         super(id);
@@ -22,6 +23,8 @@ public class CircleCell extends Cell {
 
         circle = new Circle(20);
         label = new Label("This is a long string");
+        idLabel = new Label("-" + id + "-");
+
         methodName = new Label("");
         methodName.setPrefWidth(85);
         methodName.setWrapText(true);
@@ -35,6 +38,7 @@ public class CircleCell extends Cell {
         // getChildren().setAll(circle, label);
         getChildren().add(circle);
         getChildren().add(methodName);
+        getChildren().add(idLabel);
         // setView(group);
     }
 
