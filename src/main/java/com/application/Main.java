@@ -50,19 +50,19 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Main extends Application {
 
-
     // Steps to follow next.
-    // on callapse
-    //      remove from ui
+    // on collapse
+    //      remove from ui - DONE
     //              use parent cell dimensions to remove ui elements.
     //              Add X condition. Only Y is looked at so far.
     //              Remove edges also.
-    //      bring bottom tree up
+    //      bring bottom tree up-
     //              just the lower adjacent sibling.
     //                    Bring up the lower sibling tree that is already drawn.
     //                    Also draw new elements if some space still remains.
     //      updated DB async.
-
+    //             Update tree rooted at the click point - DONE
+    //             Update tree the entire tree -
 
     // issues:
     // on reset has some issues. check it.

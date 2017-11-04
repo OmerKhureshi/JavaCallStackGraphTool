@@ -522,6 +522,11 @@ public class EventHandlers {
 
     public void updateDBRootedAt(String cellId){
 
+
+        //      updated DB async.
+        //             Update tree rooted at the click point <======  THIS METHOD
+        //              Update tree the entire tree
+
         Task<Void> updateDBTask = new Task<Void>() {
 
             @Override
@@ -545,6 +550,22 @@ public class EventHandlers {
         };
 
         new Thread(updateDBTask).run();
+
+    }
+
+
+    public void updateTree(String cellId) {
+
+        //      updated DB async.
+        //             Update tree rooted at the click point - DONE
+        //              Update tree the entire tree - <======  THIS METHOD
+
+        // iterate all lower siblings
+        //      update db <=  subtract the delta from the positions.
+
+        // iterate the parent and update parents siblings.
+        // recursively do the above for parent until the root is reached.
+
 
     }
 
