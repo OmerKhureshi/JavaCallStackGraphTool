@@ -380,9 +380,14 @@ public class EventHandlers {
             CircleCell cell = (CircleCell) event.getSource();
             String cellId =  cell.getCellId();
             int collapsed = 0;
+            double yTopLeft = 0;
+            double yBottomLeft = 0;
+
             try (ResultSet cellRS = ElementDAOImpl.selectWhere("id = " + cellId)) {
                 if (cellRS.next()) {
                     collapsed = cellRS.getInt("collapsed");
+                    yTopLeft = cellRS.getDouble("bound_box_y_top_left");
+                    yBottomLeft = cellRS.getDouble("bound_box_y_bottom_left");
                 }
             } catch (SQLException ignored) {}
 
@@ -411,6 +416,16 @@ public class EventHandlers {
 
                 removeChildrenFromUI(cellId);
                 updateDBRootedAt(cellId);
+
+                Statement statement = null;
+                try {
+                    statement = DatabaseUtil.getConnection().createStatement();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+
+                double delta = yTopLeft - yBottomLeft - BoundBox.unitHeightFactor;
+                updateLowerSiblings(Integer.parseInt(cellId), delta, statement);
 
          /*
                 //Original functionality
@@ -554,18 +569,85 @@ public class EventHandlers {
     }
 
 
-    public void updateTree(String cellId) {
+    // This method reccursively updates the positions of all the low siblings and parents lower siblings.
+    private void updateLowerSiblings(int cellId, double delta, Statement statement) {
 
         //      updated DB async.
         //             Update tree rooted at the click point - DONE
         //              Update tree the entire tree - <======  THIS METHOD
 
-        // iterate all lower siblings
-        //      update db <=  subtract the delta from the positions.
+        // BASE CONDITION. IF ROOT IS REACHED STOP.
+        if (cellId == 1) {
+            return;
+        }
 
-        // iterate the parent and update parents siblings.
-        // recursively do the above for parent until the root is reached.
+        System.out.println("EventHandler::updateLowerSiblings:  At cell ID: " + cellId);
 
+
+        int parentId = 0;
+        try (ResultSet getParentIdRS = ElementDAOImpl.selectWhere("ID = " + cellId)) {
+            if (getParentIdRS.next()) {
+                parentId = getParentIdRS.getInt("parent_id");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+
+        // get all lower siblings of the cell id.
+        String sql = "SELECT * FROM " + TableNames.ELEMENT_TABLE + " AS E1 " +
+                "where E1.PARENT_ID = " + parentId +" " +
+                "AND E1.ID > " + cellId;
+
+        try (ResultSet rs = DatabaseUtil.select(sql)) {
+            if (rs.next()) {
+                parentId = rs.getInt("PARENT_ID");
+                int id = rs.getInt("id");
+
+                Double newXTopLeft = rs.getDouble("bound_box_x_top_left") - delta;
+                Double newYTopLeft = rs.getDouble("bound_box_y_top_left") - delta;
+
+                Double newXTopRight = rs.getDouble("bound_box_x_top_right") - delta;
+                Double newYTopRight = rs.getDouble("bound_box_y_top_right") - delta;
+
+                Double newXBottomLeft = rs.getDouble("bound_box_x_bottom_left") - delta;
+                Double newYBottomLeft = rs.getDouble("bound_box_y_bottom_left") - delta;
+
+                Double newXBottomRight = rs.getDouble("bound_box_x_bottom_right") - delta;
+                Double newYBottomRight = rs.getDouble("bound_box_y_bottom_right") - delta;
+
+                Double newX = rs.getDouble("bound_box_x_coordinate") - delta;
+                Double newY = rs.getDouble("bound_box_x_coordinate") - delta;
+
+
+                // Update the delta in current row.
+                String updateQuery = "UPDATE " + TableNames.ELEMENT_TABLE +
+                        "SET bound_box_x_top_left = " + newXTopLeft + ", " +
+                        "bound_box_y_top_left = " + newYTopLeft + ", " +
+
+                        "bound_box_x_top_right = " + newXTopRight + ", " +
+                        "bound_box_y_top_right = " + newYTopRight + ", " +
+
+                        "bound_box_x_bottom_left = " + newXBottomLeft + ", " +
+                        "bound_box_y_bottom_left = " + newYBottomLeft + ", " +
+
+                        "bound_box_x_bottom_right = " + newXBottomRight + ", " +
+                        "bound_box_y_bottom_right = " + newYBottomRight + ", " +
+
+                        "bound_box_x_coordinate = " + newX + ", " +
+                        "bound_box_x_coordinate = " + newY + " " +
+
+                        "WHERE ID = " + id;
+
+                statement.addBatch(updateQuery);
+
+                System.out.println("EventHandler::updateLowerSiblings:  updating positions of cellId: " + id);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        updateLowerSiblings(parentId, delta, statement);
 
     }
 
