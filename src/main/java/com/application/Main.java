@@ -56,13 +56,32 @@ public class Main extends Application {
     //              use parent cell dimensions to remove ui elements.
     //              Add X condition. Only Y is looked at so far.
     //              Remove edges also.
-    //      bring bottom tree up-
+    //
+    //      bring bottom tree up
+    //              current tree
     //              just the lower adjacent sibling.
     //                    Bring up the lower sibling tree that is already drawn.
     //                    Also draw new elements if some space still remains.
-    //      updated DB async.
+    //              Bring edges up.
+    //
+    //      updated DB async
     //             Update tree rooted at the click point - DONE
-    //             Update tree the entire tree -
+    //             Update tree the entire tree - DONE
+    //             update edges.
+
+    //  On maximize
+    //      push bottom tree down.
+    //          push current tree as needed
+    //          push lower sibling tree down.
+    //          push edges down
+    //
+    //      add to UI.
+    //
+    //      update DB async
+    //          update collapse values in the current subtree.
+    //          update pos values in current tree ==> calculate from parent cell.
+    //          update pos values of edges.
+
 
     // issues:
     // on reset has some issues. check it.
@@ -140,7 +159,6 @@ public class Main extends Application {
     Task task;
 
     private boolean firstTimeLoad = true;
-
 
 
     @Override
@@ -221,7 +239,7 @@ public class Main extends Application {
         userChoiceAlert.setHeaderText("Start new or reload previous log files?");
         userChoiceAlert.setContentText("You can either start fresh and load new log files or you may choose to reload previously loaded log files. If the log files are large, you can avoid long load times after the first load by clicking Reload previous in the successive use of this application.");
 
-        ButtonType  startFreshButtonType = new ButtonType("Start new");
+        ButtonType startFreshButtonType = new ButtonType("Start new");
         ButtonType reloadButtonType = new ButtonType("Reload previous");
         userChoiceAlert.getButtonTypes().setAll(startFreshButtonType, reloadButtonType);
         userChoiceAlert.getDialogPane().setMinWidth(Region.USE_PREF_SIZE);
@@ -842,7 +860,7 @@ public class Main extends Application {
         pVBox = new VBox();
         pVBox.getChildren().addAll(title, progressText, progressBar);
         pVBox.setSpacing(SizeProp.SPACING);
-        pVBox.setPadding(new Insets(10,5,5,5));
+        pVBox.setPadding(new Insets(10, 5, 5, 5));
         pVBox.setAlignment(Pos.CENTER);
         pScene = new Scene(pVBox);
         pStage.setScene(pScene);
@@ -1124,27 +1142,27 @@ public class Main extends Application {
 
         Label headingCol1 = new Label("Package and method name");
         headingCol1.setWrapText(true);
-        headingCol1.setFont(Font.font("Verdana", FontWeight.BOLD, headingCol1.getFont().getSize()*1.1));
+        headingCol1.setFont(Font.font("Verdana", FontWeight.BOLD, headingCol1.getFont().getSize() * 1.1));
         GridPane.setConstraints(headingCol1, 0, 0);
         GridPane.setHalignment(headingCol1, HPos.CENTER);
 
         Label headingCol2 = new Label("Highlight method only");
         headingCol2.setWrapText(true);
-        headingCol2.setFont(Font.font("Verdana", FontWeight.BOLD, headingCol2.getFont().getSize()*1.1));
+        headingCol2.setFont(Font.font("Verdana", FontWeight.BOLD, headingCol2.getFont().getSize() * 1.1));
         GridPane.setConstraints(headingCol2, 1, 0);
         GridPane.setHalignment(headingCol2, HPos.CENTER);
 
         Label headingCol3 = new Label("Highlight subtree");
         headingCol3.setWrapText(true);
-        headingCol3.setFont(Font.font("Verdana", FontWeight.BOLD, headingCol3.getFont().getSize()*1.1));
+        headingCol3.setFont(Font.font("Verdana", FontWeight.BOLD, headingCol3.getFont().getSize() * 1.1));
         GridPane.setConstraints(headingCol3, 2, 0);
         GridPane.setHalignment(headingCol3, HPos.CENTER);
 
 
         Label headingCol4 = new Label("Choose color");
         headingCol4.setWrapText(true);
-        headingCol4.setFont(Font.font("Verdana", FontWeight.BOLD, headingCol4.getFont().getSize()*1.1));
-        GridPane.setConstraints(headingCol4, 3,0);
+        headingCol4.setFont(Font.font("Verdana", FontWeight.BOLD, headingCol4.getFont().getSize() * 1.1));
+        GridPane.setConstraints(headingCol4, 3, 0);
         GridPane.setHalignment(headingCol4, HPos.CENTER);
 
 
@@ -1420,7 +1438,7 @@ public class Main extends Application {
         // System.out.println("get thread query:");
         // System.out.println(getThreadSQL);
 
-        int threadId=0;
+        int threadId = 0;
         try {
             while (getThreadInfoRS.next()) {
                 threadId = getThreadInfoRS.getInt("THREAD_ID");
@@ -1513,7 +1531,7 @@ public class Main extends Application {
 
         colorsMap.forEach((fullName, color) -> {
             String sql = "UPDATE " + TableNames.HIGHLIGHT_ELEMENT + " SET COLOR = '" + color + "' " +
-                    "WHERE METHOD_ID = (SELECT ID FROM " + TableNames.METHOD_DEFINITION_TABLE + " "+
+                    "WHERE METHOD_ID = (SELECT ID FROM " + TableNames.METHOD_DEFINITION_TABLE + " " +
                     "WHERE PACKAGE_NAME || '.' || METHOD_NAME = '" + fullName + "')";
             try {
                 statement.addBatch(sql);
