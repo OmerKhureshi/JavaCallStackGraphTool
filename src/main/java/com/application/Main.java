@@ -70,12 +70,13 @@ public class Main extends Application {
     //             update edges.
 
     //  On maximize
+    //      add to UI.
+    //
     //      push bottom tree down.
     //          push current tree as needed
     //          push lower sibling tree down.
     //          push edges down
     //
-    //      add to UI.
     //
     //      update DB async
     //          update collapse values in the current subtree.
@@ -718,7 +719,8 @@ public class Main extends Application {
                         int threadId = rs.getInt("thread_id");
                         threadsObsList.add("Thread: " + threadId);
                     }
-                } catch (SQLException ignored) {
+                } catch (SQLException e) {
+                    e.printStackTrace();
                 }
             });
         }

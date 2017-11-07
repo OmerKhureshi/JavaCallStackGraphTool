@@ -77,6 +77,13 @@ public class EventHandlers {
     }
 
     private PopOver popOver;
+/*
+
+
+    Fix failing task
+
+
+*/
 
     private EventHandler<MouseEvent> onMouseHoverToShowInfoEventHandler = new EventHandler<MouseEvent>() {
 
@@ -371,6 +378,10 @@ public class EventHandlers {
         }
     };
 
+
+
+
+
     private EventHandler<MouseEvent> onMousePressedToCollapseTree = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {
@@ -416,7 +427,8 @@ public class EventHandlers {
                 ElementDAOImpl.updateWhere("collapsed", "2", "id = " + cellId);
 
                 removeChildrenFromUI(cellId);
-                updateCollapseValForSubTreeRootedAt(cellId);
+
+
 
                 Statement statement = null;
                 try {
@@ -426,7 +438,10 @@ public class EventHandlers {
                 }
 
                 double delta = yBottomLeft - yTopLeft - BoundBox.unitHeightFactor;
-                updatePosValForLowerTree(Integer.parseInt(cellId), delta, statement);
+
+
+                Task updatePosVal = updatePosValForLowerTree(Integer.parseInt(cellId), delta, statement);
+                updateCollapseValForSubTreeRootedAt(cellId, updatePosVal);
 
          /*
                 //Original functionality
@@ -474,6 +489,7 @@ public class EventHandlers {
         }
     };
 
+
     public void removeChildrenFromUI (String cellId) {
         Map<String, CircleCell> mapCircleCellsOnUI = graph.getModel().getCircleCellsOnUI();
         List<CircleCell> listCircleCellsOnUI = graph.getModel().getListCircleCellsOnUI();
@@ -492,7 +508,7 @@ public class EventHandlers {
                 float height = leafCount * BoundBox.unitHeightFactor;
                 float width = BoundBox.unitWidthFactor;
 
-                float x = rs.getFloat("bound_box_x_top_left");
+                float x = rs.getFloat("bound_box_x_top_right");
 
                 System.out.println("removeChildrenFromUI: y top: " + y + " ; y bottom: " + height);
 
@@ -532,12 +548,12 @@ public class EventHandlers {
         }
     }
 
-    public void rearrangeLowerTree () {
 
-    }
 
-    public void updateCollapseValForSubTreeRootedAt(String cellId){
-        
+
+
+    private void updateCollapseValForSubTreeRootedAt(String cellId, Task updatePosVals){
+
         //      updated DB async.
         //             Update tree rooted at the click point <======  THIS METHOD
         //              Update tree the entire tree
@@ -553,6 +569,8 @@ public class EventHandlers {
             @Override
             protected void succeeded() {
                 super.succeeded();
+                new Thread(updatePosVals).run();
+
                 System.out.println("EventHandler::updateCollapseValForSubTreeRootedAt: Updated db in backgrount thread");
             }
 
@@ -566,9 +584,12 @@ public class EventHandlers {
 
         new Thread(updateDBTask).run();
 
+        // return updateDBTask;
+
+
     }
 
-    public void updateCollapseValForSubTreeRootedAtRecursive(String cellId) {
+    private void updateCollapseValForSubTreeRootedAtRecursive(String cellId) {
         try (ResultSet childrenRS = ElementToChildDAOImpl.selectWhere("parent_id = " + cellId)) {
             try {
                 while (childrenRS.next()) {
@@ -593,8 +614,10 @@ public class EventHandlers {
     }
 
 
-    // This method recursively updates the positions of all the low siblings and parents lower siblings.
-    private void updatePosValForLowerTree(int cellId, double delta, Statement statement) {
+
+
+
+    private Task<Void> updatePosValForLowerTree(int cellId, double delta, Statement statement) {
         Task<Void> updateLowerTree = new Task<Void>() {
             @Override
             protected Void call() throws Exception {
@@ -618,17 +641,19 @@ public class EventHandlers {
             }
         };
 
-        new Thread(updateLowerTree).run();
+        // new Thread(updateLowerTree).run();
+        return updateLowerTree;
     }
+
 
 
     private void updatePosValForLowerTreeRecursive(int cellId, double delta, Statement statement) {
 
         //      updated DB async.
         //             Update tree rooted at the click point - DONE
-        //              Update tree the entire tree - <======  THIS METHOD
+        //             Update tree the entire tree - <======  THIS METHOD
 
-        // BASE CONDITION. IF ROOT IS REACHED STOP.
+        // BASE CONDITION. STOP IF ROOT IS REACHED.
         if (cellId == 1) {
             return;
         }
@@ -658,7 +683,7 @@ public class EventHandlers {
                 int id = rs.getInt("id");
                 System.out.println("EventHandler::updatePosValForLowerTree:  updating positions of cellId: " + id);
 
-                // Update db pos at current cell
+                // For circles, calculate the new pos values.
                 double newYTopLeft = rs.getDouble("bound_box_y_top_left") - delta;
 
                 double newYTopRight = rs.getDouble("bound_box_y_top_right") - delta;
@@ -667,10 +692,11 @@ public class EventHandlers {
 
                 double newYBottomRight = rs.getDouble("bound_box_y_bottom_right") - delta;
 
+                double newX = rs.getDouble("bound_box_x_coordinate");
                 double newY = rs.getDouble("bound_box_y_coordinate") - delta;
 
 
-                // Update the delta in the sibling cell.
+                // For circles, update the pos values.
                 updateQuery = "UPDATE " + TableNames.ELEMENT_TABLE + " " +
                         "SET bound_box_y_top_left = " + newYTopLeft + ", " +
 
@@ -684,9 +710,15 @@ public class EventHandlers {
 
                         "WHERE ID = " + id;
 
-                System.out.println("Update query to add to batch: " + updateQuery);
+                System.out.println("Update query for cell: " + updateQuery);
 
                 statement.addBatch(updateQuery);
+
+
+                // For edges, update the pos values.
+                String edgePosUpdateQuery = getEdgePosUpdateQuery(id, newX, newY);
+                statement.addBatch(edgePosUpdateQuery);
+
 
                 // Update db pos for all children recursively at current cell
                 updatePosValForLowerTreeChildrenRecursive(id, delta, statement);
@@ -696,8 +728,8 @@ public class EventHandlers {
             e.printStackTrace();
         }
 
-        // Now go to parent and
-        updatePosValForLowerTree(parentId, delta, statement);
+        // Now go to parent and updated all lower sibling position values.
+        updatePosValForLowerTreeRecursive(parentId, delta, statement);
 
     }
 
@@ -726,6 +758,7 @@ public class EventHandlers {
 
                     double newYBottomRight = rs.getDouble("bound_box_y_bottom_right") - delta;
 
+                    double newX = rs.getDouble("bound_box_x_coordinate");
                     double newY = rs.getDouble("bound_box_y_coordinate") - delta;
 
 
@@ -747,6 +780,10 @@ public class EventHandlers {
 
                     statement.addBatch(updateQuery);
 
+                    // For edges, update the pos values.
+                    String edgePosUpdateQuery = getEdgePosUpdateQuery(childId, newX, newY);
+                    statement.addBatch(edgePosUpdateQuery);
+
                     updatePosValForLowerTreeChildrenRecursive(childId, delta, statement);
                 }
             }
@@ -755,8 +792,50 @@ public class EventHandlers {
             e.printStackTrace();
         }
     }
-    
-    
+
+
+
+    // This method returns the edge update query.
+    // It accepts target x and y coordinate and get the source x and y coordinates.
+    private String getEdgePosUpdateQuery(int targetId, double endX, double endY) {
+        // Get the element row for source cell
+        String getSourceElementRow = "SELECT * FROM " + TableNames.ELEMENT_TABLE + " " +
+                "WHERE ID = (" +
+                "SELECT FK_SOURCE_ELEMENT_ID FROM " + TableNames.EDGE_TABLE + " " +
+                "WHERE FK_TARGET_ELEMENT_ID = " + targetId + ")";
+
+        String edgeUpdateQuery = null;
+
+        try (ResultSet sourceCellRS = DatabaseUtil.select(getSourceElementRow)) {
+            if (sourceCellRS.next()) {
+                // Update edge only if it exists. Edge only exists if there is a source cell for the current cell (target cell)
+                // get x and y coordinates of source and target cell. The current cell is target cell.
+                double edgeNewStartX = sourceCellRS.getDouble("bound_box_x_coordinate");
+                double edgeNewStartY = sourceCellRS.getDouble("bound_box_y_coordinate");
+                double edgeNewEndX = endX;
+                double edgeNewEndY  = endY;
+
+                // For edges, update the pos values.
+                edgeUpdateQuery = "UPDATE " + TableNames.EDGE_TABLE + " " +
+                        "SET START_X = " + edgeNewStartX + " " +
+                        "START_Y = " + edgeNewStartY + " " +
+                        "END_X = " + edgeNewEndX + " " +
+                        "END_Y = " + edgeNewEndY;
+
+                System.out.println("EventHandler::getEdgePosUpdateQuery: Update query for edge: " + edgeUpdateQuery);
+
+            }
+        } catch (SQLException e) {
+            System.out.println("SQL that threw exception: " + getSourceElementRow);
+            e.printStackTrace();
+        }
+
+        return edgeUpdateQuery;
+    }
+
+
+
+
     public void recursivelyAdd(String cellId) {
 
         try (ResultSet elementRS = ElementDAOImpl.selectWhere("id = " + cellId)) {
