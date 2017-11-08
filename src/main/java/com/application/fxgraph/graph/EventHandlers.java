@@ -736,8 +736,10 @@ public class EventHandlers {
 
 
                 // For edges, update the pos values.
-                String edgePosUpdateQuery = getEdgePosUpdateQuery(id, newX, newY);
-                statement.addBatch(edgePosUpdateQuery);
+                // String edgePosUpdateQuery = getEdgePosUpdateQuery(id, newX, newY);
+                // statement.addBatch(edgePosUpdateQuery);
+
+                addEdgePosUpdateQueryToStatement(id, newX, newY, statement);
 
 
                 // Update db pos for all children recursively at current cell
@@ -801,8 +803,10 @@ public class EventHandlers {
                     statement.addBatch(updateQuery);
 
                     // For edges, update the pos values.
-                    String edgePosUpdateQuery = getEdgePosUpdateQuery(childId, newX, newY);
-                    statement.addBatch(edgePosUpdateQuery);
+                    // String edgePosUpdateQuery = getEdgePosUpdateQuery(childId, newX, newY);
+                    // statement.addBatch(edgePosUpdateQuery);
+
+
 
                     updatePosValForLowerTreeChildrenRecursive(childId, delta, statement);
                 }
@@ -840,8 +844,9 @@ public class EventHandlers {
                         "SET START_X = " + edgeNewStartX + ", " +
                         "START_Y = " + edgeNewStartY + ", " +
                         "END_X = " + edgeNewEndX + ", " +
-                        "END_Y = " + edgeNewEndY + " " +
+                        "END_Y = " + edgeNewEndY +
                         "WHERE FK_TARGET_ELEMENT_ID = " + targetId;
+
 
                 System.out.println("EventHandler::getEdgePosUpdateQuery: Update query for edge: " + edgeUpdateQuery);
 
@@ -852,6 +857,27 @@ public class EventHandlers {
         }
 
         return edgeUpdateQuery;
+    }
+    private void addEdgePosUpdateQueryToStatement(int targetId, double x, double y, Statement statement) throws SQLException {
+
+
+        // Update the startX and startY values of all edges that start at current cell.
+        String updateEdgeStartPosQuery = "UPDATE " + TableNames.EDGE_TABLE + " " +
+                "SET START_Y = " + y + " " +
+                "WHERE FK_SOURCE_ELEMENT_ID = " + targetId;
+
+        System.out.println("EventHandler::getEdgePosUpdateQuery: Update query for edge: change of start pos: " + updateEdgeStartPosQuery);
+
+        // Update the endX and endY values of all edges that end at current cell.
+        String updateEdgeEndPosQuery = "UPDATE " + TableNames.EDGE_TABLE + " " +
+                "SET END_Y = " + y + " " +
+                "WHERE FK_TARGET_ELEMENT_ID = " + targetId;
+
+        System.out.println("EventHandler::getEdgePosUpdateQuery: Update query for edge: change of end pos: " + updateEdgeEndPosQuery);
+
+        statement.addBatch(updateEdgeStartPosQuery);
+        statement.addBatch(updateEdgeEndPosQuery);
+
     }
 
 
