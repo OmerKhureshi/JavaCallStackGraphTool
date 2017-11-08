@@ -571,7 +571,7 @@ public class EventHandlers {
                 super.succeeded();
                 new Thread(updatePosVals).run();
 
-                System.out.println("EventHandler::updateCollapseValForSubTreeRootedAt: Updated db in backgrount thread");
+                System.out.println("EventHandler::updateCollapseValForSubTreeRootedAt: Updated db in background thread");
             }
 
             @Override
@@ -581,6 +581,14 @@ public class EventHandlers {
                 System.out.println("EventHandler::updateCollapseValForSubTreeRootedAt: Updating db in background failed");
             }
         };
+
+        updateDBTask.setOnSucceeded(event -> {
+            System.out.println("EventHandler::updateCollapseValForSubTreeRootedAt:event handler: updatedDBTask succeeded. ");
+        });
+
+        updateDBTask.setOnFailed(event -> {
+            System.out.println("EventHandler::updateCollapseValForSubTreeRootedAt:event handler: updatedDBTask failed. ");
+        });
 
         new Thread(updateDBTask).run();
 
@@ -640,6 +648,18 @@ public class EventHandlers {
 
             }
         };
+
+        updateLowerTree.setOnSucceeded(event -> {
+            System.out.println("EventHandler::updatePosValForLowerTree:event handler: updateLowerTree succeeded. ");
+        });
+
+        updateLowerTree.setOnFailed(event -> {
+            System.out.println("EventHandler::updatePosValForLowerTree:event handler: updateLowerTree failed. ");
+            if (updateLowerTree.getException() instanceof Exception) {
+                updateLowerTree.getException().printStackTrace();
+
+            }
+        });
 
         // new Thread(updateLowerTree).run();
         return updateLowerTree;
@@ -817,10 +837,11 @@ public class EventHandlers {
 
                 // For edges, update the pos values.
                 edgeUpdateQuery = "UPDATE " + TableNames.EDGE_TABLE + " " +
-                        "SET START_X = " + edgeNewStartX + " " +
-                        "START_Y = " + edgeNewStartY + " " +
-                        "END_X = " + edgeNewEndX + " " +
-                        "END_Y = " + edgeNewEndY;
+                        "SET START_X = " + edgeNewStartX + ", " +
+                        "START_Y = " + edgeNewStartY + ", " +
+                        "END_X = " + edgeNewEndX + ", " +
+                        "END_Y = " + edgeNewEndY + " " +
+                        "WHERE FK_TARGET_ELEMENT_ID = " + targetId;
 
                 System.out.println("EventHandler::getEdgePosUpdateQuery: Update query for edge: " + edgeUpdateQuery);
 
