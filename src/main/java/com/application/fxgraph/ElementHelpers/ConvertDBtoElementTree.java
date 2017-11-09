@@ -172,6 +172,10 @@ public class ConvertDBtoElementTree {
     }
 
 
+    /**
+     * Loads circle on UI if they are not present when they should be.
+     *
+     * */
     public void loadUIComponentsInsideVisibleViewPort(Graph graph) {
         this.graph = graph;
         this.model = graph.getModel();

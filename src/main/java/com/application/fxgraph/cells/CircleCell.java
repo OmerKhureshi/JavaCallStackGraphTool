@@ -79,4 +79,10 @@ public class CircleCell extends Cell {
     public void setColor(Color color) {
         circle.setFill(color);
     }
+
+
+    @Override
+    public String toString() {
+        return "CircleCell: id: " + getCellId() + "; x: " + getLayoutX() + "; y: " + getLayoutY();
+    }
 }

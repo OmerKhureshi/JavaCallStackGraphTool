@@ -30,6 +30,7 @@ import static com.application.fxgraph.graph.Graph.cellLayer;
 
 public class EventHandlers {
 
+    private static ConvertDBtoElementTree convertDBtoElementTree;
     final DragContext dragContext = new DragContext();
 
     Graph graph;
@@ -77,13 +78,6 @@ public class EventHandlers {
     }
 
     private PopOver popOver;
-/*
-
-
-    Fix failing task
-
-
-*/
 
     private EventHandler<MouseEvent> onMouseHoverToShowInfoEventHandler = new EventHandler<MouseEvent>() {
 
@@ -492,33 +486,30 @@ public class EventHandlers {
 
     public void removeChildrenFromUI (String cellId) {
         Map<String, CircleCell> mapCircleCellsOnUI = graph.getModel().getCircleCellsOnUI();
-        List<CircleCell> listCircleCellsOnUI = graph.getModel().getListCircleCellsOnUI();
         List<String> removeCircleCells = new ArrayList<>();
 
         Map<String, Edge> mapEdgesOnUI = graph.getModel().getEdgesOnUI();
-        List<Edge> listEdgesOnUI = graph.getModel().getListEdgesOnUI();
         List<String> removeEdges = new ArrayList<>();
 
 
-        System.out.println("removeChildrenFromUI: click on cellid : " + cellId);
+        System.out.println("EventHandler::removeChildrenFromUI: clicked on cell id: " + cellId);
         try (ResultSet rs = ElementDAOImpl.selectWhere("id = " + cellId)) {
             if (rs.next()) {
+                float x = rs.getFloat("bound_box_x_top_right");
                 float y = rs.getFloat("bound_box_y_top_left");
                 float leafCount = rs.getInt("leaf_count");
                 float height = leafCount * BoundBox.unitHeightFactor;
-                float width = BoundBox.unitWidthFactor;
 
-                float x = rs.getFloat("bound_box_x_top_right");
-
-                System.out.println("removeChildrenFromUI: y top: " + y + " ; y bottom: " + height);
+                System.out.println("EventHandler::removeChildrenFromUI: y Top: " + y + " ; y Bottom: " + (y + height));
 
                 // add a x condition as well.
                 mapCircleCellsOnUI.forEach((id, circleCell) -> {
-                    double topY = circleCell.getLayoutY();
-                    double rightX = circleCell.getLayoutX() + width;
+                    double cellY = circleCell.getLayoutY();
+                    double cellX = circleCell.getLayoutX();
 
-                    if (topY >= y && topY < (y + height) && rightX >= x) {
-                        System.out.println("adding to remove list: cellId" + id);
+                    // if (cellY >= y && cellY < (y + height) && cellX > x) {
+                    if (cellY >= y ) {
+                        System.out.println("adding to remove list: cellId: " + id + " y: " + cellY + " cell: " + circleCell);
                         removeCircleCells.add(id);
                         removeEdges.add(id);
                     }
@@ -526,7 +517,6 @@ public class EventHandlers {
 
                 removeCircleCells.forEach((id) -> {
                     if (mapCircleCellsOnUI.containsKey(id)) {
-                        System.out.println("removeChildrenFromUI: removing cellId: " + id);
                         CircleCell cell = mapCircleCellsOnUI.get(id);
                         cellLayer.getChildren().remove(cell);
                         mapCircleCellsOnUI.remove(id);
@@ -536,7 +526,7 @@ public class EventHandlers {
                 removeEdges.forEach((id) -> {
                     Edge edge = mapEdgesOnUI.get(id);
                     if (edge != null) {
-                        System.out.println("removing edge: edgeId: " + id + "; edge targetid: " + edge.getEdgeId());
+                        // System.out.println("removing edge: edgeId: " + id + "; edge targetid: " + edge.getEdgeId());
                         mapEdgesOnUI.remove(id);
                         cellLayer.getChildren().remove(edge);
                     }
@@ -638,6 +628,7 @@ public class EventHandlers {
             @Override
             protected void succeeded() {
                 super.succeeded();
+                convertDBtoElementTree.loadUIComponentsInsideVisibleViewPort(graph);
                 System.out.println("EventHandler::updatePosValForLowerTree:  Updated the entire tree successfully");
             }
 
@@ -739,7 +730,7 @@ public class EventHandlers {
                 // String edgePosUpdateQuery = getEdgePosUpdateQuery(id, newX, newY);
                 // statement.addBatch(edgePosUpdateQuery);
 
-                addEdgePosUpdateQueryToStatement(id, newX, newY, statement);
+                addEdgePosUpdateQueryToStatement(id, newY, statement);
 
 
                 // Update db pos for all children recursively at current cell
@@ -805,15 +796,13 @@ public class EventHandlers {
                     // For edges, update the pos values.
                     // String edgePosUpdateQuery = getEdgePosUpdateQuery(childId, newX, newY);
                     // statement.addBatch(edgePosUpdateQuery);
-
+                    addEdgePosUpdateQueryToStatement(childId, newY, statement);
 
 
                     updatePosValForLowerTreeChildrenRecursive(childId, delta, statement);
                 }
             }
-        } catch (SQLException e) {
-            System.out.println("SQL that threw exception: " + query);
-            e.printStackTrace();
+        } catch (SQLException ignored) {
         }
     }
 
@@ -858,7 +847,9 @@ public class EventHandlers {
 
         return edgeUpdateQuery;
     }
-    private void addEdgePosUpdateQueryToStatement(int targetId, double x, double y, Statement statement) throws SQLException {
+
+
+    private void addEdgePosUpdateQueryToStatement(int targetId, double y, Statement statement) throws SQLException {
 
 
         // Update the startX and startY values of all edges that start at current cell.
@@ -879,6 +870,8 @@ public class EventHandlers {
         statement.addBatch(updateEdgeEndPosQuery);
 
     }
+
+
 
 
 
@@ -1020,4 +1013,9 @@ public class EventHandlers {
     public static void saveRef(Main m) {
         main = m;
     }
+
+    public static void saveRef(ConvertDBtoElementTree c) {
+        convertDBtoElementTree = c;
+    }
+
 }

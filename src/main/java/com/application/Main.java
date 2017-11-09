@@ -749,6 +749,7 @@ public class Main extends Application {
     private void addGraphCellComponents() {
         convertDBtoElementTree = new ConvertDBtoElementTree();
         CheckFileIntegrity.saveRef(this);
+        EventHandlers.saveRef(convertDBtoElementTree);
 
         task = new Task<Void>() {
             @Override
