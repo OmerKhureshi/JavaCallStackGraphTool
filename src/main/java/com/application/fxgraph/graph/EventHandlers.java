@@ -422,8 +422,6 @@ public class EventHandlers {
 
                 removeChildrenFromUI(cellId);
 
-
-
                 Statement statement = null;
                 try {
                     statement = DatabaseUtil.getConnection().createStatement();
@@ -473,9 +471,26 @@ public class EventHandlers {
             } else if (collapsed == 2) {
                 if (cell != null)
                     ((Circle)cell.getChildren().get(0)).setFill(Color.RED);
-                // ( (Circle) ( (Groupq)cell.getView() ).getChildren().get(0) ).setFill(Color.RED);
+                // ( (Circle) ( (Group)cell.getView() ).getChildren().get(0) ).setFill(Color.RED);
                 cell.setLabel("-");
+
+                removeChildrenFromUI(cellId);
+                Statement statement = null;
+                try {
+                    statement = DatabaseUtil.getConnection().createStatement();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+
+                double delta = -1 * (yBottomLeft - yTopLeft - BoundBox.unitHeightFactor);
+
+                // Update position values
+                Task updatePosVal = updatePosValForLowerTree(Integer.parseInt(cellId), delta, statement);
+                new Thread(updatePosVal).run();
+
+                // Update collapsed values and add circles and edges to UI
                 recursivelyAdd(cellId);
+
             } else if (collapsed == 3) {
                 System.out.println("onMousePressedToCollapseTree: cell: " + cellId + " ; collapsed: " + collapsed);
                 throw new IllegalStateException("This cell should not have been on the UI.");
@@ -628,6 +643,8 @@ public class EventHandlers {
             @Override
             protected void succeeded() {
                 super.succeeded();
+                System.out.println("value of uiUpdateRequired : " + graph.getModel().uiUpdateRequired);
+                graph.getModel().uiUpdateRequired = true;
                 convertDBtoElementTree.loadUIComponentsInsideVisibleViewPort(graph);
                 System.out.println("EventHandler::updatePosValForLowerTree:  Updated the entire tree successfully");
             }
@@ -877,19 +894,23 @@ public class EventHandlers {
 
 
     public void recursivelyAdd(String cellId) {
-
+        // Get element row for this cell
         try (ResultSet elementRS = ElementDAOImpl.selectWhere("id = " + cellId)) {
             if (elementRS.next()) {
                 int collapsed = elementRS.getInt("collapsed");
                 if (collapsed == 0) {
                     throw new IllegalStateException("Collapsed cannot be 0 here.");
                 } else if (collapsed == 1) {
+                    // Update collapsed=0
                     ElementDAOImpl.updateWhere("collapsed", "0", "id = " + cellId);
+
+                    // Create a new circle cell and add to UI
                     float xCoordinateTemp = elementRS.getFloat("bound_box_x_coordinate");
                     float yCoordinateTemp = elementRS.getFloat("bound_box_y_coordinate");
                     CircleCell cell = new CircleCell(cellId, xCoordinateTemp, yCoordinateTemp);
                     graph.getModel().addCell(cell);
 
+                    // Create a new edge and add to UI. Update edge's collapsed=0
                     try (ResultSet parentRS = ElementToChildDAOImpl.selectWhere("child_id = " + cellId)) {
                         if (parentRS.next()) {
                             String parentId = String.valueOf(parentRS.getInt("parent_id"));
@@ -901,12 +922,13 @@ public class EventHandlers {
                                     "fk_target_element_id = " + cellId);
 
                             graph.getModel().addEdge(edge);
-
                         }
                     }
+
                     // graph.myEndUpdate();
                     graph.updateCellLayer();
 
+                    // Recurse to this cells children
                     try (ResultSet childrenRS = ElementToChildDAOImpl.selectWhere("parent_id = " + cellId)) {
                         while (childrenRS.next()) {
                             String childId = String.valueOf(childrenRS.getInt("child_id"));
@@ -926,12 +948,16 @@ public class EventHandlers {
                     }
 
                 } else if (collapsed == 3) {
+                    // update collapsed=2
                     ElementDAOImpl.updateWhere("collapsed", "2", "id = " + cellId);
+
+                    // Create new circle cell and add to UI
                     float xCoordinateTemp = elementRS.getFloat("bound_box_x_coordinate");
                     float yCoordinateTemp = elementRS.getFloat("bound_box_y_coordinate");
                     CircleCell cell = new CircleCell(cellId, xCoordinateTemp, yCoordinateTemp);
                     graph.getModel().addCell(cell);
 
+                    // Create a new edge and add to UI. Update edge's collapsed=0
                     try (ResultSet parentRS = ElementToChildDAOImpl.selectWhere("child_id = " + cellId)) {
                         if (parentRS.next()) {
                             String parentId = String.valueOf(parentRS.getInt("parent_id"));
@@ -945,6 +971,8 @@ public class EventHandlers {
                     }
                     // graph.myEndUpdate();
                     graph.updateCellLayer();
+
+                    // Do not recurse to children. Stop at this cell.
                 }
             }
         } catch (SQLException e) {

@@ -179,9 +179,11 @@ public class ConvertDBtoElementTree {
     public void loadUIComponentsInsideVisibleViewPort(Graph graph) {
         this.graph = graph;
         this.model = graph.getModel();
+        System.out.println("ConvertDBtoElementTree:loadUIComponentsInsideVisibleViewPort: Method started");
 
         BoundingBox viewPortDims = graph.getViewPortDims();
         if (!isUIDrawingRequired(viewPortDims)) {
+            System.out.println("ConvertDBtoElementTree:loadUIComponentsInsideVisibleViewPort: UI redrawing not required.");
             return;
         }
 
