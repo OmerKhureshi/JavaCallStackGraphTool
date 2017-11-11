@@ -325,6 +325,7 @@ public class DatabaseUtil {
             conn = getConnection();
             ps = conn.createStatement();
             ps.executeUpdate(query);
+            return;
         } catch (SQLException e) {
             System.out.println("Exception caused by: " + query);
             e.printStackTrace();
