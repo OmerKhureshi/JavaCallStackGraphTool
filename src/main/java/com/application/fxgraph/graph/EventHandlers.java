@@ -6,6 +6,8 @@ import com.application.db.DAOImplementation.*;
 import com.application.db.DatabaseUtil;
 import com.application.db.TableNames;
 import com.application.fxgraph.cells.CircleCell;
+import com.sun.org.apache.xpath.internal.SourceTree;
+import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -34,6 +36,10 @@ public class EventHandlers {
     private static ConvertDBtoElementTree convertDBtoElementTree;
     final DragContext dragContext = new DragContext();
     Map<String, Double> deltaCache = new HashMap<>();
+    private boolean clickable = true;
+    private boolean subtreeExpanded = true;
+    private boolean posUpdated = true;
+
 
 
     Graph graph;
@@ -389,140 +395,27 @@ public class EventHandlers {
 
     @SuppressWarnings("Duplicates")
     private void invokeOnMousePressedEventHandler(CircleCell cell) {
-        CellLayer cellLayer = (CellLayer) graph.getCellLayer();
 
-        CircleCell clickedCell = cell;
-
-        String clickedCellID =  clickedCell.getCellId();
-        int collapsed = 0;
-        double clickedCellTopLeftY = 0;
-        double clickedCellBoundBottomLeftY = 0;
-
-        try (ResultSet cellRS = ElementDAOImpl.selectWhere("id = " + clickedCellID)) {
-            if (cellRS.next()) {
-                collapsed = cellRS.getInt("collapsed");
-                clickedCellTopLeftY = cellRS.getDouble("bound_box_y_top_left");
-                clickedCellBoundBottomLeftY = cellRS.getDouble("bound_box_y_bottom_left");
-
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-            /*
-             * collapsed - actions
-             *     0     - Cell visible on UI. Starting value for all cells.
-             *     1     - parent of this cell was minimized. Don't show on UI
-             *     2     - this cell was minimized. Show on UI. Don't show children on UI.
-             *     3     - parent of this cell was minimized. This cell was also minimized. Don't expand this cell's children. Don't show on UI.
-             */
-        if (collapsed == 1) {
-            // expand sub tree.
-            // System.out.println("onMousePressedToCollapseTree: cell: " + clickedCellID + " ; collapsed: " + collapsed);
-        } else if (collapsed == 0) {
-            // Minimize now.
-            // System.out.println(">>>> clicked on a collapsed = 0  cell.");
-            ((Circle)clickedCell.getChildren().get(0)).setFill(Color.BLUE);
-
-            // ((Circle) ( (Group)cell.getView() )
-            //             .getChildren().get(0))
-            //             .setFill(Color.BLUE);
-            // cell.getChildren().get(0).setStyle("-fx-background-color: blue");
-            // cell.setStyle("-fx-background-color: blue");
-            clickedCell.setLabel("+");
-            System.out.println("EventHandler::onMousePressedToCollapseTree: updated collapse value at cellid: " + clickedCellID);
-            ElementDAOImpl.updateWhere("collapsed", "2", "id = " + clickedCellID);
-
-
-            Statement statement = null;
-            try {
-                statement = DatabaseUtil.getConnection().createStatement();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-
-            double delta = clickedCellBoundBottomLeftY - clickedCellTopLeftY - BoundBox.unitHeightFactor;
-            double clickedCellBottomY = clickedCellTopLeftY + BoundBox.unitHeightFactor;
-
-            deltaCache.put(clickedCellID, delta);
-            removeChildrenFromUI(clickedCellID);
-
-            moveLowerTreeByDelta(clickedCellID, clickedCellBottomY, delta);
-
-            System.out.println("Delta value when collapsing cell " + clickedCell + " is " + delta);
-            Task updatePosVal = updatePosValForLowerTree(Integer.parseInt(clickedCellID), delta, clickedCellBottomY, statement);
-            updateCollapseValForSubTreeRootedAt(clickedCellID, updatePosVal);
-
-                /*
-                //Original functionality
-                Map<String, CircleCell> mapCircleCellsOnUI = graph.getModel().getCircleCellsOnUI();
-                List<CircleCell> listCircleCellsOnUI = graph.getModel().getListCircleCellsOnUI();
-                List<String> removeCircleCells = new ArrayList<>();
-
-                Map<String, Edge> mapEdgesOnUI = graph.getModel().getEdgesOnUI();
-                List<Edge> listEdgesOnUI = graph.getModel().getListEdgesOnUI();
-                List<String> removeEdges = new ArrayList<>();
-
-                updateCollapseValForSubTreeRootedAtRecursive(clickedCellID, removeCircleCells, removeEdges);
-                removeCircleCells.forEach(circleCellId -> {
-                    if (mapCircleCellsOnUI.containsKey(circleCellId)) {
-                        CircleCell circleCell = mapCircleCellsOnUI.get(circleCellId);
-                        cellLayer.getChildren().remove(circleCell);
-                        mapCircleCellsOnUI.remove(circleCellId);
-                        listCircleCellsOnUI.remove(circleCell);
-                    }
-                });
-                // listEdgesOnUI.forEach(edge -> System.out.print(" : " + edge));
-                // System.out.println();
-
-                removeEdges.forEach(edgeId -> {
-                    if (mapEdgesOnUI.containsKey(edgeId)) {
-                        Edge edge = mapEdgesOnUI.get(edgeId);
-                        cellLayer.getChildren().remove(edge);
-                        mapEdgesOnUI.remove(edgeId);
-                        listEdgesOnUI.remove(edge);
-                    }
-                });
-                */
-
-        } else if (collapsed == 2) {
-            ((Circle)clickedCell.getChildren().get(0)).setFill(Color.RED);
-            // ( (Circle) ( (Group)cell.getView() ).getChildren().get(0) ).setFill(Color.RED);
-            clickedCell.setLabel("-");
-
-
-            double delta = deltaCache.get(clickedCellID);
-            double clickedCellBottomY = clickedCellTopLeftY + BoundBox.unitHeightFactor;
-            double newClickedCellBottomY = clickedCellTopLeftY + BoundBox.unitHeightFactor + delta;
-
-            moveLowerTreeByDelta(clickedCellID, clickedCellBottomY,-delta);
-
-            Statement statement = null;
-            try {
-                statement = DatabaseUtil.getConnection().createStatement();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-
-            // Update position values
-            Task updatePosVal = updatePosValForLowerTree(Integer.parseInt(clickedCellID), -delta, newClickedCellBottomY, statement);
-            new Thread(updatePosVal).start();
-
-            // Update collapsed values and add circles and edges to UI
-            recursivelyAdd(clickedCellID);
-
-        } else if (collapsed == 3) {
-            System.out.println("onMousePressedToCollapseTree: cell: " + clickedCellID + " ; collapsed: " + collapsed);
-            throw new IllegalStateException("This cell should not have been on the UI.");
-        }
     }
-
 
 
 
     private EventHandler<MouseEvent> onMousePressedToCollapseTree = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {
+
+            if (!clickable) {
+                System.out.println(">>>>>>>>>>>>>>>>>>> Clickable is false. <<<<<<<<<<<<<<<<<<<<<");
+                return;
+            }
+
+            posUpdated = false;
+            System.out.println("on click: set posUpdated: " + posUpdated);
+            subtreeExpanded = false;
+            System.out.println("on click: set subtreeExpanded: " + subtreeExpanded);
+            clickable = false;
+            System.out.println("on click: set clickable: " + clickable);
+
             CellLayer cellLayer = (CellLayer) graph.getCellLayer();
             CircleCell clickedCell = (CircleCell) event.getSource();
             String clickedCellID =  clickedCell.getCellId();
@@ -562,7 +455,13 @@ public class EventHandlers {
                 // cell.getChildren().get(0).setStyle("-fx-background-color: blue");
                 // cell.setStyle("-fx-background-color: blue");
                 clickedCell.setLabel("+");
-                System.out.println("EventHandler::onMousePressedToCollapseTree: updated collapse value at cellid: " + clickedCellID);
+                main.setStatus("Please wait ......");
+
+                subtreeExpanded = true;
+                System.out.println("Minimize ---- ");
+                System.out.println("on minimize: set subtreeExpanded: " + true);
+
+                // System.out.println("EventHandler::onMousePressedToCollapseTree: updated collapse value at cellid: " + clickedCellID);
                 ElementDAOImpl.updateWhere("collapsed", "2", "id = " + clickedCellID);
 
 
@@ -581,7 +480,7 @@ public class EventHandlers {
 
                 moveLowerTreeByDelta(clickedCellID, clickedCellBottomY, delta);
 
-                System.out.println("Delta value when collapsing cell " + clickedCell + " is " + delta);
+                // System.out.println("Delta value when collapsing cell " + clickedCell + " is " + delta);
                 Task updatePosVal = updatePosValForLowerTree(Integer.parseInt(clickedCellID), delta, clickedCellBottomY, statement);
                 updateCollapseValForSubTreeRootedAt(clickedCellID, updatePosVal);
 
@@ -621,7 +520,8 @@ public class EventHandlers {
                 ((Circle)clickedCell.getChildren().get(0)).setFill(Color.RED);
                 // ( (Circle) ( (Group)cell.getView() ).getChildren().get(0) ).setFill(Color.RED);
                 clickedCell.setLabel("-");
-
+                main.setStatus("Please wait ......");
+                System.out.println("Maximize ++++ ");
 
                 double delta = deltaCache.get(clickedCellID);
                 double clickedCellBottomY = clickedCellTopLeftY + BoundBox.unitHeightFactor;
@@ -641,7 +541,8 @@ public class EventHandlers {
                 new Thread(updatePosVal).start();
 
                 // Update collapsed values and add circles and edges to UI
-                recursivelyAdd(clickedCellID);
+                // recursivelyAdd(clickedCellID);
+                expandSubtreeAndUpdatePosAndColValsOfSubtreeRootedAt(clickedCellID);
 
             } else if (collapsed == 3) {
                 System.out.println("onMousePressedToCollapseTree: cell: " + clickedCellID + " ; collapsed: " + collapsed);
@@ -649,6 +550,15 @@ public class EventHandlers {
             }
         }
     };
+
+    private void setClickable() {
+        System.out.println("setClickable: posUpdated: " + posUpdated);
+        System.out.println("setClickable: subtreeExpanded: " + subtreeExpanded);
+        if (posUpdated && subtreeExpanded) {
+            clickable = true;
+            main.setStatus("Done");
+        }
+    }
 
 
     public void removeChildrenFromUI (String cellId) {
@@ -815,14 +725,6 @@ public class EventHandlers {
             }
         };
 
-        updateDBTask.setOnSucceeded(event -> {
-            System.out.println("EventHandler::updateCollapseValForSubTreeRootedAt:event handler: updatedDBTask succeeded. ");
-        });
-
-        updateDBTask.setOnFailed(event -> {
-            System.out.println("EventHandler::updateCollapseValForSubTreeRootedAt:event handler: updatedDBTask failed. ");
-        });
-
         new Thread(updateDBTask).start();
 
         // return updateDBTask;
@@ -862,6 +764,11 @@ public class EventHandlers {
         Task<Void> updateLowerTree = new Task<Void>() {
             @Override
             protected Void call() throws Exception {
+                if (delta == 0) {
+                    System.out.println("No need to updated position.");
+                    return null;
+                }
+
                 updatePosValForLowerTreeRecursive(cellId, delta, bottomY, statement);
                 // System.out.println("EventHandler::updatePosValForLowerTree:  executed batch");
                 statement.executeBatch();
@@ -871,16 +778,18 @@ public class EventHandlers {
             @Override
             protected void succeeded() {
                 super.succeeded();
-                System.out.println("value of uiUpdateRequired : " + graph.getModel().uiUpdateRequired);
                 graph.getModel().uiUpdateRequired = true;
                 convertDBtoElementTree.loadUIComponentsInsideVisibleViewPort(graph);
+                posUpdated = true;
+                System.out.println("updatePosValForLowerTree::succeeded: set posUpdated: " + posUpdated);
+                Platform.runLater(() -> setClickable());
                 System.out.println("EventHandler::updatePosValForLowerTree:  Updated the entire tree successfully");
             }
 
             @Override
             protected void failed() {
                 super.failed();
-                System.out.println("EventHandler::updatePosValForLowerTree:  Updation of the full tree was unsuccessful ");
+                System.out.println("EventHandler::updatePosValForLowerTree:  Failed to update tree.");
                 try {
                     throw new Exception("updatePosValForLowerTree failed");
                 } catch (Exception e) {
@@ -905,8 +814,8 @@ public class EventHandlers {
             return;
         }
 
-        System.out.println("EventHandler::updatePosValForLowerTree:  At level for cell ID: " + cellId );
-        System.out.println(">>>>> bottomY: " + bottomY + " at cellId: " + cellId);
+        // System.out.println("EventHandler::updatePosValForLowerTree:  At level for cell ID: " + cellId );
+        // System.out.println(">>>>> bottomY: " + bottomY + " at cellId: " + cellId);
 
         // Update this cells bottom y values
         String updateCurrentCell = "UPDATE " + TableNames.ELEMENT_TABLE + " " +
@@ -952,7 +861,7 @@ public class EventHandlers {
 
                 double newYBottomLeft = bottomY = rs.getDouble("bound_box_y_bottom_left") - delta;
 
-                System.out.println(">>>>>>>>>>>>> bottomY: " + bottomY + " at cellId: " + id);
+                // System.out.println(">>>>>>>>>>>>> bottomY: " + bottomY + " at cellId: " + id);
 
                 double newYBottomRight = rs.getDouble("bound_box_y_bottom_right") - delta;
 
@@ -1216,7 +1125,41 @@ public class EventHandlers {
         }
     }
 
-    public void expandSubtreeAndUpdatePosAndColVals(String cellId) {
+    public void expandSubtreeAndUpdatePosAndColValsOfSubtreeRootedAt(String cellId) {
+        Task<Void> expandSubtree = new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                expandSubtreeAndUpdatePosAndColValsRecursive(cellId);
+                return null;
+            }
+
+            @Override
+            protected void succeeded() {
+                super.succeeded();
+                subtreeExpanded = true;
+                System.out.println("set subtreeExpanded: " + subtreeExpanded);
+                Platform.runLater(() -> setClickable());
+                System.out.println("EventHandler::updatePosValForLowerTree:  Updated the entire tree successfully");
+            }
+
+            @Override
+            protected void failed() {
+                super.failed();
+                System.out.println("EventHandler::updatePosValForLowerTree:  Failed to update tree.");
+                try {
+                    throw new Exception("updatePosValForLowerTree failed");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        new Thread(expandSubtree).start();
+
+
+    }
+
+    public void expandSubtreeAndUpdatePosAndColValsRecursive(String cellId) {
         // Get element row for this cell
         try (ResultSet elementRS = ElementDAOImpl.selectWhere("id = " + cellId)) {
             if (elementRS.next()) {
@@ -1231,7 +1174,8 @@ public class EventHandlers {
                     float xCoordinateTemp = elementRS.getFloat("bound_box_x_coordinate");
                     float yCoordinateTemp = elementRS.getFloat("bound_box_y_coordinate");
                     CircleCell cell = new CircleCell(cellId, xCoordinateTemp, yCoordinateTemp);
-                    graph.getModel().addCell(cell);
+                    Platform.runLater(() -> graph.getModel().addCell(cell));
+
 
                     // Create a new edge and add to UI. Update edge's collapsed=0
                     try (ResultSet parentRS = ElementToChildDAOImpl.selectWhere("child_id = " + cellId)) {
@@ -1244,18 +1188,19 @@ public class EventHandlers {
                             EdgeDAOImpl.updateWhere("collapsed", "0",
                                     "fk_target_element_id = " + cellId);
 
-                            graph.getModel().addEdge(edge);
+                            Platform.runLater(() -> graph.getModel().addEdge(edge));
                         }
                     }
 
                     // graph.myEndUpdate();
-                    graph.updateCellLayer();
+                    Platform.runLater(() -> graph.updateCellLayer());
+
 
                     // Recurse to this cells children
                     try (ResultSet childrenRS = ElementToChildDAOImpl.selectWhere("parent_id = " + cellId)) {
                         while (childrenRS.next()) {
                             String childId = String.valueOf(childrenRS.getInt("child_id"));
-                            expandSubtreeAndUpdatePosAndColVals(childId);
+                            expandSubtreeAndUpdatePosAndColValsOfSubtreeRootedAt(childId);
                         }
                     }
 
@@ -1266,7 +1211,7 @@ public class EventHandlers {
                     try (ResultSet childrenRS = ElementToChildDAOImpl.selectWhere("parent_id = " + cellId)) {
                         while (childrenRS.next()) {
                             String childId = String.valueOf(childrenRS.getInt("child_id"));
-                            expandSubtreeAndUpdatePosAndColVals(childId);
+                            expandSubtreeAndUpdatePosAndColValsOfSubtreeRootedAt(childId);
                         }
                     }
 
@@ -1278,7 +1223,7 @@ public class EventHandlers {
                     float xCoordinateTemp = elementRS.getFloat("bound_box_x_coordinate");
                     float yCoordinateTemp = elementRS.getFloat("bound_box_y_coordinate");
                     CircleCell cell = new CircleCell(cellId, xCoordinateTemp, yCoordinateTemp);
-                    graph.getModel().addCell(cell);
+                    Platform.runLater(() -> graph.getModel().addCell(cell));
 
                     // Create a new edge and add to UI. Update edge's collapsed=0
                     try (ResultSet parentRS = ElementToChildDAOImpl.selectWhere("child_id = " + cellId)) {
@@ -1289,11 +1234,13 @@ public class EventHandlers {
                             Edge edge = new Edge(parentCell, cell);
                             EdgeDAOImpl.updateWhere("collapsed", "0",
                                     "fk_target_element_id = " + cellId);
-                            graph.getModel().addEdge(edge);
+
+                            Platform.runLater(() -> graph.getModel().addEdge(edge));
+
                         }
                     }
                     // graph.myEndUpdate();
-                    graph.updateCellLayer();
+                    Platform.runLater(() -> graph.updateCellLayer());
 
                     // Do not recurse to children. Stop at this cell.
                 }
@@ -1301,7 +1248,12 @@ public class EventHandlers {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
     }
+
+
+
+
 
     public void updateCollapseValForSubTreeRootedAtRecursive(String cellId, List<String> removeCircleCells, List<String> removeEdges ) {
         try (ResultSet childrenRS = ElementToChildDAOImpl.selectWhere("parent_id = " + cellId)) {
@@ -1326,8 +1278,6 @@ public class EventHandlers {
             }
         } catch (SQLException e) {}
     }
-
-
 
     @SuppressWarnings("unused")
     EventHandler<MouseEvent> onMousePressedEventHandler = new EventHandler<MouseEvent>() {

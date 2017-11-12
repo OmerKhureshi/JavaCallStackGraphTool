@@ -50,42 +50,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Main extends Application {
 
-    // Steps to follow next.
-    // on collapse
-    //      remove from ui - DONE
-    //              use parent cell dimensions to remove ui elements.
-    //              Add X condition. Only Y is looked at so far.
-    //              Remove edges also.
-    //
-    //      bring bottom tree up
-    //              current tree
-    //              just the lower adjacent sibling.
-    //                    Bring up the lower sibling tree that is already drawn.
-    //                    Also draw new elements if some space still remains.
-    //              Bring edges up.
-    //
-    //      updated DB async
-    //             Update tree rooted at the click point - DONE
-    //             Update tree the entire tree - DONE
-    //             update edges.
-
-    //  On maximize
-    //      add to UI.
-    //
-    //      push bottom tree down.
-    //          push current tree as needed
-    //          push lower sibling tree down.
-    //          push edges down
-    //
-    //
-    //      update DB async
-    //          update collapse values in the current subtree.
-    //          update pos values in current tree ==> calculate from parent cell.
-    //          update pos values of edges.
-
-
-    // issues:
-    // on reset has some issues. check it.
 
     // Main UI screen
     private Graph graph;
@@ -577,6 +541,10 @@ public class Main extends Application {
         root.setBottom(statusBar);
     }
 
+    public void setStatus(String str) {
+        statusBarLabel.setText(str);
+    }
+
     private void reset() {
         root.setCenter(null);
         root.setLeft(null);
@@ -606,6 +574,7 @@ public class Main extends Application {
         root.setCenter(null);
 
         graph = new Graph();
+        setUpStatusBar();
         convertDBtoElementTree.setGraph(graph);
         root.setCenter(graph.getScrollPane());
         ((ZoomableScrollPane) graph.getScrollPane()).saveRef(this);
