@@ -23,6 +23,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -32,6 +33,8 @@ public class EventHandlers {
 
     private static ConvertDBtoElementTree convertDBtoElementTree;
     final DragContext dragContext = new DragContext();
+    Map<String, Double> deltaCache = new HashMap<>();
+
 
     Graph graph;
     static Main main;
@@ -349,6 +352,16 @@ public class EventHandlers {
                         gridPane.add(button, 1, rowIndex++ );
                     }
 
+                    // For debugging.
+
+                    Button minMaxButton = new Button("min / max");
+                    minMaxButton.setOnMouseClicked(event1 -> {
+                        invokeOnMousePressedEventHandler(cell);
+                            }
+                    );
+
+                    gridPane.add(minMaxButton, 1,rowIndex++);
+
                     popOver = new PopOver(gridPane);
                     popOver.setAnimated(true);
                     // popOver.detach();
@@ -372,6 +385,137 @@ public class EventHandlers {
         }
     };
 
+
+
+    @SuppressWarnings("Duplicates")
+    private void invokeOnMousePressedEventHandler(CircleCell cell) {
+        CellLayer cellLayer = (CellLayer) graph.getCellLayer();
+
+        CircleCell clickedCell = cell;
+
+        String clickedCellID =  clickedCell.getCellId();
+        int collapsed = 0;
+        double clickedCellTopLeftY = 0;
+        double clickedCellBoundBottomLeftY = 0;
+
+        try (ResultSet cellRS = ElementDAOImpl.selectWhere("id = " + clickedCellID)) {
+            if (cellRS.next()) {
+                collapsed = cellRS.getInt("collapsed");
+                clickedCellTopLeftY = cellRS.getDouble("bound_box_y_top_left");
+                clickedCellBoundBottomLeftY = cellRS.getDouble("bound_box_y_bottom_left");
+
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+            /*
+             * collapsed - actions
+             *     0     - Cell visible on UI. Starting value for all cells.
+             *     1     - parent of this cell was minimized. Don't show on UI
+             *     2     - this cell was minimized. Show on UI. Don't show children on UI.
+             *     3     - parent of this cell was minimized. This cell was also minimized. Don't expand this cell's children. Don't show on UI.
+             */
+        if (collapsed == 1) {
+            // expand sub tree.
+            // System.out.println("onMousePressedToCollapseTree: cell: " + clickedCellID + " ; collapsed: " + collapsed);
+        } else if (collapsed == 0) {
+            // Minimize now.
+            // System.out.println(">>>> clicked on a collapsed = 0  cell.");
+            ((Circle)clickedCell.getChildren().get(0)).setFill(Color.BLUE);
+
+            // ((Circle) ( (Group)cell.getView() )
+            //             .getChildren().get(0))
+            //             .setFill(Color.BLUE);
+            // cell.getChildren().get(0).setStyle("-fx-background-color: blue");
+            // cell.setStyle("-fx-background-color: blue");
+            clickedCell.setLabel("+");
+            System.out.println("EventHandler::onMousePressedToCollapseTree: updated collapse value at cellid: " + clickedCellID);
+            ElementDAOImpl.updateWhere("collapsed", "2", "id = " + clickedCellID);
+
+
+            Statement statement = null;
+            try {
+                statement = DatabaseUtil.getConnection().createStatement();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+            double delta = clickedCellBoundBottomLeftY - clickedCellTopLeftY - BoundBox.unitHeightFactor;
+            double clickedCellBottomY = clickedCellTopLeftY + BoundBox.unitHeightFactor;
+
+            deltaCache.put(clickedCellID, delta);
+            removeChildrenFromUI(clickedCellID);
+
+            moveLowerTreeByDelta(clickedCellID, clickedCellBottomY, delta);
+
+            System.out.println("Delta value when collapsing cell " + clickedCell + " is " + delta);
+            Task updatePosVal = updatePosValForLowerTree(Integer.parseInt(clickedCellID), delta, clickedCellBottomY, statement);
+            updateCollapseValForSubTreeRootedAt(clickedCellID, updatePosVal);
+
+                /*
+                //Original functionality
+                Map<String, CircleCell> mapCircleCellsOnUI = graph.getModel().getCircleCellsOnUI();
+                List<CircleCell> listCircleCellsOnUI = graph.getModel().getListCircleCellsOnUI();
+                List<String> removeCircleCells = new ArrayList<>();
+
+                Map<String, Edge> mapEdgesOnUI = graph.getModel().getEdgesOnUI();
+                List<Edge> listEdgesOnUI = graph.getModel().getListEdgesOnUI();
+                List<String> removeEdges = new ArrayList<>();
+
+                updateCollapseValForSubTreeRootedAtRecursive(clickedCellID, removeCircleCells, removeEdges);
+                removeCircleCells.forEach(circleCellId -> {
+                    if (mapCircleCellsOnUI.containsKey(circleCellId)) {
+                        CircleCell circleCell = mapCircleCellsOnUI.get(circleCellId);
+                        cellLayer.getChildren().remove(circleCell);
+                        mapCircleCellsOnUI.remove(circleCellId);
+                        listCircleCellsOnUI.remove(circleCell);
+                    }
+                });
+                // listEdgesOnUI.forEach(edge -> System.out.print(" : " + edge));
+                // System.out.println();
+
+                removeEdges.forEach(edgeId -> {
+                    if (mapEdgesOnUI.containsKey(edgeId)) {
+                        Edge edge = mapEdgesOnUI.get(edgeId);
+                        cellLayer.getChildren().remove(edge);
+                        mapEdgesOnUI.remove(edgeId);
+                        listEdgesOnUI.remove(edge);
+                    }
+                });
+                */
+
+        } else if (collapsed == 2) {
+            ((Circle)clickedCell.getChildren().get(0)).setFill(Color.RED);
+            // ( (Circle) ( (Group)cell.getView() ).getChildren().get(0) ).setFill(Color.RED);
+            clickedCell.setLabel("-");
+
+
+            double delta = deltaCache.get(clickedCellID);
+            double clickedCellBottomY = clickedCellTopLeftY + BoundBox.unitHeightFactor;
+            double newClickedCellBottomY = clickedCellTopLeftY + BoundBox.unitHeightFactor + delta;
+
+            moveLowerTreeByDelta(clickedCellID, clickedCellBottomY,-delta);
+
+            Statement statement = null;
+            try {
+                statement = DatabaseUtil.getConnection().createStatement();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+            // Update position values
+            Task updatePosVal = updatePosValForLowerTree(Integer.parseInt(clickedCellID), -delta, newClickedCellBottomY, statement);
+            new Thread(updatePosVal).start();
+
+            // Update collapsed values and add circles and edges to UI
+            recursivelyAdd(clickedCellID);
+
+        } else if (collapsed == 3) {
+            System.out.println("onMousePressedToCollapseTree: cell: " + clickedCellID + " ; collapsed: " + collapsed);
+            throw new IllegalStateException("This cell should not have been on the UI.");
+        }
+    }
 
 
 
@@ -432,9 +576,10 @@ public class EventHandlers {
                 double delta = clickedCellBoundBottomLeftY - clickedCellTopLeftY - BoundBox.unitHeightFactor;
                 double clickedCellBottomY = clickedCellTopLeftY + BoundBox.unitHeightFactor;
 
+                deltaCache.put(clickedCellID, delta);
                 removeChildrenFromUI(clickedCellID);
 
-                moveLowerTreeUp(clickedCellID, clickedCellBottomY, delta);
+                moveLowerTreeByDelta(clickedCellID, clickedCellBottomY, delta);
 
                 System.out.println("Delta value when collapsing cell " + clickedCell + " is " + delta);
                 Task updatePosVal = updatePosValForLowerTree(Integer.parseInt(clickedCellID), delta, clickedCellBottomY, statement);
@@ -477,11 +622,12 @@ public class EventHandlers {
                 // ( (Circle) ( (Group)cell.getView() ).getChildren().get(0) ).setFill(Color.RED);
                 clickedCell.setLabel("-");
 
+
+                double delta = deltaCache.get(clickedCellID);
                 double clickedCellBottomY = clickedCellTopLeftY + BoundBox.unitHeightFactor;
+                double newClickedCellBottomY = clickedCellTopLeftY + BoundBox.unitHeightFactor + delta;
 
-                // removeChildrenFromUI(clickedCellID);
-
-                // moveLowerTreeUp(clickedCellID, clickedCellB);
+                moveLowerTreeByDelta(clickedCellID, clickedCellBottomY,-delta);
 
                 Statement statement = null;
                 try {
@@ -490,10 +636,8 @@ public class EventHandlers {
                     e.printStackTrace();
                 }
 
-                double delta = -1 * (clickedCellBoundBottomLeftY - clickedCellTopLeftY - BoundBox.unitHeightFactor);
-
                 // Update position values
-                Task updatePosVal = updatePosValForLowerTree(Integer.parseInt(clickedCellID), delta, 0 , statement);
+                Task updatePosVal = updatePosValForLowerTree(Integer.parseInt(clickedCellID), -delta, newClickedCellBottomY, statement);
                 new Thread(updatePosVal).start();
 
                 // Update collapsed values and add circles and edges to UI
@@ -514,17 +658,17 @@ public class EventHandlers {
         Map<String, Edge> mapEdgesOnUI = graph.getModel().getEdgesOnUI();
         List<String> removeEdges = new ArrayList<>();
 
-        System.out.println("Contents of mapEdgesOnUI before removing");
-        mapEdgesOnUI.forEach((s, edge) -> {
-            System.out.println("edgeID: "  + s);
-        });
+        // System.out.println("Contents of mapEdgesOnUI before removing");
+        // mapEdgesOnUI.forEach((s, edge) -> {
+        //     System.out.println("edgeID: "  + s);
+        // });
+        //
+        // System.out.println("Contents of mapCircleCellsOnUI before removing");
+        // mapCircleCellsOnUI.forEach((s, edge) -> {
+        //     System.out.println("CellID: "  + s);
+        // });
 
-        System.out.println("Contents of mapCircleCellsOnUI before removing");
-        mapCircleCellsOnUI.forEach((s, edge) -> {
-            System.out.println("CellID: "  + s);
-        });
-
-        System.out.println("EventHandler::removeChildrenFromUI: clicked on cell id: " + cellId);
+        // System.out.println("EventHandler::removeChildrenFromUI: clicked on cell id: " + cellId);
         try (ResultSet rs = ElementDAOImpl.selectWhere("id = " + cellId)) {
             if (rs.next()) {
                 float clickedCellTopRightX = rs.getFloat("bound_box_x_top_right");
@@ -542,12 +686,12 @@ public class EventHandlers {
                     double thisCellTopY = circleCell.getLayoutY();
 
                     if (thisCellTopY >= clickedCellBottomY && thisCellTopY < clickedCellBoundBottomY && thisCellTopLeftX > clickedCellTopRightX) {
-                    // if (thisCellTopY >= clickedCellTopY ) {
-                        System.out.println("adding to remove list: cellId: " + id + " cell: " + circleCell);
+                        // if (thisCellTopY >= clickedCellTopY ) {
+                        // System.out.println("adding to remove list: cellId: " + id + " cell: " + circleCell);
                         removeCircleCells.add(id);
                         removeEdges.add(id);
                     } else if (thisCellTopY == clickedCellTopY && thisCellTopLeftX >= clickedCellTopRightX) {
-                        System.out.println("adding to remove list: cellId: " + id + " cell: " + circleCell);
+                        // System.out.println("adding to remove list: cellId: " + id + " cell: " + circleCell);
                         removeCircleCells.add(id);
                         removeEdges.add(id);
                     }
@@ -579,15 +723,15 @@ public class EventHandlers {
                 });
 
 
-                System.out.println("Contents of mapEdgesOnUI after removing");
-                mapEdgesOnUI.forEach((s, edge) -> {
-                    System.out.println("edgeID: "  + s);
-                });
-
-                System.out.println("Contents of mapCircleCellsOnUI after removing");
-                mapCircleCellsOnUI.forEach((s, edge) -> {
-                    System.out.println("CellID: "  + s);
-                });
+                // System.out.println("Contents of mapEdgesOnUI after removing");
+                // mapEdgesOnUI.forEach((s, edge) -> {
+                //     System.out.println("edgeID: "  + s);
+                // });
+                //
+                // System.out.println("Contents of mapCircleCellsOnUI after removing");
+                // mapCircleCellsOnUI.forEach((s, edge) -> {
+                //     System.out.println("CellID: "  + s);
+                // });
 
             }
         } catch (SQLException e) {
@@ -596,14 +740,14 @@ public class EventHandlers {
     }
 
 
-    private void moveLowerTreeUp(String clickedCellID, double clickedCellBottomY, double delta) {
+    private void moveLowerTreeByDelta(String clickedCellID, double clickedCellBottomY, double delta) {
         Map<String, CircleCell> mapCircleCellsOnUI = graph.getModel().getCircleCellsOnUI();
         // List<String> removeCircleCells = new ArrayList<>();
 
         Map<String, Edge> mapEdgesOnUI = graph.getModel().getEdgesOnUI();
         // List<String> removeEdges = new ArrayList<>();
 
-        System.out.println("EventHandler::moveLowerTreeUp: starting method");
+        // System.out.println("EventHandler::moveLowerTreeByDelta: starting method");
 
         // For each circle cell on UI that is below the clicked cell, move up by delta
         mapCircleCellsOnUI.forEach((thisCellID, thisCircleCell) -> {
@@ -611,7 +755,7 @@ public class EventHandlers {
 
             if (thisCellTopY >= clickedCellBottomY) {
                 thisCircleCell.relocate(thisCircleCell.getLayoutX(), thisCellTopY - delta);
-                System.out.println(" moved clickedCellID: " + thisCellID + " to y: " + (thisCellTopY - delta));
+                // System.out.println(" moved clickedCellID: " + thisCellID + " to y: " + (thisCellTopY - delta));
             }
 
         });
@@ -624,13 +768,13 @@ public class EventHandlers {
 
             if (thisEdgeEndY >= clickedCellBottomY) {
                 edge.line.setEndY(thisEdgeEndY - delta);
-                System.out.println(" moved edgeId: " + id + " to endY: " + edge.line.getEndY());
+                // System.out.println(" moved edgeId: " + id + " to endY: " + edge.line.getEndY());
 
             }
 
             if (thisEdgeStartY >= clickedCellBottomY) {
                 edge.line.setStartY(thisEdgeStartY - delta);
-                System.out.println(" moved edgeId: " + id + " to endY: " + edge.line.getStartY());
+                // System.out.println(" moved edgeId: " + id + " to endY: " + edge.line.getStartY());
             }
         });
     }
@@ -655,7 +799,7 @@ public class EventHandlers {
                 super.succeeded();
                 new Thread(updatePosVals).start();
 
-                System.out.println("EventHandler::updateCollapseValForSubTreeRootedAt: Updated db in background thread");
+                // System.out.println("EventHandler::updateCollapseValForSubTreeRootedAt: Updated db in background thread");
             }
 
             @Override
@@ -692,7 +836,7 @@ public class EventHandlers {
                 while (childrenRS.next()) {
                     String childId = String.valueOf(childrenRS.getInt("child_id"));
 
-                    System.out.println("EventHandler::updateCollapseValForSubTreeRootedAtRecursive: removing child: " + childId);
+                    // System.out.println("EventHandler::updateCollapseValForSubTreeRootedAtRecursive: removing child: " + childId);
 
                     ElementDAOImpl.updateWhere("collapsed", "1",
                             "id = " + childId + " AND collapsed = 0");
@@ -719,7 +863,7 @@ public class EventHandlers {
             @Override
             protected Void call() throws Exception {
                 updatePosValForLowerTreeRecursive(cellId, delta, bottomY, statement);
-                System.out.println("EventHandler::updatePosValForLowerTree:  executed batch");
+                // System.out.println("EventHandler::updatePosValForLowerTree:  executed batch");
                 statement.executeBatch();
                 return null;
             }
@@ -761,8 +905,10 @@ public class EventHandlers {
             return;
         }
 
-        System.out.println("EventHandler::updatePosValForLowerTree:  At level for cell ID: " + cellId);
+        System.out.println("EventHandler::updatePosValForLowerTree:  At level for cell ID: " + cellId );
+        System.out.println(">>>>> bottomY: " + bottomY + " at cellId: " + cellId);
 
+        // Update this cells bottom y values
         String updateCurrentCell = "UPDATE " + TableNames.ELEMENT_TABLE + " " +
 
                 "SET bound_box_y_bottom_left = " + bottomY + ", " +
@@ -797,7 +943,7 @@ public class EventHandlers {
         try (ResultSet rs = DatabaseUtil.select(sql)) {
             while (rs.next()) {
                 int id = rs.getInt("id");
-                System.out.println("EventHandler::updatePosValForLowerTree:  updating positions of cellId: " + id);
+                // System.out.println("EventHandler::updatePosValForLowerTree:  updating positions of cellId: " + id);
 
                 // For circles, calculate the new pos values.
                 double newYTopLeft = rs.getDouble("bound_box_y_top_left") - delta;
@@ -805,6 +951,8 @@ public class EventHandlers {
                 double newYTopRight = rs.getDouble("bound_box_y_top_right") - delta;
 
                 double newYBottomLeft = bottomY = rs.getDouble("bound_box_y_bottom_left") - delta;
+
+                System.out.println(">>>>>>>>>>>>> bottomY: " + bottomY + " at cellId: " + id);
 
                 double newYBottomRight = rs.getDouble("bound_box_y_bottom_right") - delta;
 
@@ -826,7 +974,7 @@ public class EventHandlers {
 
                         "WHERE ID = " + id;
 
-                System.out.println("Update query for cell: " + updateQuery);
+                // System.out.println("Update query for cell: " + updateQuery);
 
                 statement.addBatch(updateQuery);
 
@@ -865,7 +1013,7 @@ public class EventHandlers {
 
                 if (rs.next()) {
 
-                    System.out.println("EventHandler::updatePosValForLowerTreeChildrenRecursive: updating db pos for child: " + childId);
+                    // System.out.println("EventHandler::updatePosValForLowerTreeChildrenRecursive: updating db pos for child: " + childId);
 
 
                     double newYTopLeft = rs.getDouble("bound_box_y_top_left") - delta;
@@ -894,7 +1042,7 @@ public class EventHandlers {
 
                             "WHERE ID = " + childId;
 
-                    System.out.println("Update query to add to batch: " + updateQuery);
+                    // System.out.println("Update query to add to batch: " + updateQuery);
 
                     statement.addBatch(updateQuery);
 
@@ -942,7 +1090,7 @@ public class EventHandlers {
                         "WHERE FK_TARGET_ELEMENT_ID = " + targetId;
 
 
-                System.out.println("EventHandler::getEdgePosUpdateQuery: Update query for edge: " + edgeUpdateQuery);
+                // System.out.println("EventHandler::getEdgePosUpdateQuery: Update query for edge: " + edgeUpdateQuery);
 
             }
         } catch (SQLException e) {
@@ -962,14 +1110,14 @@ public class EventHandlers {
                 "SET START_Y = " + y + " " +
                 "WHERE FK_SOURCE_ELEMENT_ID = " + targetId;
 
-        System.out.println("EventHandler::getEdgePosUpdateQuery: Update query for edge: change of start pos: " + updateEdgeStartPosQuery);
+        // System.out.println("EventHandler::getEdgePosUpdateQuery: Update query for edge: change of start pos: " + updateEdgeStartPosQuery);
 
         // Update the endX and endY values of all edges that end at current cell.
         String updateEdgeEndPosQuery = "UPDATE " + TableNames.EDGE_TABLE + " " +
                 "SET END_Y = " + y + " " +
                 "WHERE FK_TARGET_ELEMENT_ID = " + targetId;
 
-        System.out.println("EventHandler::getEdgePosUpdateQuery: Update query for edge: change of end pos: " + updateEdgeEndPosQuery);
+        // System.out.println("EventHandler::getEdgePosUpdateQuery: Update query for edge: change of end pos: " + updateEdgeEndPosQuery);
 
         statement.addBatch(updateEdgeStartPosQuery);
         statement.addBatch(updateEdgeEndPosQuery);
@@ -1032,6 +1180,93 @@ public class EventHandlers {
                         while (childrenRS.next()) {
                             String childId = String.valueOf(childrenRS.getInt("child_id"));
                             recursivelyAdd(childId);
+                        }
+                    }
+
+                } else if (collapsed == 3) {
+                    // update collapsed=2
+                    ElementDAOImpl.updateWhere("collapsed", "2", "id = " + cellId);
+
+                    // Create new circle cell and add to UI
+                    float xCoordinateTemp = elementRS.getFloat("bound_box_x_coordinate");
+                    float yCoordinateTemp = elementRS.getFloat("bound_box_y_coordinate");
+                    CircleCell cell = new CircleCell(cellId, xCoordinateTemp, yCoordinateTemp);
+                    graph.getModel().addCell(cell);
+
+                    // Create a new edge and add to UI. Update edge's collapsed=0
+                    try (ResultSet parentRS = ElementToChildDAOImpl.selectWhere("child_id = " + cellId)) {
+                        if (parentRS.next()) {
+                            String parentId = String.valueOf(parentRS.getInt("parent_id"));
+                            CircleCell parentCell = graph.getModel().getCircleCellsOnUI().get(parentId);
+
+                            Edge edge = new Edge(parentCell, cell);
+                            EdgeDAOImpl.updateWhere("collapsed", "0",
+                                    "fk_target_element_id = " + cellId);
+                            graph.getModel().addEdge(edge);
+                        }
+                    }
+                    // graph.myEndUpdate();
+                    graph.updateCellLayer();
+
+                    // Do not recurse to children. Stop at this cell.
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void expandSubtreeAndUpdatePosAndColVals(String cellId) {
+        // Get element row for this cell
+        try (ResultSet elementRS = ElementDAOImpl.selectWhere("id = " + cellId)) {
+            if (elementRS.next()) {
+                int collapsed = elementRS.getInt("collapsed");
+                if (collapsed == 0) {
+                    throw new IllegalStateException("Collapsed cannot be 0 here.");
+                } else if (collapsed == 1) {
+
+                    ElementDAOImpl.updateWhere("collapsed", "0", "id = " + cellId);
+
+                    // Create a new circle cell and add to UI
+                    float xCoordinateTemp = elementRS.getFloat("bound_box_x_coordinate");
+                    float yCoordinateTemp = elementRS.getFloat("bound_box_y_coordinate");
+                    CircleCell cell = new CircleCell(cellId, xCoordinateTemp, yCoordinateTemp);
+                    graph.getModel().addCell(cell);
+
+                    // Create a new edge and add to UI. Update edge's collapsed=0
+                    try (ResultSet parentRS = ElementToChildDAOImpl.selectWhere("child_id = " + cellId)) {
+                        if (parentRS.next()) {
+                            String parentId = String.valueOf(parentRS.getInt("parent_id"));
+                            CircleCell parentCell = graph.getModel().getCircleCellsOnUI().get(parentId);
+
+                            Edge edge = new Edge(parentCell, cell);
+
+                            EdgeDAOImpl.updateWhere("collapsed", "0",
+                                    "fk_target_element_id = " + cellId);
+
+                            graph.getModel().addEdge(edge);
+                        }
+                    }
+
+                    // graph.myEndUpdate();
+                    graph.updateCellLayer();
+
+                    // Recurse to this cells children
+                    try (ResultSet childrenRS = ElementToChildDAOImpl.selectWhere("parent_id = " + cellId)) {
+                        while (childrenRS.next()) {
+                            String childId = String.valueOf(childrenRS.getInt("child_id"));
+                            expandSubtreeAndUpdatePosAndColVals(childId);
+                        }
+                    }
+
+                } else if (collapsed == 2) {
+                    // update collapsed=0
+                    ElementDAOImpl.updateWhere("collapsed", "0", "id = " + cellId);
+                    // for all children with collapsed=1, show and update collapsed=0
+                    try (ResultSet childrenRS = ElementToChildDAOImpl.selectWhere("parent_id = " + cellId)) {
+                        while (childrenRS.next()) {
+                            String childId = String.valueOf(childrenRS.getInt("child_id"));
+                            expandSubtreeAndUpdatePosAndColVals(childId);
                         }
                     }
 
