@@ -463,7 +463,6 @@ public class Main extends Application {
         runAnalysisMenuItem.setOnAction(event -> {
             setUpProgressBar();
             reload();
-
             if (firstTimeLoad) {
                 // Change icons and colors in instructions panel
                 runInfoGlyph.setIcon(FontAwesome.Glyph.CHECK);
@@ -557,6 +556,7 @@ public class Main extends Application {
 
 
         ConvertDBtoElementTree.resetRegions();
+        Delta.resetDelta();
     }
 
     private void reload() {
@@ -846,6 +846,8 @@ public class Main extends Application {
     private void postDatabaseLoad() {
         resetCenterLayout();
         setUpThreadsView();
+
+        Delta.init();
 
         // Graph.drawPlaceHolderLines();
 

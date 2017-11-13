@@ -5,10 +5,7 @@ import com.application.db.DAOImplementation.*;
 import com.application.db.DatabaseUtil;
 import com.application.db.TableNames;
 import com.application.fxgraph.cells.CircleCell;
-import com.application.fxgraph.graph.CellLayer;
-import com.application.fxgraph.graph.Edge;
-import com.application.fxgraph.graph.Graph;
-import com.application.fxgraph.graph.Model;
+import com.application.fxgraph.graph.*;
 import com.sun.org.apache.xpath.internal.SourceTree;
 import javafx.application.Platform;
 import javafx.geometry.BoundingBox;
@@ -183,6 +180,9 @@ public class ConvertDBtoElementTree {
 
 
         BoundingBox viewPortDims = graph.getViewPortDims();
+
+        Delta.onScroll(viewPortDims.getMaxY());
+
         if (!isUIDrawingRequired(viewPortDims)) {
             // System.out.println("ConvertDBtoElementTree:loadUIComponentsInsideVisibleViewPort: UI redrawing not required.");
             return;
