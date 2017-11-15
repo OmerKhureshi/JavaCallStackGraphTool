@@ -1,6 +1,8 @@
 package com.application.fxgraph.graph;
 
 import com.application.db.DAOImplementation.ElementDAOImpl;
+import com.application.db.DAOImplementation.TraceDAOImpl;
+import javafx.concurrent.Task;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -43,14 +45,40 @@ public class Delta {
     }
 
 
-    public static void onScroll(double y) {
-        screenBottomY = y;
-        int nextKey = ((int) (y / gridSize) + 1) * gridSize;
-        double delta = deltaValMap.get(nextKey);
-        System.out.println("Delta::onScroll: delta val: " + delta);
+    public static void clearNextGridBottomY(double y) {
+        int nextGridBottomY = ((int) (y / gridSize) + 2 ) * gridSize;
+        deltaValMap.put(nextGridBottomY, 0d);
+
+        System.out.println("Delta::clearNextGridBottomY: setting delta = 0 at y = " + y + " and nextGridBottomY = " + nextGridBottomY);
+    }
+
+
+    /**
+     * This method is invoked when screen is scrolled.
+     * It checks if any updates are required in the cells below the next grid and if needed, triggers the updates in a background thread,
+     *
+     * @param screenBottomY
+     */
+    public static void onScroll(double screenBottomY) {
+        Delta.screenBottomY = screenBottomY;
+
+        // get next grid's bottom delta value
+        int nextGridBottomY = ((int) (Delta.screenBottomY / gridSize) + 2) * gridSize;
+        double delta = deltaValMap.get(nextGridBottomY);
+
+        // trigger updates only if next grid's delta != 0
+        // and if the updates were not already triggered for that grid.
         if (delta != 0 && !calledOnce) {
             calledOnce = true;
-            // call update db
+            Task<Void> updateTask = EventHandlers.updateTreeBelowYWrapper(nextGridBottomY, delta);
+            // set delta = 0 at this gridbottom
+            updateTask.setOnSucceeded(event -> {
+                System.out.println("Delta::onScroll: background thread updateTask completed. Setting delta = 0 at this grid bottom.");
+                unSetCalledOnce();
+                deltaValMap.put(nextGridBottomY, 0d);
+            });
+
+            new Thread(updateTask).start();
         }
     }
 
