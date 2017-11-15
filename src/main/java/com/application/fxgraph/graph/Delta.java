@@ -38,6 +38,9 @@ public class Delta {
         }
     }
 
+    public static int getNextGridBottomY(double y) {
+        return ((int) (screenBottomY / gridSize) + 2) * gridSize;
+    }
 
 
     public static void onScroll(double y) {
