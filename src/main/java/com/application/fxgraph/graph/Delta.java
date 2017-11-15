@@ -58,9 +58,14 @@ public class Delta {
 
 
     // Keep recurring till the end of next grid is reached
-    public static boolean shouldReccurse(double y) {
+    public static boolean shouldRecurse(double y, int cellId, double delta) {
         int nextGridBottomY = ((int) (screenBottomY / gridSize) + 2) * gridSize;
-        return y < nextGridBottomY;
+        if (y < nextGridBottomY) {
+            return true;
+        } else {
+            updateDeltaVal(y, cellId, delta);
+            return false;
+        }
     }
 
     public static double getDeltaVal(double y) {
@@ -68,8 +73,8 @@ public class Delta {
         return deltaValMap.get(thisGridBottomY);
     }
 
-    public static void updateDeltaVal(int cellId, double newDeltaVal) {
-        int nextGridBottomY = ((int) (y / gridSize) + 2) * gridSize;
+    public static void updateDeltaVal(double y, int cellId, double newDeltaVal) {
+        int nextGridBottomY = ((int) (y / gridSize)) * gridSize;
         cellIDMap.put(nextGridBottomY, cellId);
         deltaValMap.put(nextGridBottomY, newDeltaVal + deltaValMap.get(nextGridBottomY));
     }
