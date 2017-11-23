@@ -376,6 +376,18 @@ public class DatabaseUtil {
         CallTraceDAOImpl.createTable();
         MethodDefnDAOImpl.createTable();
     }
+
+    public static Statement createStatement() {
+        Statement statement = null;
+        try {
+            statement = DatabaseUtil.getConnection().createStatement();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return statement;
+    }
+
 }
 
 
