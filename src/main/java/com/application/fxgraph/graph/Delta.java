@@ -117,15 +117,11 @@ public class Delta {
         calledOnce = false;
     }
 
+    // happy region -> current grid + upper grid + lower grid.
+    // loaded region -> happy + 1 upper grid + 1 lower grid.
 
-    // class Store {
-    //     int cellId;
-    //     double delta;
-    //
-    //     Store(int cellId, double delta) {
-    //         this.cellId = cellId;
-    //         this.delta = delta;
-    //     }
-    // }
+
+   // on scroll.
+   //       if view port is not completely contained by happy region, then UIDrawing is required.
 
 }

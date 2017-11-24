@@ -1101,15 +1101,12 @@ public class EventHandlers {
 
         try (ResultSet currentCellRS = ElementDAOImpl.selectWhere("ID = " + cellId)) {
             if (currentCellRS.next()) {
-                double currentCellBottomY = currentCellRS.getDouble("BOUND_BOX_Y_BOTTOM_LEFT");
-                double newCellBottomY = currentCellBottomY - delta;
-
                 parentCellId = currentCellRS.getInt("parent_id");
 
                 // Update this cells bottom y values
                 String updateCurrentCell = "UPDATE " + TableNames.ELEMENT_TABLE + " " +
-                        "SET bound_box_y_bottom_left = " + newCellBottomY + ", " +
-                        "bound_box_y_bottom_right = " + newCellBottomY + " " +
+                        "SET bound_box_y_bottom_left = bound_box_y_bottom_left - " + delta + ", " +
+                        "bound_box_y_bottom_right = bound_box_y_bottom_right - " + delta + " " +
                         "WHERE ID = " + cellId;
 
                 statement.addBatch(updateCurrentCell);
