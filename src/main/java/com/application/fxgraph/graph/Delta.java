@@ -1,3 +1,4 @@
+/*
 package com.application.fxgraph.graph;
 
 import com.application.db.DAOImplementation.ElementDAOImpl;
@@ -53,12 +54,14 @@ public class Delta {
     }
 
 
-    /**
+    */
+/**
      * This method is invoked when screen is scrolled.
      * It checks if any updates are required in the cells below the next grid and if needed, triggers the updates in a background thread,
      *
      * @param screenBottomY
-     */
+     *//*
+
     public static void onScroll(double screenBottomY) {
         Delta.screenBottomY = screenBottomY;
 
@@ -124,4 +127,4 @@ public class Delta {
    // on scroll.
    //       if view port is not completely contained by happy region, then UIDrawing is required.
 
-}
+}*/
