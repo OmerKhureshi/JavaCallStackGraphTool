@@ -7,6 +7,7 @@ import com.application.db.DatabaseUtil;
 import com.application.db.TableNames;
 import com.application.fxgraph.ElementHelpers.Element;
 import com.application.fxgraph.cells.CircleCell;
+import com.sun.xml.internal.bind.v2.model.core.ID;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.event.EventHandler;
@@ -461,7 +462,7 @@ public class EventHandlers {
                 main.setStatus("Please wait ......");
 
                 subtreeExpanded = true;
-                System.out.println("Minimize ---- ");
+                System.out.println("====== Minimize cellId: " + clickedCellID + " ------ ");
 
                 ElementDAOImpl.updateWhere("collapsed", "2", "id = " + clickedCellID);
 
@@ -480,7 +481,7 @@ public class EventHandlers {
                 // Task updatePosVal = updatePosValForLowerTree(Integer.parseInt(clickedCellID), delta, clickedCellBottomY, statement);
                 // updateCollapseValForSubTreeRootedAt(clickedCellID, updatePosVal);
 
-                updateDBInBackgroundThread(Integer.parseInt(clickedCellID), clickedCellTopLeftY, clickedCellBoundBottomLeftY, clickedCellTopRightX, delta, 1);
+                updateDBInBackgroundThread(Integer.parseInt(clickedCellID), clickedCellTopLeftY, clickedCellBoundBottomLeftY, clickedCellTopLeftX, clickedCellTopRightX, delta, 1);
 
 
             } else if (collapsed == 2) {
@@ -490,7 +491,7 @@ public class EventHandlers {
                 // ( (Circle) ( (Group)cell.getView() ).getChildren().get(0) ).setFill(Color.RED);
                 clickedCell.setLabel("-");
                 main.setStatus("Please wait ......");
-                System.out.println("Maximize ++++ ");
+                System.out.println("====== Maximize cellId: " + clickedCellID + " ++++++ ");
 
                 double delta = deltaCache.get(clickedCellID);
                 double clickedCellBottomY = clickedCellTopLeftY + BoundBox.unitHeightFactor;
@@ -502,13 +503,16 @@ public class EventHandlers {
                 // because the clicked cell's children will have a y coordinate greater that clickedCellBoundBottomLeftY and
                 // thus will be incorrectly updated.
                 // Therefore get the next lower sibling of the clicked cell and use its topLeftY as the Y value below which all pos values should be updated.
-                ElementDAOImpl.selectWhere("");
+                //
+                // solution 1:
+                // Get the next lower sibling where delta update has to begin by getting the element from table where Y > clickedCellBoundBottomY AND X <= clickedCellTopLeftX.
+                //         And then, in only update delta pos vals for cells whose id > the nextSiblingID fetched above.
+                //
+                // solution 2:
+                // On minimize, decrement pos vals of all cells with y >= clickedCellBottomY ( and not clickedCellBoundBottomY).
+                //         Then on maximize, update delta pos vals for cells with Y >= clickedCellBottomY and the above minimized cells will be updated to now have correct values.
 
-                String getNextSiblingQuery = "SELECT * FROM " + TableNames.ELEMENT_TABLE + " " +
-                        "WHERE PARENT_ID = (SELECT E2.PARENT_ID from " + TableNames.ELEMENT_TABLE + " AS E2 WHERE ID = " + clickedCellID + ") " +
-                        "AND ID > " + clickedCellID + " LIMIT 1";
-
-                updateDBInBackgroundThread(Integer.parseInt(clickedCellID), clickedCellTopLeftY, clickedCellBoundBottomLeftY, clickedCellTopRightX, -delta, 0);
+                updateDBInBackgroundThread(Integer.parseInt(clickedCellID), clickedCellTopLeftY, clickedCellBoundBottomLeftY, clickedCellTopLeftX, clickedCellTopRightX, -delta, 0);
 
             } else if (collapsed == 3) {
                 System.out.println("onMousePressedToCollapseTree: cell: " + clickedCellID + " ; collapsed: " + collapsed);
@@ -516,6 +520,24 @@ public class EventHandlers {
             }
         }
     };
+
+    private int getNextLowerSiblingOrAncestorNode(int clickedCellId, double x, double y) {
+        String getNextQuery = "SELECT MIN(ID) AS MINID " +
+                "FROM " + TableNames.ELEMENT_TABLE + " " +
+                "WHERE BOUND_BOX_Y_TOP_LEFT > " + y + " " +
+                "AND BOUND_BOX_X_TOP_LEFT <= " + x + " " +
+                "AND ID > " + clickedCellId;
+
+        try (ResultSet rs = DatabaseUtil.select(getNextQuery)) {
+            if (rs.next()) {
+                return rs.getInt("MINID");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
 
     private void setClickable() {
         // if (posUpdated && subtreeExpanded) {
@@ -656,7 +678,8 @@ public class EventHandlers {
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    private void updateDBInBackgroundThread(int cellId, double topY, double bottomY, double leftX, double delta, int min) {
+    private void updateDBInBackgroundThread(int clickedCellId, double topY, double bottomY, double leftX, double rightX, double delta, int min) {
+
         Statement statement = DatabaseUtil.createStatement();
         Task<Void> task = new Task<Void>() {
             @Override
@@ -664,13 +687,25 @@ public class EventHandlers {
                 System.out.println("==================== Starting thread updateDBInBackgroundThread. ====================");
                 if (min == 1) {
                     // on minimization
-                    updateCollapseValForSubTreeBulk(topY, bottomY, leftX , statement);
+                    updateCollapseValForSubTreeBulk(topY, bottomY, rightX , statement);
                 } else {
                     // on maximation
-                    expandSubtreeAndUpdateColValsRecursive(String.valueOf(cellId));
+                    expandSubtreeAndUpdateColValsRecursive(String.valueOf(clickedCellId));
                 }
-                updateTreeBelowYBulk(bottomY, delta, statement);
-                updateParentChainRecursive(cellId, delta, statement);
+
+                // No upate required for single line children
+                if (delta == 0) {
+                    System.out.println("Optimized for singel line children collapses.");
+                    statement.executeBatch();
+                    return null;
+                }
+
+                int nextCellId = getNextLowerSiblingOrAncestorNode(clickedCellId, leftX, topY);
+                if (nextCellId != 0) {
+                    // only if next lower sibling ancestor node is present.
+                    updateTreeBelowYBulk(topY + BoundBox.unitHeightFactor, delta, statement, nextCellId);
+                }
+                updateParentChainRecursive(clickedCellId, delta, statement);
                 statement.executeBatch();
                 return null;
             }
@@ -679,7 +714,7 @@ public class EventHandlers {
             protected void succeeded() {
                 super.succeeded();
                 setClickable();
-                System.out.println("==================== updateDBInBackgroundThread Successful.====================");
+                System.out.println("==================== updateDBInBackgroundThread Successful. ====================");
             }
 
             @Override
@@ -714,6 +749,7 @@ public class EventHandlers {
                 "CASE " +
                 "WHEN COLLAPSED = 0 THEN 1 " +
                 "WHEN COLLAPSED = 2 THEN 3 " +
+                "ELSE COLLAPSED " +
                 "END " +
                 "WHERE bound_box_y_coordinate >= " + topY + " " +
                 "AND bound_box_y_coordinate < " + bottomY + " " +
@@ -740,19 +776,34 @@ public class EventHandlers {
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    private void updateTreeBelowYBulk(double y, double delta, Statement statement) {
+    private void updateTreeBelowYBulk(double y, double delta, Statement statement, int nextCellId) {
 
-        String updateQuery = "UPDATE " + TableNames.ELEMENT_TABLE + " " +
+        String updateCellsQuery = "UPDATE " + TableNames.ELEMENT_TABLE + " " +
                 "SET bound_box_y_top_left = bound_box_y_top_left - " + delta + ", " +
                 "bound_box_y_top_right = bound_box_y_top_right - " + delta + ", " +
                 "bound_box_y_bottom_left = bound_box_y_bottom_left - " + delta + ", " +
                 "bound_box_y_bottom_right = bound_box_y_bottom_right - " + delta + ", " +
                 "bound_box_y_coordinate = bound_box_y_coordinate - " + delta + " " +
-                "WHERE bound_box_y_coordinate >= " + y;
+                "WHERE bound_box_y_coordinate >= " + y + " " +
+                "AND ID >= " + nextCellId;
+        System.out.println("updateTreeBelowYBulk: updateCellsQuery: " + updateCellsQuery);
 
-        System.out.println("updateTreeBelowYBulk: query: " + updateQuery);
+        String updateEdgeStartPoingQuery = "UPDATE " + TableNames.EDGE_TABLE + " " +
+                "SET START_Y =  START_Y - " + delta + " " +
+                "WHERE START_Y >= " + y + " " +
+                "AND FK_SOURCE_ELEMENT_ID >= " + nextCellId;
+        System.out.println("updateTreeBelowYBulk: updateEdgeStartPoingQuery: " + updateEdgeStartPoingQuery);
+
+        String updateEdgeEndPointQuery = "UPDATE " + TableNames.EDGE_TABLE + " " +
+                "SET END_Y =  END_Y - " + delta + " " +
+                "WHERE END_Y >= " + y + " " +
+                "AND FK_TARGET_ELEMENT_ID >= " + nextCellId;
+        System.out.println("updateTreeBelowYBulk: updateEdgeEndPointQuery: " + updateEdgeEndPointQuery);
+
         try {
-            statement.addBatch(updateQuery);
+            statement.addBatch(updateCellsQuery);
+            statement.addBatch(updateEdgeStartPoingQuery);
+            statement.addBatch(updateEdgeEndPointQuery);
         } catch (SQLException e) {
             e.printStackTrace();
         }
