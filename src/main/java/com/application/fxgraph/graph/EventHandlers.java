@@ -483,7 +483,6 @@ public class EventHandlers {
 
                 updateDBInBackgroundThread(Integer.parseInt(clickedCellID), clickedCellTopLeftY, clickedCellBoundBottomLeftY, clickedCellTopLeftX, clickedCellTopRightX, delta, 1);
 
-
             } else if (collapsed == 2) {
                 // MAXIMIZE SUBTREE
 
@@ -499,19 +498,7 @@ public class EventHandlers {
 
                 moveLowerTreeByDelta(clickedCellID, clickedCellBottomY, -delta);
 
-                // To update position values of lower tree, we can not rely on the clickedCellBoundBottomLeftY
-                // because the clicked cell's children will have a y coordinate greater that clickedCellBoundBottomLeftY and
-                // thus will be incorrectly updated.
-                // Therefore get the next lower sibling of the clicked cell and use its topLeftY as the Y value below which all pos values should be updated.
-                //
-                // solution 1:
-                // Get the next lower sibling where delta update has to begin by getting the element from table where Y > clickedCellBoundBottomY AND X <= clickedCellTopLeftX.
-                //         And then, in only update delta pos vals for cells whose id > the nextSiblingID fetched above.
-                //
-                // solution 2:
-                // On minimize, decrement pos vals of all cells with y >= clickedCellBottomY ( and not clickedCellBoundBottomY).
-                //         Then on maximize, update delta pos vals for cells with Y >= clickedCellBottomY and the above minimized cells will be updated to now have correct values.
-
+                ElementDAOImpl.updateWhere("collapsed", "0", "id = " + clickedCellID);
                 updateDBInBackgroundThread(Integer.parseInt(clickedCellID), clickedCellTopLeftY, clickedCellBoundBottomLeftY, clickedCellTopLeftX, clickedCellTopRightX, -delta, 0);
 
             } else if (collapsed == 3) {
@@ -541,8 +528,8 @@ public class EventHandlers {
 
     private void setClickable() {
         // if (posUpdated && subtreeExpanded) {
-            clickable = true;
-            main.setStatus("Done");
+        clickable = true;
+        main.setStatus("Done");
         // }
     }
 
@@ -685,12 +672,16 @@ public class EventHandlers {
             @Override
             protected Void call() throws Exception {
                 System.out.println("==================== Starting thread updateDBInBackgroundThread. ====================");
+                int nextCellId = getNextLowerSiblingOrAncestorNode(clickedCellId, leftX, topY);
+
                 if (min == 1) {
                     // on minimization
-                    updateCollapseValForSubTreeBulk(topY, bottomY, rightX , statement);
+                    updateCollapseValForSubTreeBulk(topY, bottomY, rightX, statement, true, 0, 0);
                 } else {
                     // on maximation
-                    expandSubtreeAndUpdateColValsRecursive(String.valueOf(clickedCellId));
+                    int endCellId = nextCellId == 0 ? Integer.MAX_VALUE : nextCellId;
+                    updateCollapseValForSubTreeBulk(topY, bottomY, rightX, statement, true, clickedCellId, endCellId);
+                    // expandSubtreeAndUpdateColValsRecursive(String.valueOf(clickedCellId));
                 }
 
                 // No upate required for single line children
@@ -700,11 +691,12 @@ public class EventHandlers {
                     return null;
                 }
 
-                int nextCellId = getNextLowerSiblingOrAncestorNode(clickedCellId, leftX, topY);
                 if (nextCellId != 0) {
                     // only if next lower sibling ancestor node is present.
                     updateTreeBelowYBulk(topY + BoundBox.unitHeightFactor, delta, statement, nextCellId);
+                    convertDBtoElementTree.loadUIComponentsInsideVisibleViewPort(graph);
                 }
+
                 updateParentChainRecursive(clickedCellId, delta, statement);
                 statement.executeBatch();
                 return null;
@@ -736,34 +728,57 @@ public class EventHandlers {
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    private void updateCollapseValForSubTreeBulk(double topY, double bottomY, double leftX, Statement statement) {
+    private void updateCollapseValForSubTreeBulk(double topY, double bottomY, double leftX, Statement statement, boolean isMinimized, int startCellId, int endCellId) {
+        String updateCellQuery;
+        String updateEdgeQuery;
 
-        /*
-                if collapsed == 0 > set collapsed = 1
-                if collapsed == 2 > set collapsed = 3
-        */
+        if (isMinimized) {
+            // Update the collapse value in the subtree rooted at the clicked cell.
+            updateCellQuery = "UPDATE " + TableNames.ELEMENT_TABLE + " " +
+                    "SET COLLAPSED = " +
+                    "CASE " +
+                    "WHEN COLLAPSED = 0 THEN 1 " +
+                    "WHEN COLLAPSED = 2 THEN 3 " +
+                    "ELSE COLLAPSED " +
+                    "END " +
+                    "WHERE bound_box_y_coordinate >= " + topY + " " +
+                    "AND bound_box_y_coordinate < " + bottomY + " " +
+                    "AND bound_box_x_coordinate >= " + leftX;
 
-        // Update the collapse value in the subtree rooted at the clicked cell.
-        String updateCellQuery = "UPDATE " + TableNames.ELEMENT_TABLE + " " +
-                "SET COLLAPSED = " +
-                "CASE " +
-                "WHEN COLLAPSED = 0 THEN 1 " +
-                "WHEN COLLAPSED = 2 THEN 3 " +
-                "ELSE COLLAPSED " +
-                "END " +
-                "WHERE bound_box_y_coordinate >= " + topY + " " +
-                "AND bound_box_y_coordinate < " + bottomY + " " +
-                "AND bound_box_x_coordinate >= " + leftX;
+            System.out.println("updateCollapseValForSubTreeBulk: query: " + updateCellQuery);
 
-        System.out.println("updateCollapseValForSubTreeBulk: query: " + updateCellQuery);
+            // Update the collapse value in the subtree rooted at the clicked cell.
+            updateEdgeQuery = "UPDATE " + TableNames.EDGE_TABLE + " " +
+                    "SET COLLAPSED = 1" +
+                    "WHERE END_Y >= " + topY + " " +
+                    "AND END_Y <= " + bottomY + " " +
+                    "AND END_X >= " + leftX;
+        } else {
+            updateCellQuery = "UPDATE " + TableNames.ELEMENT_TABLE + " " +
+                    "SET COLLAPSED = " +
+                    "CASE " +
+                    "WHEN COLLAPSED = 1 THEN 0 " +
+                    "WHEN COLLAPSED = 2 THEN 0 " +
+                    "WHEN COLLAPSED = 3 THEN 2 " +
+                    "ELSE COLLAPSED " +
+                    "END " +
+                    "WHERE bound_box_y_coordinate >= " + topY + " " +
+                    "AND bound_box_y_coordinate < " + bottomY + " " +
+                    "AND bound_box_x_coordinate >= " + leftX + " " +
+                    "AND ID > " + startCellId + " " +
+                    "AND ID < " + endCellId + " ";
 
-        // Update the collapse value in the subtree rooted at the clicked cell.
-        String updateEdgeQuery = "UPDATE " + TableNames.EDGE_TABLE + " " +
-                "SET COLLAPSED = 1" +
-                "WHERE END_Y >= " + topY + " " +
-                "AND END_Y <= " + bottomY + " " +
-                "AND END_X >= " + leftX;
+            System.out.println("updateCollapseValForSubTreeBulk: query: " + updateCellQuery);
 
+            // Update the collapse value in the subtree rooted at the clicked cell.
+            updateEdgeQuery = "UPDATE " + TableNames.EDGE_TABLE + " " +
+                    "SET COLLAPSED = 1" +
+                    "WHERE END_Y >= " + topY + " " +
+                    "AND END_Y <= " + bottomY + " " +
+                    "AND END_X >= " + leftX + " " +
+                    "AND FK_TARGET_ELEMENT_ID > " + startCellId + " " +
+                    "AND FK_TARGET_ELEMENT_ID < " + endCellId + " ";
+        }
 
         try {
             statement.addBatch(updateCellQuery);
