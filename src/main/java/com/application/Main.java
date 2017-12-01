@@ -933,7 +933,6 @@ public class Main extends Application {
             convertDBtoElementTree.loadUIComponentsInsideVisibleViewPort(graph);
             convertDBtoElementTree.removeUIComponentsFromInvisibleViewPort(graph);
             // graph.myEndUpdate();
-            graph.updateCellLayer();
         }
         // System.out.println("Main::updateUi: END called by " + caller);
     }

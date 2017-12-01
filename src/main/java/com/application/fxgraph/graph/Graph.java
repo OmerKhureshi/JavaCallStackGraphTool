@@ -104,7 +104,7 @@ public class Graph {
 
     public void updateCellLayer() {
 
-        // System.out.println("Graph::updateCellLayer: ");
+        System.out.println("Graph::updateCellLayer: method started");
         // System.out.println("Graph::updateCellLayer: gighlightsOnUI.size() " + model.getHighlightsOnUI().size());
         model.getCircleCellsOnUI().forEach((id, circleCell) -> {
             if (!cellLayer.getChildren().contains(circleCell)) {
@@ -132,6 +132,7 @@ public class Graph {
 
         model.uiUpdateRequired = false;
 
+        System.out.println("Graph::updateCellLayer: method ended");
     }
 
 

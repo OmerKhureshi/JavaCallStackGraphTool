@@ -680,7 +680,7 @@ public class EventHandlers {
                 } else {
                     // on maximation
                     int endCellId = nextCellId == 0 ? Integer.MAX_VALUE : nextCellId;
-                    updateCollapseValForSubTreeBulk(topY, bottomY, rightX, statement, true, clickedCellId, endCellId);
+                    updateCollapseValForSubTreeBulk(topY, bottomY, rightX, statement, false, clickedCellId, endCellId);
                     // expandSubtreeAndUpdateColValsRecursive(String.valueOf(clickedCellId));
                 }
 
@@ -691,14 +691,16 @@ public class EventHandlers {
                     return null;
                 }
 
+                updateParentChainRecursive(clickedCellId, delta, statement);
+                statement.executeBatch();
+
                 if (nextCellId != 0) {
                     // only if next lower sibling ancestor node is present.
                     updateTreeBelowYBulk(topY + BoundBox.unitHeightFactor, delta, statement, nextCellId);
-                    convertDBtoElementTree.loadUIComponentsInsideVisibleViewPort(graph);
+                    statement.executeBatch();
                 }
 
-                updateParentChainRecursive(clickedCellId, delta, statement);
-                statement.executeBatch();
+                Platform.runLater(() -> convertDBtoElementTree.forceUiRendering(graph));
                 return null;
             }
 
@@ -729,6 +731,7 @@ public class EventHandlers {
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     private void updateCollapseValForSubTreeBulk(double topY, double bottomY, double leftX, Statement statement, boolean isMinimized, int startCellId, int endCellId) {
+        System.out.println("EventHandler::updateCollapseValForSubTreeBulk: method started");
         String updateCellQuery;
         String updateEdgeQuery;
 
@@ -745,7 +748,7 @@ public class EventHandlers {
                     "AND bound_box_y_coordinate < " + bottomY + " " +
                     "AND bound_box_x_coordinate >= " + leftX;
 
-            System.out.println("updateCollapseValForSubTreeBulk: query: " + updateCellQuery);
+            System.out.println("updateCollapseValForSubTreeBulk for minimize: query: " + updateCellQuery);
 
             // Update the collapse value in the subtree rooted at the clicked cell.
             updateEdgeQuery = "UPDATE " + TableNames.EDGE_TABLE + " " +
@@ -762,13 +765,15 @@ public class EventHandlers {
                     "WHEN COLLAPSED = 3 THEN 2 " +
                     "ELSE COLLAPSED " +
                     "END " +
-                    "WHERE bound_box_y_coordinate >= " + topY + " " +
-                    "AND bound_box_y_coordinate < " + bottomY + " " +
-                    "AND bound_box_x_coordinate >= " + leftX + " " +
-                    "AND ID > " + startCellId + " " +
+                    "WHERE " +
+                    // "bound_box_y_coordinate >= " + topY + " " +
+                    // "AND bound_box_y_coordinate < " + bottomY + " " +
+                    // "AND bound_box_x_coordinate >= " + leftX + " " +
+                    // "AND " +
+                    "ID > " + startCellId + " " +
                     "AND ID < " + endCellId + " ";
 
-            System.out.println("updateCollapseValForSubTreeBulk: query: " + updateCellQuery);
+            System.out.println("updateCollapseValForSubTreeBulk for mazimize: query: " + updateCellQuery);
 
             // Update the collapse value in the subtree rooted at the clicked cell.
             updateEdgeQuery = "UPDATE " + TableNames.EDGE_TABLE + " " +
@@ -786,13 +791,14 @@ public class EventHandlers {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        System.out.println("EventHandler::updateCollapseValForSubTreeBulk: method ended");
     }
 
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     private void updateTreeBelowYBulk(double y, double delta, Statement statement, int nextCellId) {
-
+        System.out.println("EventHandler::updateTreeBelowYBulk: method started");
         String updateCellsQuery = "UPDATE " + TableNames.ELEMENT_TABLE + " " +
                 "SET bound_box_y_top_left = bound_box_y_top_left - " + delta + ", " +
                 "bound_box_y_top_right = bound_box_y_top_right - " + delta + ", " +
@@ -822,6 +828,7 @@ public class EventHandlers {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        System.out.println("EventHandler::updateTreeBelowYBulk: method ended.");
     }
 
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -837,7 +844,7 @@ public class EventHandlers {
      * @param statement All updated queries are added to this statement as batch.
      */
     private static void updateParentChainRecursive(int cellId, double delta, Statement statement) {
-
+        System.out.println("EventHandler::updateParentChainRecursive: method started");
         // BASE CONDITION. STOP IF ROOT IS REACHED
         if (cellId == 1) {
             return;
@@ -863,6 +870,7 @@ public class EventHandlers {
         }
 
         updateParentChainRecursive(parentCellId, delta, statement);
+        System.out.println("EventHandler::updateParentChainRecursive: method ended");
     }
 
 
