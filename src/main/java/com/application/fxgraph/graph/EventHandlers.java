@@ -676,7 +676,8 @@ public class EventHandlers {
 
                 if (min == 1) {
                     // on minimization
-                    updateCollapseValForSubTreeBulk(topY, bottomY, rightX, statement, true, 0, 0);
+                    int endCellId = nextCellId == 0 ? Integer.MAX_VALUE : nextCellId;
+                    updateCollapseValForSubTreeBulk(topY, bottomY, rightX, statement, true, clickedCellId, endCellId);
                 } else {
                     // on maximation
                     int endCellId = nextCellId == 0 ? Integer.MAX_VALUE : nextCellId;
@@ -744,18 +745,28 @@ public class EventHandlers {
                     "WHEN COLLAPSED = 2 THEN 3 " +
                     "ELSE COLLAPSED " +
                     "END " +
-                    "WHERE bound_box_y_coordinate >= " + topY + " " +
-                    "AND bound_box_y_coordinate < " + bottomY + " " +
-                    "AND bound_box_x_coordinate >= " + leftX;
+                    "WHERE " +
+                    // "(bound_box_y_coordinate >= " + topY + " " +
+                    // "AND bound_box_y_coordinate < " + bottomY + " " +
+                    // "AND bound_box_x_coordinate >= " + leftX + ") " +
+                    // "AND " +
+                    "ID > " + startCellId + " " +
+                    "AND ID < " + endCellId;
 
-            System.out.println("updateCollapseValForSubTreeBulk for minimize: query: " + updateCellQuery);
+            System.out.println("updateCollapseValForSubTreeBulk for minimize:cell query: " + updateCellQuery);
 
             // Update the collapse value in the subtree rooted at the clicked cell.
             updateEdgeQuery = "UPDATE " + TableNames.EDGE_TABLE + " " +
-                    "SET COLLAPSED = 1" +
-                    "WHERE END_Y >= " + topY + " " +
-                    "AND END_Y <= " + bottomY + " " +
-                    "AND END_X >= " + leftX;
+                    "SET COLLAPSED = 1 " +
+                    "WHERE " +
+                    // "END_Y >= " + topY + " " +
+                    // "AND END_Y <= " + bottomY + " " +
+                    // "AND END_X >= " + leftX + " " +
+                    // "AND " +
+                    "FK_TARGET_ELEMENT_ID > " + startCellId + " " +
+                    "AND FK_TARGET_ELEMENT_ID < " + endCellId;
+
+            System.out.println("updateCollapseValForSubTreeBulk for minimize: edge query: " + updateEdgeQuery);
         } else {
             updateCellQuery = "UPDATE " + TableNames.ELEMENT_TABLE + " " +
                     "SET COLLAPSED = " +
@@ -773,16 +784,19 @@ public class EventHandlers {
                     "ID > " + startCellId + " " +
                     "AND ID < " + endCellId + " ";
 
-            System.out.println("updateCollapseValForSubTreeBulk for mazimize: query: " + updateCellQuery);
+            System.out.println("updateCollapseValForSubTreeBulk for mazimize: cell query: " + updateCellQuery);
 
             // Update the collapse value in the subtree rooted at the clicked cell.
             updateEdgeQuery = "UPDATE " + TableNames.EDGE_TABLE + " " +
-                    "SET COLLAPSED = 1" +
-                    "WHERE END_Y >= " + topY + " " +
-                    "AND END_Y <= " + bottomY + " " +
-                    "AND END_X >= " + leftX + " " +
-                    "AND FK_TARGET_ELEMENT_ID > " + startCellId + " " +
+                    "SET COLLAPSED = 0 " +
+                    "WHERE " +
+                    // "END_Y >= " + topY + " " +
+                    // "AND END_Y <= " + bottomY + " " +
+                    // "AND END_X >= " + leftX + " " +
+                    // "AND " +
+                    "FK_TARGET_ELEMENT_ID > " + startCellId + " " +
                     "AND FK_TARGET_ELEMENT_ID < " + endCellId + " ";
+            System.out.println("updateCollapseValForSubTreeBulk for mazimize: edge query: " + updateEdgeQuery);
         }
 
         try {
