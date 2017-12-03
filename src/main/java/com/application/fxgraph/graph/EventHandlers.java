@@ -444,9 +444,9 @@ public class EventHandlers {
              *     2     - this cell was minimized. Show on UI. Don't show children on UI.
              *     3     - parent of this cell was minimized. This cell was also minimized. Don't expand this cell's children. Don't show on UI.
              */
-            if (collapsed == 1) {
+            if (collapsed == 1 || collapsed == 3 || collapsed == 5) {
                 // expand sub tree.
-                // System.out.println("onMousePressedToCollapseTree: cell: " + clickedCellID + " ; collapsed: " + collapsed);
+                System.out.println("onMousePressedToCollapseTree: cell: " + clickedCellID + " ; collapsed: " + collapsed);
             } else if (collapsed == 0) {
                 // MINIMIZE SUBTREE
 
@@ -501,9 +501,6 @@ public class EventHandlers {
                 ElementDAOImpl.updateWhere("collapsed", "0", "id = " + clickedCellID);
                 updateDBInBackgroundThread(Integer.parseInt(clickedCellID), clickedCellTopLeftY, clickedCellBoundBottomLeftY, clickedCellTopLeftX, clickedCellTopRightX, -delta, 0);
 
-            } else if (collapsed == 3) {
-                System.out.println("onMousePressedToCollapseTree: cell: " + clickedCellID + " ; collapsed: " + collapsed);
-                throw new IllegalStateException("This cell should not have been on the UI.");
             }
         }
     };
@@ -731,7 +728,7 @@ public class EventHandlers {
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    private void updateCollapseValForSubTreeBulk(double topY, double bottomY, double leftX, Statement statement, boolean isMinimized, int startCellId, int endCellId) {
+    private void  updateCollapseValForSubTreeBulk(double topY, double bottomY, double leftX, Statement statement, boolean isMinimized, int startCellId, int endCellId) {
         System.out.println("EventHandler::updateCollapseValForSubTreeBulk: method started");
         String updateCellQuery;
         String updateEdgeQuery;
@@ -743,6 +740,7 @@ public class EventHandlers {
                     "CASE " +
                     "WHEN COLLAPSED = 0 THEN 1 " +
                     "WHEN COLLAPSED = 2 THEN 3 " +
+                    "WHEN COLLAPSED = 1 THEN 5 " +
                     "ELSE COLLAPSED " +
                     "END " +
                     "WHERE " +
@@ -774,6 +772,7 @@ public class EventHandlers {
                     "WHEN COLLAPSED = 1 THEN 0 " +
                     "WHEN COLLAPSED = 2 THEN 0 " +
                     "WHEN COLLAPSED = 3 THEN 2 " +
+                    "WHEN COLLAPSED = 5 THEN 1 " +
                     "ELSE COLLAPSED " +
                     "END " +
                     "WHERE " +
