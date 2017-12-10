@@ -15,6 +15,7 @@ import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tab;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
@@ -413,7 +414,7 @@ public class EventHandlers {
             // subtreeExpanded = false;
             // System.out.println("on click: set subtreeExpanded: " + subtreeExpanded);
             clickable = false;
-            System.out.println("on click: set clickable: " + clickable);
+            // System.out.println("on click: set clickable: " + clickable);
 
             CellLayer cellLayer = (CellLayer) graph.getCellLayer();
             CircleCell clickedCell = (CircleCell) event.getSource();
@@ -444,7 +445,7 @@ public class EventHandlers {
              *     2     - this cell was minimized. Show on UI. Don't show children on UI.
              *     3     - parent of this cell was minimized. This cell was also minimized. Don't expand this cell's children. Don't show on UI.
              */
-            if (collapsed == 1 || collapsed == 3 || collapsed == 5) {
+            if (collapsed == 1 || collapsed >= 3) {
                 // expand sub tree.
                 System.out.println("onMousePressedToCollapseTree: cell: " + clickedCellID + " ; collapsed: " + collapsed);
             } else if (collapsed == 0) {
@@ -686,6 +687,7 @@ public class EventHandlers {
                 if (delta == 0) {
                     System.out.println("Optimized for singel line children collapses.");
                     statement.executeBatch();
+                    Platform.runLater(() -> convertDBtoElementTree.forceUiRendering(graph));
                     return null;
                 }
 
@@ -732,15 +734,15 @@ public class EventHandlers {
         System.out.println("EventHandler::updateCollapseValForSubTreeBulk: method started");
         String updateCellQuery;
         String updateEdgeQuery;
+        String updateEdgeQuery2;
 
         if (isMinimized) {
             // Update the collapse value in the subtree rooted at the clicked cell.
             updateCellQuery = "UPDATE " + TableNames.ELEMENT_TABLE + " " +
                     "SET COLLAPSED = " +
                     "CASE " +
-                    "WHEN COLLAPSED = 0 THEN 1 " +
-                    "WHEN COLLAPSED = 2 THEN 3 " +
-                    "WHEN COLLAPSED = 1 THEN 5 " +
+                    "WHEN COLLAPSED <= 0 THEN COLLAPSED - 1 " +
+                    "WHEN COLLAPSED >= 2 THEN COLLAPSED + 1 " +
                     "ELSE COLLAPSED " +
                     "END " +
                     "WHERE " +
@@ -755,7 +757,12 @@ public class EventHandlers {
 
             // Update the collapse value in the subtree rooted at the clicked cell.
             updateEdgeQuery = "UPDATE " + TableNames.EDGE_TABLE + " " +
-                    "SET COLLAPSED = 1 " +
+                    "SET COLLAPSED = " +
+                    "CASE " +
+                    "WHEN COLLAPSED = " + CollapseType.EDGE_VISIBLE + " THEN " + CollapseType.EDGE_NOTVISIBLE + " " +
+                    // "WHEN COLLAPSED = " + CollapseType.EDGE_NOTVISIBLE + " THEN " + CollapseType.EDGE_PARENT_NOTVISIBLE + " " +
+                    "ELSE COLLAPSED " +
+                    "END " +
                     "WHERE " +
                     // "END_Y >= " + topY + " " +
                     // "AND END_Y <= " + bottomY + " " +
@@ -764,15 +771,29 @@ public class EventHandlers {
                     "FK_TARGET_ELEMENT_ID > " + startCellId + " " +
                     "AND FK_TARGET_ELEMENT_ID < " + endCellId;
 
-            System.out.println("updateCollapseValForSubTreeBulk for minimize: edge query: " + updateEdgeQuery);
+
+            updateEdgeQuery2 = "UPDATE " + TableNames.EDGE_TABLE + " " +
+                    "SET COLLAPSED = " +
+                        "CASE " +
+                            "WHEN COLLAPSED = 0 THEN 1 " +
+                            "ELSE COLLAPSED " +
+                        "END " +
+                    "WHERE FK_TARGET_ELEMENT_ID IN " +
+                    "(SELECT ELE.ID FROM " + TableNames.ELEMENT_TABLE + " AS ELE JOIN " + TableNames.EDGE_TABLE + " as EDGE " +
+                        "ON ELE.ID = EDGE.FK_TARGET_ELEMENT_ID " +
+                        "WHERE EDGE.FK_TARGET_ELEMENT_ID > " +  startCellId + " " +
+                        "AND EDGE.FK_TARGET_ELEMENT_ID < " + endCellId + " " +
+                        // "AND ELE.COLLAPSED >= 0 " +
+                        // "AND ELE.COLLAPSED <= 2" +
+                    ")";
+
+            System.out.println("updateCollapseValForSubTreeBulk for minimize: edge query: " + updateEdgeQuery2);
         } else {
             updateCellQuery = "UPDATE " + TableNames.ELEMENT_TABLE + " " +
                     "SET COLLAPSED = " +
                     "CASE " +
-                    "WHEN COLLAPSED = 1 THEN 0 " +
-                    "WHEN COLLAPSED = 2 THEN 0 " +
-                    "WHEN COLLAPSED = 3 THEN 2 " +
-                    "WHEN COLLAPSED = 5 THEN 1 " +
+                    "WHEN COLLAPSED < 0 THEN COLLAPSED + 1 " +
+                    "WHEN COLLAPSED > 2 THEN COLLAPSED - 1 " +
                     "ELSE COLLAPSED " +
                     "END " +
                     "WHERE " +
@@ -787,7 +808,12 @@ public class EventHandlers {
 
             // Update the collapse value in the subtree rooted at the clicked cell.
             updateEdgeQuery = "UPDATE " + TableNames.EDGE_TABLE + " " +
-                    "SET COLLAPSED = 0 " +
+                    "SET COLLAPSED = " +
+                    "CASE " +
+                    "WHEN COLLAPSED = " + CollapseType.EDGE_NOTVISIBLE + " THEN " + CollapseType.EDGE_VISIBLE + " " +
+                    // "WHEN COLLAPSED = " + CollapseType.EDGE_PARENT_NOTVISIBLE + " THEN " + CollapseType.EDGE_NOTVISIBLE + " " +
+                    "ELSE COLLAPSED " +
+                    "END " +
                     "WHERE " +
                     // "END_Y >= " + topY + " " +
                     // "AND END_Y <= " + bottomY + " " +
@@ -795,16 +821,70 @@ public class EventHandlers {
                     // "AND " +
                     "FK_TARGET_ELEMENT_ID > " + startCellId + " " +
                     "AND FK_TARGET_ELEMENT_ID < " + endCellId + " ";
-            System.out.println("updateCollapseValForSubTreeBulk for mazimize: edge query: " + updateEdgeQuery);
+
+
+            updateEdgeQuery2 = "UPDATE " + TableNames.EDGE_TABLE + " " +
+                    "SET COLLAPSED = " +
+                        "CASE " +
+                            "WHEN COLLAPSED = 1 THEN 0 " +
+                            "ELSE COLLAPSED " +
+                        "END " +
+                    "WHERE FK_TARGET_ELEMENT_ID IN " +
+                    "(SELECT ELE.ID FROM " + TableNames.ELEMENT_TABLE + " AS ELE JOIN " + TableNames.EDGE_TABLE + " as EDGE " +
+                        "ON ELE.ID = EDGE.FK_TARGET_ELEMENT_ID " +
+                        "WHERE EDGE.FK_TARGET_ELEMENT_ID > " + startCellId + " " +
+                        "AND EDGE.FK_TARGET_ELEMENT_ID < " + endCellId + " " +
+                        "AND (ELE.COLLAPSED = 0 OR ELE.COLLAPSED = 2)" +
+                    ")";
+            System.out.println("updateCollapseValForSubTreeBulk for mazimize: edge query: " + updateEdgeQuery2);
+
         }
 
         try {
             statement.addBatch(updateCellQuery);
-            statement.addBatch(updateEdgeQuery);
+            statement.addBatch(updateEdgeQuery2);
         } catch (SQLException e) {
             e.printStackTrace();
         }
         System.out.println("EventHandler::updateCollapseValForSubTreeBulk: method ended");
+    }
+
+    private void updateCollapseValForEdgesSubTreeBulk(Statement statement, boolean isMinimized, int startCellId, int endCellId) throws SQLException {
+        String updateEdgeQuery2;
+
+        if (isMinimized) {
+            updateEdgeQuery2 = "UPDATE " + TableNames.EDGE_TABLE + " " +
+                    "SET COLLAPSED = " +
+                    "CASE " +
+                    "WHEN COLLAPSED = 0 THEN 1 " +
+                    "ELSE COLLAPSED " +
+                    "END " +
+                    "WHERE FK_TARGET_ELEMENT_ID IN " +
+                    "(SELECT ELE.ID FROM " + TableNames.ELEMENT_TABLE + " AS ELE JOIN " + TableNames.EDGE_TABLE + " as EDGE " +
+                        "ON ELE.ID = EDGE.FK_TARGET_ELEMENT_ID " +
+                        "WHERE EDGE.FK_TARGET_ELEMENT_ID > " + startCellId + " " +
+                        "AND EDGE.FK_TARGET_ELEMENT_ID < " + endCellId + " " +
+                        "AND (ELE.COLLAPSED <> 0 OR ELE.COLLAPSED <> 2)" +
+                    ")";
+        } else {
+
+            updateEdgeQuery2 = "UPDATE " + TableNames.EDGE_TABLE + " " +
+                    "SET COLLAPSED = " +
+                    "CASE " +
+                    "WHEN COLLAPSED = 1 THEN 0 " +
+                    "ELSE COLLAPSED " +
+                    "END " +
+                    "WHERE FK_TARGET_ELEMENT_ID IN " +
+                    "(SELECT ELE.ID FROM " + TableNames.ELEMENT_TABLE + " AS ELE JOIN " + TableNames.EDGE_TABLE + " as EDGE " +
+                    "ON ELE.ID = EDGE.FK_TARGET_ELEMENT_ID " +
+                    "WHERE EDGE.FK_TARGET_ELEMENT_ID > " + startCellId + " " +
+                    "AND EDGE.FK_TARGET_ELEMENT_ID < " + endCellId + " " +
+                    "AND ELE.COLLAPSED = 0 " +
+                    "AND ELE.COLLAPSED = 2" +
+                    ")";
+        }
+        statement.addBatch(updateEdgeQuery2);
+
     }
 
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

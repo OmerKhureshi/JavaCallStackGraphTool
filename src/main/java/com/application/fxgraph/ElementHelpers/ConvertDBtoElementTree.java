@@ -5,10 +5,7 @@ import com.application.db.DAOImplementation.*;
 import com.application.db.DatabaseUtil;
 import com.application.db.TableNames;
 import com.application.fxgraph.cells.CircleCell;
-import com.application.fxgraph.graph.CellLayer;
-import com.application.fxgraph.graph.Edge;
-import com.application.fxgraph.graph.Graph;
-import com.application.fxgraph.graph.Model;
+import com.application.fxgraph.graph.*;
 import com.sun.org.apache.xpath.internal.SourceTree;
 import javafx.application.Platform;
 import javafx.geometry.BoundingBox;
@@ -205,18 +202,18 @@ public class ConvertDBtoElementTree {
     }
 
     public void forceUiRendering(Graph graph) {
-        System.out.println("ConvertDBtoElementTree:forceUiRendering: method started");
+        // System.out.println("ConvertDBtoElementTree:forceUiRendering: method started");
         // Add circle cells
         addCircleCells();
 
         // Add edges
         addEdges();
 
-        System.out.println("ConvertDBtoElementTree:forceUiRendering: invoking updateCellLayer");
+        // System.out.println("ConvertDBtoElementTree:forceUiRendering: invoking updateCellLayer");
         graph.updateCellLayer();
-        System.out.println("ConvertDBtoElementTree:forceUiRendering: ending updateCellLayer");
+        // System.out.println("ConvertDBtoElementTree:forceUiRendering: ending updateCellLayer");
 
-        System.out.println("ConvertDBtoElementTree:forceUiRendering: method ended");
+        // System.out.println("ConvertDBtoElementTree:forceUiRendering: method ended");
     }
 
     private void addHighlights() {
@@ -272,11 +269,11 @@ public class ConvertDBtoElementTree {
 
     private void addCircleCells() {
         Map<String, CircleCell> mapCircleCellsOnUI = model.getCircleCellsOnUI();
-
-        System.out.println("Printing mapCircleCellsOnUI: size: " + mapCircleCellsOnUI.size());
-        mapCircleCellsOnUI.forEach((id, circleCell) -> {
-            System.out.println(circleCell);
-        });
+        //
+        // System.out.println("Printing mapCircleCellsOnUI: size: " + mapCircleCellsOnUI.size());
+        // mapCircleCellsOnUI.forEach((id, circleCell) -> {
+        //     System.out.println(circleCell);
+        // });
 
 
         // Calculate the expanded region around viewport that needs to be loaded.
@@ -342,7 +339,7 @@ public class ConvertDBtoElementTree {
 
                 // Add circle cell to model and UI only if they are not already present on UI and if collapsed value is 0 or 2
                 if (!mapCircleCellsOnUI.containsKey(id) && (collapsed == 0 || collapsed == 2)) {
-                    System.out.println("ConvertDBtoElementTree::addCircleCells: adding new cells to UI: cell id: " + id);
+                    // System.out.println("ConvertDBtoElementTree::addCircleCells: adding new cells to UI: cell id: " + id);
                     curCircleCell = new CircleCell(id, xCoordinate, yCoordinate);
                     curCircleCell.setMethodName(methodName);
                     model.addCell(curCircleCell);
@@ -369,7 +366,7 @@ public class ConvertDBtoElementTree {
                                 float xCoordinateTemp = rsTemp.getFloat("bound_box_x_coordinate");
                                 float yCoordinateTemp = rsTemp.getFloat("bound_box_y_coordinate");
                                 parentCircleCell = new CircleCell(parentId, xCoordinateTemp, yCoordinateTemp);
-                                System.out.println("ConvertDBtoElementTree::addCircleCells: adding new cells to UI: cell id: " + parentId);
+                                // System.out.println("ConvertDBtoElementTree::addCircleCells: adding new cells to UI: cell id: " + parentId);
                                 model.addCell(parentCircleCell);
                             }
                         }
@@ -403,7 +400,7 @@ public class ConvertDBtoElementTree {
                 "INNER JOIN CALL_TRACE ON ELEMENT.ID_ENTER_CALL_TRACE = CALL_TRACE.ID " +
                 "WHERE CALL_TRACE.THREAD_ID = " + currentThreadId + " ";
 
-        String commonWhereClausForEdges = "AND EDGE_ELEMENT.collapsed = 0 AND " + "end_x >= " + (viewPortMinX - widthOffset) + " AND start_x <= " + (viewPortMaxX + widthOffset);
+        String commonWhereClausForEdges = "AND EDGE_ELEMENT.collapsed = " + CollapseType.EDGE_VISIBLE + " AND " + "end_x >= " + (viewPortMinX - widthOffset) + " AND start_x <= " + (viewPortMaxX + widthOffset);
         String whereClauseForUpwardEdges = " AND end_Y >= " + (viewPortMinY - heightOffset )+ " AND start_y <= " + (viewPortMaxY + heightOffset);
         String whereClauseForDownwardEdges = " AND start_y >= " + (viewPortMinY - heightOffset)+ " AND end_Y <= " + (viewPortMaxY + heightOffset);
 
@@ -432,7 +429,7 @@ public class ConvertDBtoElementTree {
                 double endX = rs.getFloat("end_x");
                 double startY = rs.getFloat("start_y");
                 double endY = rs.getFloat("end_y");
-                System.out.println("ConvertDBtoElementTree::getEdgesFromResultSet: adding edge with target id: " + targetEdgeId);
+                // System.out.println("ConvertDBtoElementTree::getEdgesFromResultSet: adding edge with target id: " + targetEdgeId);
                 curEdge = new Edge(targetEdgeId, startX, endX, startY, endY);
                 model.addEdge(curEdge);
 
