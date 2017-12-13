@@ -21,6 +21,7 @@ public class Element {
     private int fkEnterCallTrace;
     private int fkExitCallTrace;
     private int isCollapsed = 0;
+    private double delta = 0;
     private Element parent;
     private List<Element> children;
     private int indexInParent;
@@ -352,5 +353,9 @@ public class Element {
         Timestamp timestamp = new Timestamp(instant.toEpochMilli());
         System.out.println(timestamp);
 
+    }
+
+    public double getDelta() {
+        return delta;
     }
 }

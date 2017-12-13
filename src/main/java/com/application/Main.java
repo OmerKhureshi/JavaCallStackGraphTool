@@ -565,7 +565,6 @@ public class Main extends Application {
             System.out.println("Returning without effect");
             return;
         }
-        dbOnReload();
         addGraphCellComponents();
     }
 

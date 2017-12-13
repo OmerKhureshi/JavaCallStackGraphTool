@@ -49,7 +49,8 @@ public class ElementDAOImpl {
                         "index_in_parent INTEGER, " +
                         "leaf_count INTEGER, " +
                         "level_count INTEGER, " +
-                        "collapsed INTEGER" +
+                        "collapsed INTEGER, " +
+                        "delta FLOAT" +
                         ")";
                 ps.execute(sql);
                 System.out.println("** Creating table " + TableNames.ELEMENT_TABLE);
@@ -83,7 +84,8 @@ public class ElementDAOImpl {
                     element.getIndexInParent() + ", " +
                     element.getLeafCount() + ", " +
                     element.getLevelCount() +  ", " +
-                    element.getIsCollapsed() +
+                    element.getIsCollapsed() + ", " +
+                    element.getDelta() +
                     ")";
 
             ps.execute(sql);

@@ -428,6 +428,7 @@ public class EventHandlers {
             double clickedCellTopLeftX = 0;
             double clickedCellTopRightX = 0;
             double clickedCellBoundBottomLeftY = 0;
+            double newDelta = 0;
 
             try (ResultSet cellRS = ElementDAOImpl.selectWhere("id = " + clickedCellID)) {
                 if (cellRS.next()) {
@@ -436,7 +437,7 @@ public class EventHandlers {
                     clickedCellTopLeftX = cellRS.getDouble("bound_box_x_top_left");
                     clickedCellTopRightX = cellRS.getDouble("bound_box_x_top_right");
                     clickedCellBoundBottomLeftY = cellRS.getDouble("bound_box_y_bottom_left");
-
+                    newDelta = cellRS.getDouble("delta");
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -469,24 +470,25 @@ public class EventHandlers {
                 subtreeExpanded = true;
                 System.out.println("====== Minimize cellId: " + clickedCellID + " ------ ");
 
-                ElementDAOImpl.updateWhere("collapsed", "2", "id = " + clickedCellID);
+                // ElementDAOImpl.updateWhere("collapsed", "2", "id = " + clickedCellID);
 
 
                 Statement statement = DatabaseUtil.createStatement();
 
-                double delta = clickedCellBoundBottomLeftY - clickedCellTopLeftY - BoundBox.unitHeightFactor;
+                // delta = clickedCellBoundBottomLeftY - clickedCellTopLeftY - BoundBox.unitHeightFactor;
+                newDelta = clickedCellBoundBottomLeftY - clickedCellTopLeftY - BoundBox.unitHeightFactor;
                 double clickedCellBottomY = clickedCellTopLeftY + BoundBox.unitHeightFactor;
 
-                deltaCache.put(clickedCellID, delta);
+                // deltaCache.put(clickedCellID, delta);
+
+                String updateClickedElement = "UPDATE " + TableNames.ELEMENT_TABLE + " " +
+                        "SET COLLAPSED = 2, DELTA = " + newDelta + " " +
+                        "WHERE ID = " + clickedCellID;
+                DatabaseUtil.executeUpdate(updateClickedElement);
+
                 removeChildrenFromUI(clickedCellID);
-
-                moveLowerTreeByDelta(clickedCellID, clickedCellBottomY, delta);
-
-
-                // Task updatePosVal = updatePosValForLowerTree(Integer.parseInt(clickedCellID), delta, clickedCellBottomY, statement);
-                // updateCollapseValForSubTreeRootedAt(clickedCellID, updatePosVal);
-
-                updateDBInBackgroundThread(Integer.parseInt(clickedCellID), clickedCellTopLeftY, clickedCellBoundBottomLeftY, clickedCellTopLeftX, clickedCellTopRightX, delta, 1);
+                moveLowerTreeByDelta(clickedCellID, clickedCellBottomY, newDelta);
+                updateDBInBackgroundThread(Integer.parseInt(clickedCellID), clickedCellTopLeftY, clickedCellBoundBottomLeftY, clickedCellTopLeftX, clickedCellTopRightX, newDelta, 1);
 
             } else if (collapsed == 2) {
                 // MAXIMIZE SUBTREE
@@ -497,14 +499,16 @@ public class EventHandlers {
                 main.setStatus("Please wait ......");
                 System.out.println("====== Maximize cellId: " + clickedCellID + " ++++++ ");
 
-                double delta = deltaCache.get(clickedCellID);
-                double clickedCellBottomY = clickedCellTopLeftY + BoundBox.unitHeightFactor;
-                double newClickedCellBottomY = clickedCellTopLeftY + BoundBox.unitHeightFactor + delta;
+                // double delta = deltaCache.get(clickedCellID);
 
-                moveLowerTreeByDelta(clickedCellID, clickedCellBottomY, -delta);
+
+                double clickedCellBottomY = clickedCellTopLeftY + BoundBox.unitHeightFactor;
+                double newClickedCellBottomY = clickedCellTopLeftY + BoundBox.unitHeightFactor + newDelta;
+
+                moveLowerTreeByDelta(clickedCellID, clickedCellBottomY, -newDelta);
 
                 ElementDAOImpl.updateWhere("collapsed", "0", "id = " + clickedCellID);
-                updateDBInBackgroundThread(Integer.parseInt(clickedCellID), clickedCellTopLeftY, clickedCellBoundBottomLeftY, clickedCellTopLeftX, clickedCellTopRightX, -delta, 0);
+                updateDBInBackgroundThread(Integer.parseInt(clickedCellID), clickedCellTopLeftY, clickedCellBoundBottomLeftY, clickedCellTopLeftX, clickedCellTopRightX, -newDelta, 0);
 
             }
         }
@@ -585,7 +589,9 @@ public class EventHandlers {
                 // Get edges which don't have an target cicle rendered on UI.
                 mapEdgesOnUI.forEach((id, edge) -> {
                     double thisLineEndY = edge.line.getEndY();
-                    if (thisLineEndY >= clickedCellTopY && thisLineEndY <= clickedCellBoundBottomY && !id.equalsIgnoreCase(cellId)) {
+                    double thisLineStartY = edge.line.getStartY();
+                    double thisLineStartX = edge.line.getStartX();
+                    if (thisLineEndY >= clickedCellTopY && thisLineEndY <= clickedCellBoundBottomY && thisLineStartY >= clickedCellTopY && thisLineStartX >= (clickedCellTopRightX-BoundBox.unitWidthFactor)) {
                         System.out.println("adding to remove list: edge ID-: " + id);
                         removeEdges.add(id);
                     }
