@@ -14,6 +14,7 @@ import com.application.logs.parsers.ParseCallTrace;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -554,7 +555,7 @@ public class Main extends Application {
 
         resetInstructionsPanel();
         resetHighlights();
-
+        EventHandlers.resetEventHandlers();
 
         ConvertDBtoElementTree.resetRegions();
     }
@@ -564,8 +565,19 @@ public class Main extends Application {
             System.out.println("Returning without effect");
             return;
         }
-
+        dbOnReload();
         addGraphCellComponents();
+    }
+
+    private void dbOnReload() {
+        String resetCollapsedValOnCells = "UPDATE " + TableNames.ELEMENT_TABLE + " SET COLLAPSED = 0";
+        String resetCollapsedValOnEdges = "UPDATE " + TableNames.EDGE_TABLE+ " SET COLLAPSED = 0";
+
+        Platform.runLater(() -> {
+            DatabaseUtil.executeUpdate(resetCollapsedValOnCells);
+            DatabaseUtil.executeUpdate(resetCollapsedValOnEdges);
+        });
+
     }
 
     private void resetCenterLayout() {

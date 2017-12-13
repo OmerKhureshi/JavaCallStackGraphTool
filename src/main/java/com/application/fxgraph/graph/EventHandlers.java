@@ -37,7 +37,7 @@ public class EventHandlers {
 
     private static ConvertDBtoElementTree convertDBtoElementTree;
     final DragContext dragContext = new DragContext();
-    Map<String, Double> deltaCache = new HashMap<>();
+    static Map<String, Double> deltaCache = new HashMap<>();
     private boolean clickable = true;
     private boolean subtreeExpanded = true;
     private boolean posUpdated = true;
@@ -48,6 +48,10 @@ public class EventHandlers {
 
     public EventHandlers(Graph graph) {
         this.graph = graph;
+    }
+
+    public static void resetEventHandlers() {
+        deltaCache = new HashMap<>();
     }
 
     public void setCustomMouseEventHandlers(final Node node) {
@@ -578,13 +582,14 @@ public class EventHandlers {
                     }
                 });
 
-                // mapEdgesOnUI.forEach((id, edge) -> {
-                //     double thisLineEndY = edge.line.getEndY();
-                //     if (thisLineEndY >= clickedCellTopY) {
-                //         System.out.println("adding to remove list: edge ID: " + id);
-                //         removeEdges.add(id);
-                //     }
-                // });
+                // Get edges which don't have an target cicle rendered on UI.
+                mapEdgesOnUI.forEach((id, edge) -> {
+                    double thisLineEndY = edge.line.getEndY();
+                    if (thisLineEndY >= clickedCellTopY && thisLineEndY <= clickedCellBoundBottomY && !id.equalsIgnoreCase(cellId)) {
+                        System.out.println("adding to remove list: edge ID-: " + id);
+                        removeEdges.add(id);
+                    }
+                });
 
                 removeCircleCells.forEach((id) -> {
                     if (mapCircleCellsOnUI.containsKey(id)) {
