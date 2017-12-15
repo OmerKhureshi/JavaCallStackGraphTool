@@ -101,7 +101,7 @@ public class Main extends Application {
     private Glyph clearHistoryGlyph;
 
     private Menu highlight;
-    private MenuItem highlightMeneItem;
+    private MenuItem highlightMenuItem;
     private Glyph highlightItemsGlyph;
 
     // Status bar
@@ -311,11 +311,11 @@ public class Main extends Application {
         highlight = new Menu("Highlights");
         highlightItemsGlyph = new Glyph(font, FontAwesome.Glyph.FLAG);
         highlightItemsGlyph.setColor(ColorProp.ENABLED);
-        highlightMeneItem = new MenuItem("Highlight method invocations", highlightItemsGlyph);
+        highlightMenuItem = new MenuItem("Highlight method invocations", highlightItemsGlyph);
 
-        highlight.getItems().add(highlightMeneItem);
+        highlight.getItems().add(highlightMenuItem);
         highlight.setDisable(true);
-        menuItems.add(highlightMeneItem);
+        menuItems.add(highlightMenuItem);
 
         // Main menu
         menuBar.getMenus().addAll(fileMenu, runMenu, saveImgMenu, goToMenu, highlight);
@@ -403,10 +403,10 @@ public class Main extends Application {
         highlight = new Menu("Highlights");
         highlightItemsGlyph = new Glyph(font, FontAwesome.Glyph.FLAG);
         highlightItemsGlyph.setColor(ColorProp.ENABLED_COLORFUL);
-        highlightMeneItem = new MenuItem("Highlight method invocations", highlightItemsGlyph);
+        highlightMenuItem = new MenuItem("Highlight method invocations", highlightItemsGlyph);
 
-        highlight.getItems().add(highlightMeneItem);
-        menuItems.add(highlightMeneItem);
+        highlight.getItems().add(highlightMenuItem);
+        menuItems.add(highlightMenuItem);
 
         // Main menu
         menuBar.getMenus().addAll(fileMenu, runMenu, saveImgMenu, goToMenu, highlight);
@@ -419,6 +419,7 @@ public class Main extends Application {
     }
 
     private void setUpMenuActions() {
+        System.out.println("Main::setUpMenuActions: method started");
 
         chooseMethodDefnMenuItem.setOnAction(event -> {
             File methodDefnFile = chooseLogFile("MethodDefinition");
@@ -524,15 +525,21 @@ public class Main extends Application {
         clearHistoryMenuItem.setOnAction(event -> graph.clearRecents());
 
         // highlightMenuItem.setOnAction(event -> setUpMethodsWindow());
-        highlightMeneItem.setOnAction(event -> setUpHighlightsWindow());
+        highlightMenuItem.setOnAction(event -> setUpHighlightsWindow());
+
+        System.out.println("Main::setUpMenuActions: method ended");
+
     }
 
     private String currentSelectedThread;
 
     public void resetFromOutside() {
+        System.out.println("Main::resetFromOutside: method start");
         reset();
         methodDefnGlyph.setIcon(FontAwesome.Glyph.PLUS);
         callTraceGlyph.setIcon(FontAwesome.Glyph.PLUS);
+        System.out.println("Main::resetFromOutside: method end");
+
     }
 
     public void setUpStatusBar() {
@@ -547,6 +554,7 @@ public class Main extends Application {
     }
 
     private void reset() {
+        System.out.println("Main::reset: method start");
         root.setCenter(null);
         root.setLeft(null);
         runAnalysisMenuItem.setDisable(true);
@@ -558,6 +566,7 @@ public class Main extends Application {
         EventHandlers.resetEventHandlers();
 
         ConvertDBtoElementTree.resetRegions();
+        System.out.println("Main::reset: method end");
     }
 
     private void reload() {
