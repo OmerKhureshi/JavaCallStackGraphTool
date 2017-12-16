@@ -236,7 +236,8 @@ public class ConvertDBtoElementTree {
                 "AND " + (viewPortMaxX + widthOffset) + " >= start_x " +
                 "AND " +(viewPortMinY - heightOffset) + " <= (start_y + height) " + " " +
                 "AND " + (viewPortMaxY + heightOffset) + " >= start_Y " +
-                "AND thread_id = " + currentThreadId;
+                "AND thread_id = " + currentThreadId + " " +
+                "AND COLLAPSED = 0";
 
         ResultSet rs = HighlightDAOImpl.selectWhere(sql);
 

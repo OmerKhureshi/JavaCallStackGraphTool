@@ -1373,9 +1373,12 @@ public class Main extends Application {
         String packageName = fullName.substring(0, fullName.length() - methodName.length() - 1);
 
         String sqlSingle = "INSERT INTO " + TableNames.HIGHLIGHT_ELEMENT + " " +
-                "(METHOD_ID, THREAD_ID, HIGHLIGHT_TYPE, START_X, START_Y, WIDTH, HEIGHT, COLOR) " +
+                "(ELEMENT_ID, METHOD_ID, THREAD_ID, HIGHLIGHT_TYPE, START_X, START_Y, WIDTH, HEIGHT, COLOR, COLLAPSED) " +
 
                 "SELECT " +
+
+                // ELEMENT_ID
+                TableNames.ELEMENT_TABLE + ".ID, " +
 
                 // METHOD_ID
                 TableNames.METHOD_DEFINITION_TABLE + ".ID, " +
@@ -1401,7 +1404,10 @@ public class Main extends Application {
                 // "(" + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_BOTTOM_LEFT - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT), " +
 
                 // HIGHLIGHT COLOR
-                "'" + colorsMap.getOrDefault(fullName, Color.AQUAMARINE) + "' " +
+                "'" + colorsMap.getOrDefault(fullName, Color.AQUAMARINE) + "'," +
+
+                // COLLAPSED
+                "0 " +
 
                 "FROM " + TableNames.ELEMENT_TABLE + " " +
                 "JOIN " + TableNames.CALL_TRACE_TABLE + " ON " + TableNames.ELEMENT_TABLE + ".ID_ENTER_CALL_TRACE = " + TableNames.CALL_TRACE_TABLE + ".ID " +
@@ -1441,8 +1447,12 @@ public class Main extends Application {
         // System.out.println("Result threadId " + threadId);
 
         String sqlFull = "INSERT INTO " + TableNames.HIGHLIGHT_ELEMENT + " " +
-                "(METHOD_ID, THREAD_ID, HIGHLIGHT_TYPE, START_X, START_Y, WIDTH, HEIGHT, COLOR) " +
+                "(ELEMENT_ID, METHOD_ID, THREAD_ID, HIGHLIGHT_TYPE, START_X, START_Y, WIDTH, HEIGHT, COLOR) " +
                 "SELECT " +
+
+                // ELEMENT_ID
+                TableNames.ELEMENT_TABLE + ".ID, " +
+
                 // METHOD_ID
                 TableNames.METHOD_DEFINITION_TABLE + ".ID, " +
 
@@ -1474,7 +1484,11 @@ public class Main extends Application {
                 "AND CT.THREAD_ID = " + threadId + ") - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT - 15, " +
 
                 // COLOR
-                "'" + colorsMap.getOrDefault(fullName, Color.AQUAMARINE) + "' " +
+                "'" + colorsMap.getOrDefault(fullName, Color.AQUAMARINE) + "', " +
+
+                // COLLAPSED
+                "0 " +
+
 
                 "FROM " + TableNames.ELEMENT_TABLE + " " +
                 "JOIN " + TableNames.CALL_TRACE_TABLE + " ON " + TableNames.ELEMENT_TABLE + ".ID_ENTER_CALL_TRACE = " + TableNames.CALL_TRACE_TABLE + ".ID " +

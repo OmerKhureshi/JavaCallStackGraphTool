@@ -20,6 +20,7 @@ public class HighlightDAOImpl {
             try (Connection c = DatabaseUtil.getConnection(); Statement ps = c.createStatement()) {
                 String sql = "CREATE TABLE " + TableNames.HIGHLIGHT_ELEMENT + " (" +
                         "id INTEGER NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1), " +
+                        "element_id INT, " +
                         "method_id INT, " +
                         "thread_id INT, " +
                         "highlight_type VARCHAR(6), " + // valid values may be "SINGLE" or "FuLL".
@@ -27,7 +28,8 @@ public class HighlightDAOImpl {
                         "start_y FLOAT, " +
                         "width FLOAT, " +
                         "height FLOAT, " +
-                        "color VARCHAR(10)" +
+                        "color VARCHAR(10), " +
+                        "collapsed INT" +
                         ")";
                 ps.execute(sql);
                 System.out.println("** Creating table " + TableNames.HIGHLIGHT_ELEMENT);
