@@ -375,7 +375,9 @@ public class DatabaseUtil {
 
         CallTraceDAOImpl.createTable();
         MethodDefnDAOImpl.createTable();
+        // FilesDAOImpl.createTable();
     }
+
 
     public static Statement createStatement() {
         Statement statement = null;

@@ -89,6 +89,7 @@ public class Main extends Application {
     private Glyph runAnalysisGlyph;
     private MenuItem resetMenuItem;
     private Glyph resetGlyph;
+    private MenuItem runAnalysisHistoryMenuItem;
 
     private Menu saveImgMenu;  // Save Image menu button
     private MenuItem saveImgMenuItem;
@@ -272,7 +273,10 @@ public class Main extends Application {
         // runAnalysisMenuItem.setStyle(SizeProp.PADDING_SUBMENU);
         runAnalysisMenuItem.setDisable(true);
 
-        runMenu.getItems().addAll(runAnalysisMenuItem, resetMenuItem);
+        runAnalysisHistoryMenuItem = new MenuItem("Rerun latest files");
+        runAnalysisHistoryMenuItem.setDisable(firstTimeLoad);
+
+        runMenu.getItems().addAll(runAnalysisMenuItem, resetMenuItem, runAnalysisHistoryMenuItem);
         menuItems.add(runAnalysisMenuItem);
         menuItems.add(resetMenuItem);
 
@@ -484,6 +488,11 @@ public class Main extends Application {
             callTraceGlyph.setIcon(FontAwesome.Glyph.PLUS);
         });
 
+        runAnalysisHistoryMenuItem.setOnAction(event -> {
+            methodDefnFileSet = callTraceFileSet = true;
+            reload();
+        });
+
         // Capture and save the currently loaded UI tree.
         saveImgMenuItem.setOnAction(event -> saveUIImage());
 
@@ -527,7 +536,7 @@ public class Main extends Application {
         // highlightMenuItem.setOnAction(event -> setUpMethodsWindow());
         highlightMenuItem.setOnAction(event -> setUpHighlightsWindow());
 
-        System.out.println("Main::setUpMenuActions: method ended");
+        // System.out.println("Main::setUpMenuActions: method ended");
 
     }
 
@@ -1447,7 +1456,7 @@ public class Main extends Application {
         // System.out.println("Result threadId " + threadId);
 
         String sqlFull = "INSERT INTO " + TableNames.HIGHLIGHT_ELEMENT + " " +
-                "(ELEMENT_ID, METHOD_ID, THREAD_ID, HIGHLIGHT_TYPE, START_X, START_Y, WIDTH, HEIGHT, COLOR) " +
+                "(ELEMENT_ID, METHOD_ID, THREAD_ID, HIGHLIGHT_TYPE, START_X, START_Y, WIDTH, HEIGHT, COLOR, COLLAPSED) " +
                 "SELECT " +
 
                 // ELEMENT_ID
@@ -1503,7 +1512,7 @@ public class Main extends Application {
         String sql = highlightType.equalsIgnoreCase("SINGLE") ? sqlSingle : sqlFull;
 
         // System.out.println("-------------");
-        // System.out.println(sql);
+        System.out.println( "Main::addInsertQueryToStatement: sql: " + sql);
         try {
             statement.addBatch(sql);
         } catch (SQLException e) {
@@ -1520,6 +1529,8 @@ public class Main extends Application {
 
         // System.out.println("-------------");
         // System.out.println(sql);
+        System.out.println( "Main::addDeleteQueryToStatement: sql: " + sql);
+
 
         try {
             statement.addBatch(sql);
