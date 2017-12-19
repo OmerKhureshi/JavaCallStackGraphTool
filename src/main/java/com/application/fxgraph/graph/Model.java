@@ -32,7 +32,7 @@ public class Model {
     private Map<String, Edge> edgesOnUI = new HashMap<>();
     List<Edge> listEdgesOnUI = new ArrayList<>();
 
-    private Map<Integer, Rectangle> highlightsOnUI = new HashMap<>();
+    private Map<Integer, com.application.fxgraph.graph.RectangleCell> highlightsOnUI = new HashMap<>();
 
 
     public Model() {
@@ -52,7 +52,7 @@ public class Model {
 
     public void stackRectangles(String from) {
 
-        List<Rectangle> list = new ArrayList<>(highlightsOnUI.values());
+        List<com.application.fxgraph.graph.RectangleCell> list = new ArrayList<>(highlightsOnUI.values());
 
         // Sort the list of rectangles according to area.
         Collections.sort(list, (o1, o2) -> (int) (o1.getWidth() * o1.getHeight() - o2.getWidth() * o2.getHeight()));
@@ -107,7 +107,7 @@ public class Model {
         }
     }
 
-    public void addHighlight(Integer id, Rectangle rectangle) {
+    public void addHighlight(Integer id, com.application.fxgraph.graph.RectangleCell rectangle) {
         // uiUpdateRequired = true;
         highlightsOnUI.putIfAbsent(id, rectangle);
     }
@@ -149,7 +149,7 @@ public class Model {
         return listEdgesOnUI;
     }
 
-    public Map<Integer, Rectangle> getHighlightsOnUI() {
+    public Map<Integer, com.application.fxgraph.graph.RectangleCell> getHighlightsOnUI() {
         return highlightsOnUI;
     }
 

@@ -533,19 +533,19 @@ public class EventHandlers {
                 "AND BOUND_BOX_X_TOP_LEFT <= " + x + " " +
                 "AND ID > " + clickedCellId;
 
-        System.out.println("EventHandler::getNextLowerSiblingOrAncestorNode: query: " + getNextQuery);
+        // System.out.println("EventHandler::getNextLowerSiblingOrAncestorNode: query: " + getNextQuery);
 
 
         try (ResultSet rs = DatabaseUtil.select(getNextQuery)) {
             if (rs.next()) {
-                System.out.println("EventHandler::getNextLowerSiblingOrAncestorNode: we have result: " + rs.getInt("MINID"));
+                // System.out.println("EventHandler::getNextLowerSiblingOrAncestorNode: we have result: " + rs.getInt("MINID"));
                 return rs.getInt("MINID");
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        System.out.println("EventHandler::getNextLowerSiblingOrAncestorNode: we dont hav res" + Integer.MAX_VALUE);
+        // System.out.println("EventHandler::getNextLowerSiblingOrAncestorNode: we dont hav res" + Integer.MAX_VALUE);
         return Integer.MAX_VALUE;
     }
 
@@ -558,13 +558,14 @@ public class EventHandlers {
 
 
     public void removeChildrenFromUI(int cellId, int endCellId) {
+        System.out.println("EventHandler::removeChildrenFromUI: method stated. start cellid: " + cellId + " end cellid: " + endCellId);
         Map<String, CircleCell> mapCircleCellsOnUI = graph.getModel().getCircleCellsOnUI();
         List<String> removeCircleCells = new ArrayList<>();
 
         Map<String, Edge> mapEdgesOnUI = graph.getModel().getEdgesOnUI();
         List<String> removeEdges = new ArrayList<>();
 
-        Map<Integer, Rectangle> highlightsOnUi = graph.getModel().getHighlightsOnUI();
+        Map<Integer, RectangleCell> highlightsOnUi = graph.getModel().getHighlightsOnUI();
         List<Integer> removeHighlights = new ArrayList<>();
 
         mapCircleCellsOnUI.forEach((id, circleCell) -> {
@@ -582,7 +583,10 @@ public class EventHandlers {
         });
 
         highlightsOnUi.forEach((id, rectangle) -> {
-            if (id > cellId && id < endCellId) {
+            System.out.println("EventHandler::removeChildrenFromUI: foreach in highlightsOnUi: id: " + id);
+            int elementId = rectangle.getElementId();
+            if (elementId> cellId && elementId < endCellId) {
+                System.out.println("EventHandler::removeChildrenFromUI: adding to removeHighlights, elementId: " + elementId);
                 removeHighlights.add(id);
             }
         });
@@ -610,6 +614,7 @@ public class EventHandlers {
             }
         });
 
+        System.out.println("EventHandler::removeChildrenFromUI: method ended.");
 
         // System.out.println("EventHandler::removeChildrenFromUI: clicked on cell id: " + cellId);
         // try (ResultSet rs = ElementDAOImpl.selectWhere("id = " + cellId)) {

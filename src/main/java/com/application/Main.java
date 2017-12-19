@@ -370,7 +370,12 @@ public class Main extends Application {
         resetGlyph.setColor(ColorProp.ENABLED);
         resetMenuItem = new MenuItem("Reset", resetGlyph);
 
-        runMenu.getItems().addAll(runAnalysisMenuItem, resetMenuItem);
+        runAnalysisHistoryMenuItem = new MenuItem("Rerun latest files");
+        runAnalysisHistoryMenuItem.setDisable(firstTimeLoad);
+
+        runMenu.getItems().addAll(runAnalysisMenuItem, resetMenuItem, runAnalysisHistoryMenuItem);
+
+        // runMenu.getItems().addAll(runAnalysisMenuItem, resetMenuItem);
         menuItems.add(runAnalysisMenuItem);
         menuItems.add(resetMenuItem);
 
@@ -1517,7 +1522,7 @@ public class Main extends Application {
         String sql = highlightType.equalsIgnoreCase("SINGLE") ? sqlSingle : sqlFull;
 
         // System.out.println("-------------");
-        System.out.println( "Main::addInsertQueryToStatement: sql: " + sql);
+        // System.out.println( "Main::addInsertQueryToStatement: sql: " + sql);
         try {
             statement.addBatch(sql);
         } catch (SQLException e) {
@@ -1534,7 +1539,7 @@ public class Main extends Application {
 
         // System.out.println("-------------");
         // System.out.println(sql);
-        System.out.println( "Main::addDeleteQueryToStatement: sql: " + sql);
+        // System.out.println( "Main::addDeleteQueryToStatement: sql: " + sql);
 
 
         try {

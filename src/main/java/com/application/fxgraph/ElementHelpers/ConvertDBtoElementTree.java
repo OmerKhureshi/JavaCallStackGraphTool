@@ -176,7 +176,7 @@ public class ConvertDBtoElementTree {
     public void loadUIComponentsInsideVisibleViewPort(Graph graph) {
         this.graph = graph;
         this.model = graph.getModel();
-        System.out.println("ConvertDBtoElementTree:loadUIComponentsInsideVisibleViewPort: Method started");
+        // System.out.println("ConvertDBtoElementTree:loadUIComponentsInsideVisibleViewPort: Method started");
 
 
         // BoundingBox viewPortDims = graph.getViewPortDims();
@@ -222,7 +222,7 @@ public class ConvertDBtoElementTree {
     private void addHighlights() {
         // System.out.println("ConvertDBtoElementTree::addHighlights: ");
 
-        Map<Integer, Rectangle> highlightsOnUI = model.getHighlightsOnUI();
+        Map<Integer, RectangleCell> highlightsOnUI = model.getHighlightsOnUI();
 
         BoundingBox viewPortDims = graph.getViewPortDims();
 
@@ -247,6 +247,7 @@ public class ConvertDBtoElementTree {
         try {
             while (rs.next()) {
                 int id = rs.getInt("ID");
+                int elementId = rs.getInt("ELEMENT_ID");
                 float startX = rs.getFloat("START_X");
                 float startY = rs.getFloat("START_Y");
                 float width = rs.getFloat("WIDTH");
@@ -256,12 +257,18 @@ public class ConvertDBtoElementTree {
                 // If the rectangle highlight is not on UI then create a new rectangle and show on UI.
                 if (!highlightsOnUI.containsKey(id)) {
                     // System.out.println("Drawing rectangle: " + id);
-                    Rectangle rectangle = new Rectangle(startX, startY, width, height);
-                    rectangle.setFill(Color.web(color));
-                    rectangle.setArcHeight(20);
-                    rectangle.setArcWidth(20);
+                    // Rectangle rectangle = new Rectangle(startX, startY, width, height);
+                    // rectangle.setFill(Color.web(color));
+                    // rectangle.setArcHeight(20);
+                    // rectangle.setArcWidth(20);
 
-                    model.addHighlight(id, rectangle);
+                    RectangleCell rect = new RectangleCell(elementId, startX, startY, width, height);
+                    rect.setColor(color);
+                    rect.setArcHeight(20);
+                    rect.setArcWidht(20);
+
+                    // model.addHighlight(id, rectangle);
+                    model.addHighlight(id, rect);
                 }
             }
         } catch (SQLException e) {
@@ -510,7 +517,7 @@ public class ConvertDBtoElementTree {
         CellLayer cellLayer = (CellLayer) graph.getCellLayer();
 
         // This is the global HashMap that stores rectangle highlights currently on the UI.
-        Map<Integer, Rectangle > highlightsOnUI = model.getHighlightsOnUI();
+        Map<Integer, RectangleCell > highlightsOnUI = model.getHighlightsOnUI();
 
         // Temporary list to aid in removal of HashMap elements.
         List<Integer> removeHighlights = new ArrayList<>();
@@ -518,8 +525,8 @@ public class ConvertDBtoElementTree {
         Iterator j = highlightsOnUI.entrySet().iterator();
 
         while (j.hasNext()) {
-            Map.Entry<Integer, Rectangle> entry = (Map.Entry) j.next();
-            Rectangle rectangle = entry.getValue();
+            Map.Entry<Integer, RectangleCell> entry = (Map.Entry) j.next();
+            RectangleCell rectangle = entry.getValue();
             int rectId = entry.getKey();
 
             if (!preloadBox.intersects(rectangle.getBoundsInLocal())) {
@@ -549,14 +556,14 @@ public class ConvertDBtoElementTree {
         // Removing elements from HashMap is a two step process, this is to avoid concurrent modification exception
         // Remove rectangle highlights from UI and HashMap.
         removeHighlights.forEach(rectId -> {
-            Rectangle rectangle = highlightsOnUI.get(rectId);
+            RectangleCell rectangle = highlightsOnUI.get(rectId);
             Platform.runLater(() -> cellLayer.getChildren().remove(rectangle));
             highlightsOnUI.remove(rectId);
         });
     }
 
     public void removeUIComponentsFromInvisibleViewPort(Graph graph) {
-        System.out.println("ConvertDBtoElementTree::removeUIComponentsFromInvisibleViewPort: method started");
+        // System.out.println("ConvertDBtoElementTree::removeUIComponentsFromInvisibleViewPort: method started");
         this.graph = graph;
         this.model = graph.getModel();
 
