@@ -176,14 +176,14 @@ public class ConvertDBtoElementTree {
     public void loadUIComponentsInsideVisibleViewPort(Graph graph) {
         this.graph = graph;
         this.model = graph.getModel();
-        // System.out.println("ConvertDBtoElementTree:loadUIComponentsInsideVisibleViewPort: Method started");
+        System.out.println("ConvertDBtoElementTree:loadUIComponentsInsideVisibleViewPort: Method started");
 
 
-        BoundingBox viewPortDims = graph.getViewPortDims();
-        if (!isUIDrawingRequired(viewPortDims)) {
-            // System.out.println("ConvertDBtoElementTree:loadUIComponentsInsideVisibleViewPort: UI redrawing not required.");
-            return;
-        }
+        // BoundingBox viewPortDims = graph.getViewPortDims();
+        // if (!isUIDrawingRequired(viewPortDims)) {
+        //     // System.out.println("ConvertDBtoElementTree:loadUIComponentsInsideVisibleViewPort: UI redrawing not required.");
+        //     return;
+        // }
 
         // System.out.println("ConvertDBtoElementTree:loadUIComponentsInsideVisibleViewPort: UI redrawing required.");
 
@@ -208,6 +208,9 @@ public class ConvertDBtoElementTree {
 
         // Add edges
         addEdges();
+
+        // Add highlights
+        addHighlights();
 
         // System.out.println("ConvertDBtoElementTree:forceUiRendering: invoking updateCellLayer");
         graph.updateCellLayer();
@@ -531,6 +534,7 @@ public class ConvertDBtoElementTree {
                         if (rs.getInt("COUNT") == 0) {
                             if (!removeHighlights.contains(rectId)) {
                                 removeHighlights.add(rectId);
+                                System.out.println("ConvertDBtoElementTree::removeHighlights: adding to removeHighlights: " + rectId);
                             }
                         }
                     }
@@ -552,14 +556,15 @@ public class ConvertDBtoElementTree {
     }
 
     public void removeUIComponentsFromInvisibleViewPort(Graph graph) {
+        System.out.println("ConvertDBtoElementTree::removeUIComponentsFromInvisibleViewPort: method started");
         this.graph = graph;
         this.model = graph.getModel();
 
         BoundingBox viewPortDims = graph.getViewPortDims();
 
-        if (!isUIDrawingRequired(viewPortDims)) {
-            return;
-        }
+        // if (!isUIDrawingRequired(viewPortDims)) {
+        //     return;
+        // }
 
         double minX = viewPortDims.getMinX();
         double minY = viewPortDims.getMinY();
@@ -672,7 +677,7 @@ public class ConvertDBtoElementTree {
 
     static boolean firstLoad = true;
 
-    private boolean isUIDrawingRequired(BoundingBox viewPort) {
+    public boolean isUIDrawingRequired(BoundingBox viewPort) {
         // System.out.println("ConvertDBtoElementTree::UiUpdateRequired:");
 
         if (firstLoad) {

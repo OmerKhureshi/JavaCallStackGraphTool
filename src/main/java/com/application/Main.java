@@ -959,6 +959,11 @@ public class Main extends Application {
 
         if (convertDBtoElementTree != null && graph != null) {
             // System.out.println("Main::updateUi: called by " + caller + " thread " + Thread.currentThread().getName());
+            BoundingBox viewPortDims = graph.getViewPortDims();
+            if (!convertDBtoElementTree.isUIDrawingRequired(viewPortDims)) {
+                // System.out.println("ConvertDBtoElementTree:loadUIComponentsInsideVisibleViewPort: UI redrawing not required.");
+                return;
+            }
             convertDBtoElementTree.loadUIComponentsInsideVisibleViewPort(graph);
             convertDBtoElementTree.removeUIComponentsFromInvisibleViewPort(graph);
             // graph.myEndUpdate();
