@@ -558,7 +558,7 @@ public class EventHandlers {
 
 
     public void removeChildrenFromUI(int cellId, int endCellId) {
-        System.out.println("EventHandler::removeChildrenFromUI: method stated. start cellid: " + cellId + " end cellid: " + endCellId);
+        // System.out.println("EventHandler::removeChildrenFromUI: method stated. start cellid: " + cellId + " end cellid: " + endCellId);
         Map<String, CircleCell> mapCircleCellsOnUI = graph.getModel().getCircleCellsOnUI();
         List<String> removeCircleCells = new ArrayList<>();
 
@@ -583,10 +583,10 @@ public class EventHandlers {
         });
 
         highlightsOnUi.forEach((id, rectangle) -> {
-            System.out.println("EventHandler::removeChildrenFromUI: foreach in highlightsOnUi: id: " + id);
+            // System.out.println("EventHandler::removeChildrenFromUI: foreach in highlightsOnUi: id: " + id);
             int elementId = rectangle.getElementId();
             if (elementId> cellId && elementId < endCellId) {
-                System.out.println("EventHandler::removeChildrenFromUI: adding to removeHighlights, elementId: " + elementId);
+                // System.out.println("EventHandler::removeChildrenFromUI: adding to removeHighlights, elementId: " + elementId);
                 removeHighlights.add(id);
             }
         });
@@ -609,12 +609,15 @@ public class EventHandlers {
 
         removeHighlights.forEach((id) -> {
             if (highlightsOnUi.containsKey(id)) {
+                RectangleCell rectangleCell = highlightsOnUi.get(id);
+                int elementId = highlightsOnUi.get(id).getElementId();
+                // System.out.println("EventHandler::removeChildrenFromUI: removing from highlightsOnUi and cellLayer: " + id + " ElementId: " + elementId);
                 highlightsOnUi.remove(id);
-                cellLayer.getChildren().remove(id);
+                cellLayer.getChildren().remove(rectangleCell);
             }
         });
 
-        System.out.println("EventHandler::removeChildrenFromUI: method ended.");
+        // System.out.println("EventHandler::removeChildrenFromUI: method ended.");
 
         // System.out.println("EventHandler::removeChildrenFromUI: clicked on cell id: " + cellId);
         // try (ResultSet rs = ElementDAOImpl.selectWhere("id = " + cellId)) {
@@ -691,13 +694,13 @@ public class EventHandlers {
 
 
     private void moveLowerTreeByDelta(String clickedCellID, double clickedCellBottomY, double delta) {
-        Map<String, CircleCell> mapCircleCellsOnUI = graph.getModel().getCircleCellsOnUI();
-        // List<String> removeCircleCells = new ArrayList<>();
-
-        Map<String, Edge> mapEdgesOnUI = graph.getModel().getEdgesOnUI();
-        // List<String> removeEdges = new ArrayList<>();
-
         // System.out.println("EventHandler::moveLowerTreeByDelta: starting method");
+        // System.out.println("EventHandler::moveLowerTreeByDelta: input: clickedCellId: " + clickedCellID + " , clickedCellBottomY: " + clickedCellBottomY + " , delta: " + delta);
+
+        Map<String, CircleCell> mapCircleCellsOnUI = graph.getModel().getCircleCellsOnUI();
+        Map<String, Edge> mapEdgesOnUI = graph.getModel().getEdgesOnUI();
+        Map<Integer, RectangleCell> mapHighlightsOnUI = graph.getModel().getHighlightsOnUI();
+
 
         // For each circle cell on UI that is below the clicked cell, move up by delta
         mapCircleCellsOnUI.forEach((thisCellID, thisCircleCell) -> {
@@ -727,6 +730,23 @@ public class EventHandlers {
                 // System.out.println(" moved edgeId: " + id + " to endY: " + edge.line.getStartY());
             }
         });
+
+
+        // For each highlight rectangle whose startY is below the clicked cell, relocate that rectangle appropriately
+        mapHighlightsOnUI.forEach((id, rectangleCell) -> {
+            double y = rectangleCell.getLayoutY();
+            // double rectLayoutY = rectangleCell.getChildren().get(0).getLayoutY();
+            // double rectLayoutY2 = rectangleCell.getRectangle().getLayoutY();
+            // double rectY2 = rectangleCell.getRectangle().getY();
+            // int elementId = rectangleCell.getElementId();
+            // System.out.println("EventHandler::moveLowerTreeByDelta: looking at rect id=" + id + " elementId=" + elementId + " y=" + y + " rectLayoutY=" + rectLayoutY +" rectLayoutY2="+rectLayoutY2+" rectY2="+rectY2);
+            if (y >= clickedCellBottomY - BoundBox.unitHeightFactor/2) {
+                // System.out.println("moving it up");
+                rectangleCell.relocate(rectangleCell.getLayoutX(), y - delta);
+            }
+        });
+
+        // System.out.println("EventHandler::moveLowerTreeByDelta: ending method");
     }
 
 
@@ -762,6 +782,8 @@ public class EventHandlers {
                 }
 
                 updateParentChainRecursive(clickedCellId, delta, statement);
+                // updateAllParentHighlights(topY, delta, statement);
+
                 statement.executeBatch();
 
                 if (nextCellId != Integer.MAX_VALUE) {
@@ -866,6 +888,9 @@ public class EventHandlers {
                     "WHERE ELEMENT_ID > " + startCellId + " " +
                     "AND ELEMENT_ID < " + endCellId;
 
+            // System.out.println("EventHandler::updateCollapseValForSubTreeBulk: updateHighlightsQuery for collapse: " + updateHighlightsQuery);
+
+
         } else {
             updateCellQuery = "UPDATE " + TableNames.ELEMENT_TABLE + " " +
                     "SET COLLAPSED = " +
@@ -919,8 +944,14 @@ public class EventHandlers {
 
             updateHighlightsQuery = "UPDATE " + TableNames.HIGHLIGHT_ELEMENT + " " +
                     "SET COLLAPSED = 0 " +
-                    "WHERE ELEMENT_ID > " + startCellId + " " +
-                    "AND ELEMENT_ID < " + endCellId;
+                    "WHERE ELEMENT_ID IN " +
+                    "(SELECT ID FROM " + TableNames.ELEMENT_TABLE + " " +
+                    "WHERE ID > " + startCellId + " " +
+                    "AND ID < " + endCellId + " " +
+                    "AND (COLLAPSED = 0 OR COLLAPSED = 2)" +
+                    ")";
+
+            // System.out.println("EventHandler::updateCollapseValForSubTreeBulk: updateHighlightsQuery for expand: " + updateHighlightsQuery);
 
         }
 
@@ -999,10 +1030,17 @@ public class EventHandlers {
                 "AND FK_TARGET_ELEMENT_ID >= " + nextCellId;
         // System.out.println("updateTreeBelowYBulk: updateEdgeEndPointQuery: " + updateEdgeEndPointQuery);
 
+        String updateHighlightsQuery = "UPDATE " + TableNames.HIGHLIGHT_ELEMENT + " " +
+                "SET START_Y = START_Y - " + delta + " " +
+                "WHERE ELEMENT_ID > " + nextCellId;
+
+        System.out.println("EventHandler::updateTreeBelowYBulk: updateHighlightsQuery: " + updateHighlightsQuery);
+
         try {
             statement.addBatch(updateCellsQuery);
             statement.addBatch(updateEdgeStartPoingQuery);
             statement.addBatch(updateEdgeEndPointQuery);
+            statement.addBatch(updateHighlightsQuery);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -1051,6 +1089,37 @@ public class EventHandlers {
         // System.out.println("EventHandler::updateParentChainRecursive: method ended");
     }
 
+    private void updateAllParentHighlights(double y, double delta, Statement statement) {
+        try {
+            String updateParentHighlights = "UPDATE " + TableNames.HIGHLIGHT_ELEMENT + " " +
+                    "SET HEIGHT = HEIGHT - " + delta + " " +
+                    "WHERE HIGHTLIGHT_TYPE = 'FULL' " +
+                    "AND START_Y <= " + y + " " +
+                    "AND START_Y + HEIGHT <" + y;
+
+            statement.addBatch(updateParentHighlights);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        // double startY = 0;
+        // try (ResultSet hrs = HighlightDAOImpl.selectWhere("ELEMENT_ID = " + cellId + " AND WHERE HIGHTLIGHT_TYPE = 'SINGLE'")) {
+        //     if (hrs.next()) {
+        //         startY = hrs.getDouble("START_Y");
+        //     }
+        //
+        //     String updateParentHighlights = "UPDATE " + TableNames.HIGHLIGHT_ELEMENT + " " +
+        //             "SET HEIGHT = HEIGHT - " + delta + " " +
+        //             "WHERE HIGHTLIGHT_TYPE = 'SINGLE' " +
+        //             "AND START_Y <= " + y + " " +
+        //             "AND START_Y + HEIGHT <" + y;
+        //     statement.addBatch(updateParentHighlights);
+        //
+        // } catch (SQLException e) {
+        //     e.printStackTrace();
+        // }
+    }
 
     // This method returns the edge update query.
     // It accepts target x and y coordinate and get the source x and y coordinates.

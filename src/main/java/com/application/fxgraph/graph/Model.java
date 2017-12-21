@@ -55,10 +55,13 @@ public class Model {
         List<com.application.fxgraph.graph.RectangleCell> list = new ArrayList<>(highlightsOnUI.values());
 
         // Sort the list of rectangles according to area.
-        Collections.sort(list, (o1, o2) -> (int) (o1.getWidth() * o1.getHeight() - o2.getWidth() * o2.getHeight()));
+        Collections.sort(list, (o1, o2) -> (int) (-o1.getWidth() * o1.getHeight() + o2.getWidth() * o2.getHeight()));
 
         // In order of smaller to larger rectangles, send each to back. Results in larger highlights behind or below smaller ones.
         list.forEach(Node::toBack);
+        System.out.println("fronting ======================================================================");
+        getEdgesOnUI().forEach((id, edge) -> edge.toFront());
+        getCircleCellsOnUI().forEach((id, circleCell) -> circleCell.toFront());
     }
 
     public void addCell(CircleCell circleCell) {

@@ -1,19 +1,14 @@
 package com.application.fxgraph.ElementHelpers;
 
-import com.application.Main;
 import com.application.db.DAOImplementation.*;
 import com.application.db.DatabaseUtil;
 import com.application.db.TableNames;
 import com.application.fxgraph.cells.CircleCell;
 import com.application.fxgraph.graph.*;
-import com.sun.org.apache.xpath.internal.SourceTree;
 import javafx.application.Platform;
 import javafx.geometry.BoundingBox;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
-import javafx.scene.shape.Rectangle;
 
-import javax.xml.crypto.Data;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
@@ -220,7 +215,7 @@ public class ConvertDBtoElementTree {
     }
 
     private void addHighlights() {
-        // System.out.println("ConvertDBtoElementTree::addHighlights: ");
+        // System.out.println("ConvertDBtoElementTree::addHighlights: method started");
 
         Map<Integer, RectangleCell> highlightsOnUI = model.getHighlightsOnUI();
 
@@ -256,7 +251,7 @@ public class ConvertDBtoElementTree {
 
                 // If the rectangle highlight is not on UI then create a new rectangle and show on UI.
                 if (!highlightsOnUI.containsKey(id)) {
-                    // System.out.println("Drawing rectangle: " + id);
+                    // System.out.println("Drawing rectangle: " + id + " elementId: " + elementId);
                     // Rectangle rectangle = new Rectangle(startX, startY, width, height);
                     // rectangle.setFill(Color.web(color));
                     // rectangle.setArcHeight(20);
@@ -265,7 +260,7 @@ public class ConvertDBtoElementTree {
                     RectangleCell rect = new RectangleCell(elementId, startX, startY, width, height);
                     rect.setColor(color);
                     rect.setArcHeight(20);
-                    rect.setArcWidht(20);
+                    rect.setArcWidth(20);
 
                     // model.addHighlight(id, rectangle);
                     model.addHighlight(id, rect);
@@ -275,6 +270,7 @@ public class ConvertDBtoElementTree {
             e.printStackTrace();
         }
 
+        // System.out.println("ConvertDBtoElementTree::addHighlights: method ended");
 
     }
 
@@ -514,6 +510,7 @@ public class ConvertDBtoElementTree {
     }
 
     private void removeHighlights(BoundingBox preloadBox) {
+        // System.out.println("ConvertDBtoElementTree::removeHighlights: method started");
         CellLayer cellLayer = (CellLayer) graph.getCellLayer();
 
         // This is the global HashMap that stores rectangle highlights currently on the UI.
@@ -529,9 +526,30 @@ public class ConvertDBtoElementTree {
             RectangleCell rectangle = entry.getValue();
             int rectId = entry.getKey();
 
-            if (!preloadBox.intersects(rectangle.getBoundsInLocal())) {
+            // if (!preloadBox.intersects(rectangle.getBoundsInLocal())) {
+            if (!preloadBox.intersects(rectangle.getBoundsInParent())) {
+                // ------------------   FOR DEBUGGING     ------------------
+                // System.out.println("ConvertDBtoElementTree::removeHighlights: adding to removeHighlights because of 1: " + rectId + " elementid: " + rectangle.getElementId());
+                // System.out.println("  minY: " + rectangle.getBoundsInLocal().getMinY() + " " + rectangle.getBoundsInLocal().getMinY() + " " + rectangle.getLayoutY());
+                // System.out.println("  maxY: " + rectangle.getBoundsInLocal().getMaxY() + " " + rectangle.getBoundsInLocal().getMaxY());
+                // System.out.println("  height: " + rectangle.getBoundsInLocal().getHeight() + " " + rectangle.getBoundsInLocal().getHeight());
+                // System.out.println("---------------------------------------------------");
+                // System.out.println("  minY: " + rectangle.getRectangle().getBoundsInLocal().getMinY() + " " + rectangle.getRectangle().getBoundsInLocal().getMinY() + " " + rectangle.getRectangle().getLayoutY());
+                // System.out.println("  maxY: " + rectangle.getRectangle().getBoundsInLocal().getMaxY() + " " + rectangle.getRectangle().getBoundsInLocal().getMaxY());
+                // System.out.println("  height: " + rectangle.getRectangle().getBoundsInLocal().getHeight() + " " + rectangle.getRectangle().getBoundsInLocal().getHeight());
+                // System.out.println("---------------------------------------------------");
+                // System.out.println("preloadbox bounds: " + preloadBox);
+                // System.out.println("rectangleCell: boundsinlocal: " + rectangle.getBoundsInLocal());
+                // System.out.println("rectangleCell: boundsInParent: " + rectangle.getBoundsInParent());
+                // System.out.println("rectangleCell: layoutBounds: " + rectangle.getLayoutBounds());
+                // System.out.println("rectangleCell.getRectangle: boundsinlocal: " + rectangle.getRectangle().getBoundsInLocal());
+                // System.out.println("rectangleCell.getRectangle: boundsinparent: " + rectangle.getRectangle().getBoundsInParent());
+                // System.out.println("rectangleCell.getRectangle: layoutBounds: " + rectangle.getRectangle().getLayoutBounds());
+                // System.out.println("---------------------------------------------------");
+
                 // Removes those highlights that are not visible.
                 removeHighlights.add(rectId);
+
             } else {
                 // Removes those highlights that are not in HIGHLIGHT_ELEMENT Table.
                 String deleteQuery = "SELECT COUNT(*) AS COUNT FROM HIGHLIGHT_ELEMENT WHERE ID = " + rectId;
@@ -541,7 +559,7 @@ public class ConvertDBtoElementTree {
                         if (rs.getInt("COUNT") == 0) {
                             if (!removeHighlights.contains(rectId)) {
                                 removeHighlights.add(rectId);
-                                System.out.println("ConvertDBtoElementTree::removeHighlights: adding to removeHighlights: " + rectId);
+                                // System.out.println("ConvertDBtoElementTree::removeHighlights: adding to removeHighlights because of 2: " + rectId + " elementId: " + rs.getInt("element_id"));
                             }
                         }
                     }
@@ -549,7 +567,6 @@ public class ConvertDBtoElementTree {
                     e.printStackTrace();
                 }
             }
-
         }
 
 
@@ -557,9 +574,12 @@ public class ConvertDBtoElementTree {
         // Remove rectangle highlights from UI and HashMap.
         removeHighlights.forEach(rectId -> {
             RectangleCell rectangle = highlightsOnUI.get(rectId);
+            int elementId = rectangle.getElementId();
+            // System.out.println("ConvertDBtoElementTree::removeHighlights: removing rectangle: " + rectId + " elementId: " + elementId);
             Platform.runLater(() -> cellLayer.getChildren().remove(rectangle));
             highlightsOnUI.remove(rectId);
         });
+        // System.out.println("ConvertDBtoElementTree::removeHighlights: method ended");
     }
 
     public void removeUIComponentsFromInvisibleViewPort(Graph graph) {

@@ -1386,6 +1386,8 @@ public class Main extends Application {
     }
 
     private void addInsertQueryToStatement(String fullName, Statement statement, String highlightType) {
+        double startOffset = -10;
+        double endOffset = -30;
 
         String[] arr = fullName.split("\\.");
         String methodName = arr[arr.length - 1];
@@ -1409,16 +1411,16 @@ public class Main extends Application {
                 "'" + highlightType + "', " +
 
                 // START_X
-                TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_COORDINATE - 15 , " +
+                TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_COORDINATE + " + startOffset + ", " +
 
                 // START_X
-                TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_COORDINATE - 15, " +
+                TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_COORDINATE + " + startOffset +", " +
 
                 // WIDTH
-                (BoundBox.unitWidthFactor - 15) + ", " +
+                (BoundBox.unitWidthFactor + endOffset) + ", " +
 
                 // HEIGHT
-                (BoundBox.unitHeightFactor - 15) + ", " +
+                (BoundBox.unitHeightFactor + endOffset) + ", " +
                 // "(" + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_RIGHT - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT), " +
                 // "(" + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_BOTTOM_LEFT - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT), " +
 
@@ -1482,25 +1484,26 @@ public class Main extends Application {
                 "'" + highlightType + "', " +
 
                 // START_X
-                TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT + 30, " +
+                TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_COORDINATE + " + startOffset + ", " +
 
                 // START_Y
-                TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT + 30, " +
+                TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_COORDINATE + " + startOffset + ", " +
 
                 // WIDTH
                 "(SELECT MAX(E1.BOUND_BOX_X_TOP_RIGHT) FROM " + TableNames.ELEMENT_TABLE + " AS E1 " +
                 "JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT ON E1.ID_ENTER_CALL_TRACE = CT.ID " +
                 "WHERE E1.BOUND_BOX_Y_COORDINATE >= " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT " +
                 "AND E1.BOUND_BOX_Y_COORDINATE <= " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_BOTTOM_LEFT " +
-                "AND CT.THREAD_ID = " + threadId + ") - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT - 15, " +
+                "AND CT.THREAD_ID = " + threadId + ") - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT + " + endOffset + ", " +
 
                 // HEIGHT
-                "(SELECT MAX(E1.BOUND_BOX_Y_BOTTOM_RIGHT) FROM " + TableNames.ELEMENT_TABLE + " AS E1 " +
-                "JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT ON E1.ID_ENTER_CALL_TRACE = CT.ID " +
-                "WHERE E1.BOUND_BOX_Y_COORDINATE >= " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT " +
-                "AND E1.BOUND_BOX_Y_COORDINATE <= " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_BOTTOM_LEFT " +
-                "AND E1.BOUND_BOX_X_COORDINATE >= " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT " +
-                "AND CT.THREAD_ID = " + threadId + ") - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT - 15, " +
+                // "(SELECT MAX(E1.BOUND_BOX_Y_BOTTOM_RIGHT) FROM " + TableNames.ELEMENT_TABLE + " AS E1 " +
+                // "JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT ON E1.ID_ENTER_CALL_TRACE = CT.ID " +
+                // "WHERE E1.BOUND_BOX_Y_COORDINATE >= " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT " +
+                // "AND E1.BOUND_BOX_Y_COORDINATE <= " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_BOTTOM_LEFT " +
+                // "AND E1.BOUND_BOX_X_COORDINATE >= " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT " +
+                // "AND CT.THREAD_ID = " + threadId + ") - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT + " + endOffset + ", " +
+                TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_BOTTOM_LEFT - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT + " + endOffset + "," +
 
                 // COLOR
                 "'" + colorsMap.getOrDefault(fullName, Color.AQUAMARINE) + "', " +
@@ -1521,8 +1524,7 @@ public class Main extends Application {
 
         String sql = highlightType.equalsIgnoreCase("SINGLE") ? sqlSingle : sqlFull;
 
-        // System.out.println("-------------");
-        // System.out.println( "Main::addInsertQueryToStatement: sql: " + sql);
+        System.out.println( "Main::addInsertQueryToStatement: sql : " + sql);
         try {
             statement.addBatch(sql);
         } catch (SQLException e) {
@@ -1537,9 +1539,7 @@ public class Main extends Application {
                 "WHERE (" + TableNames.METHOD_DEFINITION_TABLE + ".PACKAGE_NAME || '.' || " + TableNames.METHOD_DEFINITION_TABLE + ".METHOD_NAME) " +
                 "IN (" + fullNames + "))";
 
-        // System.out.println("-------------");
-        // System.out.println(sql);
-        // System.out.println( "Main::addDeleteQueryToStatement: sql: " + sql);
+        System.out.println( "Main::addDeleteQueryToStatement: sql: " + sql);
 
 
         try {
