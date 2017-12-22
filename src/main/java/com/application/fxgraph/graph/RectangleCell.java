@@ -18,7 +18,7 @@ public class RectangleCell extends Cell {
         setStyle("-fx-background-color: yellow");
 
         rectangle = new Rectangle(width, height);
-        // rectangle = new Rectangle(startX, startY, width, height);
+        rectangle.setStroke(Color.BLACK);
 
         idLabel = new Label(String.valueOf(elementId));
 
@@ -38,12 +38,16 @@ public class RectangleCell extends Cell {
         rectangle.setArcWidth(width);
     }
 
-
     public int getElementId() {
         return elementId;
     }
 
     public Rectangle getRectangle() {
         return rectangle;
+    }
+
+    public void setHeight(double height) {
+        this.setPrefHeight(height);
+        rectangle.setHeight(height);
     }
 }

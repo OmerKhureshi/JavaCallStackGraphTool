@@ -5,24 +5,21 @@ import com.application.Main;
 import com.application.db.DAOImplementation.*;
 import com.application.db.DatabaseUtil;
 import com.application.db.TableNames;
-import com.application.fxgraph.ElementHelpers.Element;
 import com.application.fxgraph.cells.CircleCell;
-import com.sun.xml.internal.bind.v2.model.core.ID;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.event.EventHandler;
+import javafx.geometry.BoundingBox;
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.Tab;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
-import javafx.scene.shape.Rectangle;
 import org.controlsfx.control.PopOver;
-import org.omg.CORBA.INTERNAL;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -33,6 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.application.fxgraph.graph.BoundBox.unitWidthFactor;
 import static com.application.fxgraph.graph.Graph.cellLayer;
 
 public class EventHandlers {
@@ -493,6 +491,7 @@ public class EventHandlers {
 
                 removeChildrenFromUI(Integer.parseInt(clickedCellID), nextCellId);
                 moveLowerTreeByDelta(clickedCellID, clickedCellBottomY, newDelta);
+                updateAllParentHighlightsOnUI(clickedCellTopLeftX, clickedCellBottomY, newDelta);
                 updateDBInBackgroundThread(Integer.parseInt(clickedCellID), clickedCellTopLeftY, clickedCellBoundBottomLeftY, clickedCellTopLeftX, clickedCellTopRightX, newDelta, 1, nextCellId);
 
             } else if (collapsed == 2) {
@@ -513,6 +512,7 @@ public class EventHandlers {
                 double newClickedCellBottomY = clickedCellTopLeftY + BoundBox.unitHeightFactor + newDelta;
 
                 moveLowerTreeByDelta(clickedCellID, clickedCellBottomY, -newDelta);
+                updateAllParentHighlightsOnUI(clickedCellTopLeftX, clickedCellTopLeftY, -newDelta);
 
                 ElementDAOImpl.updateWhere("collapsed", "0", "id = " + clickedCellID);
                 updateDBInBackgroundThread(Integer.parseInt(clickedCellID), clickedCellTopLeftY, clickedCellBoundBottomLeftY, clickedCellTopLeftX, clickedCellTopRightX, -newDelta, 0, nextCellId);
@@ -524,8 +524,8 @@ public class EventHandlers {
     private int getNextLowerSiblingOrAncestorNode(int clickedCellId, double x, double y) {
         String getNextQuery = "SELECT " +
                 "CASE " +
-                        "WHEN MIN(ID) IS NULL THEN " + Integer.MAX_VALUE + " " +
-                        "ELSE MIN(ID) " +
+                "WHEN MIN(ID) IS NULL THEN " + Integer.MAX_VALUE + " " +
+                "ELSE MIN(ID) " +
                 "END " +
                 "AS MINID " +
                 "FROM " + TableNames.ELEMENT_TABLE + " " +
@@ -782,7 +782,7 @@ public class EventHandlers {
                 }
 
                 updateParentChainRecursive(clickedCellId, delta, statement);
-                // updateAllParentHighlights(topY, delta, statement);
+                updateAllParentHighlightsInDB(topY, delta, statement);
 
                 statement.executeBatch();
 
@@ -867,17 +867,17 @@ public class EventHandlers {
 
             updateEdgeQuery2 = "UPDATE " + TableNames.EDGE_TABLE + " " +
                     "SET COLLAPSED = " +
-                        "CASE " +
-                            "WHEN COLLAPSED = 0 THEN 1 " +
-                            "ELSE COLLAPSED " +
-                        "END " +
+                    "CASE " +
+                    "WHEN COLLAPSED = 0 THEN 1 " +
+                    "ELSE COLLAPSED " +
+                    "END " +
                     "WHERE FK_TARGET_ELEMENT_ID IN " +
                     "(SELECT ELE.ID FROM " + TableNames.ELEMENT_TABLE + " AS ELE JOIN " + TableNames.EDGE_TABLE + " as EDGE " +
-                        "ON ELE.ID = EDGE.FK_TARGET_ELEMENT_ID " +
-                        "WHERE EDGE.FK_TARGET_ELEMENT_ID > " +  startCellId + " " +
-                        "AND EDGE.FK_TARGET_ELEMENT_ID < " + endCellId + " " +
-                        // "AND ELE.COLLAPSED >= 0 " +
-                        // "AND ELE.COLLAPSED <= 2" +
+                    "ON ELE.ID = EDGE.FK_TARGET_ELEMENT_ID " +
+                    "WHERE EDGE.FK_TARGET_ELEMENT_ID > " +  startCellId + " " +
+                    "AND EDGE.FK_TARGET_ELEMENT_ID < " + endCellId + " " +
+                    // "AND ELE.COLLAPSED >= 0 " +
+                    // "AND ELE.COLLAPSED <= 2" +
                     ")";
 
             // System.out.println("updateCollapseValForSubTreeBulk for minimize: edge query: " + updateEdgeQuery2);
@@ -928,16 +928,16 @@ public class EventHandlers {
 
             updateEdgeQuery2 = "UPDATE " + TableNames.EDGE_TABLE + " " +
                     "SET COLLAPSED = " +
-                        "CASE " +
-                            "WHEN COLLAPSED = 1 THEN 0 " +
-                            "ELSE COLLAPSED " +
-                        "END " +
+                    "CASE " +
+                    "WHEN COLLAPSED = 1 THEN 0 " +
+                    "ELSE COLLAPSED " +
+                    "END " +
                     "WHERE FK_TARGET_ELEMENT_ID IN " +
                     "(SELECT ELE.ID FROM " + TableNames.ELEMENT_TABLE + " AS ELE JOIN " + TableNames.EDGE_TABLE + " as EDGE " +
-                        "ON ELE.ID = EDGE.FK_TARGET_ELEMENT_ID " +
-                        "WHERE EDGE.FK_TARGET_ELEMENT_ID > " + startCellId + " " +
-                        "AND EDGE.FK_TARGET_ELEMENT_ID < " + endCellId + " " +
-                        "AND (ELE.COLLAPSED = 0 OR ELE.COLLAPSED = 2)" +
+                    "ON ELE.ID = EDGE.FK_TARGET_ELEMENT_ID " +
+                    "WHERE EDGE.FK_TARGET_ELEMENT_ID > " + startCellId + " " +
+                    "AND EDGE.FK_TARGET_ELEMENT_ID < " + endCellId + " " +
+                    "AND (ELE.COLLAPSED = 0 OR ELE.COLLAPSED = 2)" +
                     ")";
             // System.out.println("updateCollapseValForSubTreeBulk for mazimize: edge query: " + updateEdgeQuery2);
 
@@ -977,10 +977,10 @@ public class EventHandlers {
                     "END " +
                     "WHERE FK_TARGET_ELEMENT_ID IN " +
                     "(SELECT ELE.ID FROM " + TableNames.ELEMENT_TABLE + " AS ELE JOIN " + TableNames.EDGE_TABLE + " as EDGE " +
-                        "ON ELE.ID = EDGE.FK_TARGET_ELEMENT_ID " +
-                        "WHERE EDGE.FK_TARGET_ELEMENT_ID > " + startCellId + " " +
-                        "AND EDGE.FK_TARGET_ELEMENT_ID < " + endCellId + " " +
-                        "AND (ELE.COLLAPSED <> 0 OR ELE.COLLAPSED <> 2)" +
+                    "ON ELE.ID = EDGE.FK_TARGET_ELEMENT_ID " +
+                    "WHERE EDGE.FK_TARGET_ELEMENT_ID > " + startCellId + " " +
+                    "AND EDGE.FK_TARGET_ELEMENT_ID < " + endCellId + " " +
+                    "AND (ELE.COLLAPSED <> 0 OR ELE.COLLAPSED <> 2)" +
                     ")";
         } else {
 
@@ -1089,12 +1089,66 @@ public class EventHandlers {
         // System.out.println("EventHandler::updateParentChainRecursive: method ended");
     }
 
-    private void updateAllParentHighlights(double y, double delta, Statement statement) {
+    private void updateAllParentHighlightsOnUI(double x, double y, double delta) {
+        double finalX = x + BoundBox.unitWidthFactor * 0.5;
+        double finalY = y + BoundBox.unitHeightFactor * 0.5;
+        graph.getModel().getHighlightsOnUI().forEach((id, rectangleCell) -> {
+            // if this rectangle contains y, then shrink it by delta
+
+            if (rectangleCell.getBoundsInParent().contains(finalX, finalY)) {
+                System.out.println("===== EventHandler::updateAllParentHighlightsOnUI: id: " + id + " eleID: " + rectangleCell.getElementId());
+                System.out.println("rectangleCell.getBoundsInParent(): " + rectangleCell.getBoundsInParent());
+                System.out.println("rectangleCell.getBoundsInLocal(): " + rectangleCell.getBoundsInLocal());
+                System.out.println(" x, y : " + finalX + ", " + finalY);
+                System.out.println("OLD");
+                System.out.println("rectangleCell.getPrefHeight() " + rectangleCell.getPrefHeight() + " rectangleCell.getHeight(): " + rectangleCell.getHeight());
+                System.out.println("rectangleCell.getBoundsInParent().getHeight() " + rectangleCell.getBoundsInParent().getHeight());
+                System.out.println("rectangleCell.getRectangle().getBoundsInParent().getHeight(): " + rectangleCell.getRectangle().getBoundsInParent().getHeight());
+                System.out.println("rectangleCell.getRectangle().getHeight(): " + rectangleCell.getRectangle().getHeight());
+                rectangleCell.setHeight(rectangleCell.getPrefHeight() - delta);
+                System.out.println("NEW");
+                System.out.println("rectangleCell.getPrefHeight() " + rectangleCell.getPrefHeight() + " rectangleCell.getHeight(): " + rectangleCell.getHeight());
+                System.out.println("rectangleCell.getBoundsInParent().getHeight() " + rectangleCell.getBoundsInParent().getHeight());
+                System.out.println("rectangleCell.getRectangle().getBoundsInParent().getHeight(): " + rectangleCell.getRectangle().getBoundsInParent().getHeight());
+                System.out.println("rectangleCell.getRectangle().getHeight(): " + rectangleCell.getRectangle().getHeight());
+            } else {
+                System.out.println("ELSE");
+                System.out.println("EventHandler::updateAllParentHighlightsOnUI: id: " + id + " eleID: " + rectangleCell.getElementId());
+                System.out.println("rectangleCell.getBoundsInParent(): " + rectangleCell.getBoundsInParent());
+                System.out.println("rectangleCell.getBoundsInLocal(): " + rectangleCell.getBoundsInLocal());
+                System.out.println(" x, y : " + finalX + ", " + finalY);
+                System.out.println("rectangleCell.getPrefHeight() " + rectangleCell.getPrefHeight() + " rectangleCell.getHeight(): " + rectangleCell.getHeight());
+                System.out.println("rectangleCell.getBoundsInParent().getHeight() " + rectangleCell.getBoundsInParent().getHeight());
+                System.out.println("rectangleCell.getRectangle().getBoundsInParent().getHeight(): " + rectangleCell.getRectangle().getBoundsInParent().getHeight());
+                System.out.println("rectangleCell.getRectangle().getHeight(): " + rectangleCell.getRectangle().getHeight());
+
+                if (rectangleCell.getBoundsInParent().getMinY() <= finalY && rectangleCell.getBoundsInParent().getMaxY() >= finalY) {
+                    System.out.println("YES ME");
+                    Bounds b = rectangleCell.getBoundsInParent();
+
+                    System.out.println(finalX >= b.getMinX());
+                    System.out.println(finalX <= b.getMaxX());
+                    System.out.println((finalY >= b.getMinY()) + " " +
+                            (finalY <= b.getMaxY()) + " " +
+                            (0.0f >= b.getMinZ()) + " " +
+                            (0.0f <= b.getMaxZ()));
+
+                    if (rectangleCell.getBoundsInParent().contains(finalX, finalY)) {
+                        System.out.println("===yes again");
+                    } else {
+                        System.out.println("===not again");
+                    }
+                }
+
+            }
+        });
+    }
+
+    private void updateAllParentHighlightsInDB(double y, double delta, Statement statement) {
         try {
             String updateParentHighlights = "UPDATE " + TableNames.HIGHLIGHT_ELEMENT + " " +
                     "SET HEIGHT = HEIGHT - " + delta + " " +
-                    "WHERE HIGHTLIGHT_TYPE = 'FULL' " +
-                    "AND START_Y <= " + y + " " +
+                    "WHERE START_Y <= " + y + " " +
                     "AND START_Y + HEIGHT <" + y;
 
             statement.addBatch(updateParentHighlights);

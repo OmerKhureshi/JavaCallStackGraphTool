@@ -55,25 +55,30 @@ public class Model {
         List<com.application.fxgraph.graph.RectangleCell> list = new ArrayList<>(highlightsOnUI.values());
 
         // Sort the list of rectangles according to area.
-        Collections.sort(list, (o1, o2) -> (int) (-o1.getWidth() * o1.getHeight() + o2.getWidth() * o2.getHeight()));
+        list.sort((o1, o2) -> (int) (o1.getBoundsInParent().getWidth() * o1.getBoundsInParent().getHeight() - o2.getBoundsInParent().getWidth() * o2.getBoundsInParent().getHeight()));
+        list.forEach(Node::toBack);
+        // getEdgesOnUI().forEach((id, edge) -> edge.toFront());
+        // getCircleCellsOnUI().forEach((id, circleCell) -> circleCell.toFront());
 
         // In order of smaller to larger rectangles, send each to back. Results in larger highlights behind or below smaller ones.
-        list.forEach(Node::toBack);
-        System.out.println("fronting ======================================================================");
-        getEdgesOnUI().forEach((id, edge) -> edge.toFront());
-        getCircleCellsOnUI().forEach((id, circleCell) -> circleCell.toFront());
+        // System.out.println("fronting ======================================================================");
+        // System.out.println("width of first. " + list.get(0).getWidth());
+        // System.out.println("width of first. " + list.get(0).getRectangle().getWidth());
+        // System.out.println("width of first. " + list.get(0).getBoundsInParent().getWidth());
+        //
+        // System.out.println("fronting end ======================================================================");
     }
 
     public void addCell(CircleCell circleCell) {
         // circleCell.toFront();
         // circleCell.setTranslateZ(10);
         // synchronized (Main.getLock()) {
-            if (!circleCellsOnUI.containsKey(circleCell.getCellId())) {
-                // System.out.println( "Model::addCell: " + circleCell.getCellId());
-                circleCellsOnUI.put(circleCell.getCellId(), circleCell);
-                // System.out.println( "Model::addCell: circleCellsOnUI.size() " +circleCellsOnUI.size());
-                listCircleCellsOnUI.add(circleCell);
-            }
+        if (!circleCellsOnUI.containsKey(circleCell.getCellId())) {
+            // System.out.println( "Model::addCell: " + circleCell.getCellId());
+            circleCellsOnUI.put(circleCell.getCellId(), circleCell);
+            // System.out.println( "Model::addCell: circleCellsOnUI.size() " +circleCellsOnUI.size());
+            listCircleCellsOnUI.add(circleCell);
+        }
         // }
     }
 

@@ -19,7 +19,7 @@ public class CircleCell extends Cell {
         super(id);
 
         // Uncomment to see yellow background on the whole circle cell stack pane.
-        // setStyle("-fx-background-color: yellow");
+        setStyle("-fx-background-color: green");
 
         circle = new Circle(20);
         label = new Label("This is a long string");
@@ -40,6 +40,7 @@ public class CircleCell extends Cell {
         getChildren().add(methodName);
         getChildren().add(idLabel);
         // setView(group);
+        this.toFront();
     }
 
     public CircleCell (String id, Element element) {
@@ -48,11 +49,13 @@ public class CircleCell extends Cell {
                 element.getBoundBox().xCoordinate,
                 element.getBoundBox().yCoordinate
         );
+        this.toFront();
     }
 
     public CircleCell (String id, float xCoordinate, float yCoordinate) {
         this(id);
         this.relocate(xCoordinate , yCoordinate);
+        this.toFront();
     }
 
     public String getLabel() {

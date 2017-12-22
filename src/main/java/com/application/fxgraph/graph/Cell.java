@@ -20,8 +20,8 @@ public class Cell extends Pane {
 
     public Cell(String cellId) {
         this.cellId = cellId;
-        setPrefHeight(40);
-        setPrefWidth(40);
+        // setPrefHeight(40);
+        // setPrefWidth(40);
     }
 
     public void addCellChild(Cell cell) {

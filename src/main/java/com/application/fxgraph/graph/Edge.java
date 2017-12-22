@@ -47,6 +47,7 @@ public class Edge extends Group {
 
         getChildren().add( line);
         // getChildren().add(label);
+        this.toFront();
     }
 
     public Edge(String edgeId, double startX, double endX, double startY, double endY) {
@@ -84,7 +85,7 @@ public class Edge extends Group {
 
         getChildren().add(line);
         // getChildren().add(label);
-
+        this.toFront();
     }
 
     public void createLine() {
