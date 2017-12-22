@@ -19,7 +19,7 @@ public class CircleCell extends Cell {
         super(id);
 
         // Uncomment to see yellow background on the whole circle cell stack pane.
-        setStyle("-fx-background-color: green");
+        // setStyle("-fx-background-color: mediumslateblue");
 
         circle = new Circle(20);
         label = new Label("This is a long string");
