@@ -439,6 +439,7 @@ public class EventHandlers {
                     clickedCellTopRightX = cellRS.getDouble("bound_box_x_top_right");
                     clickedCellBoundBottomLeftY = cellRS.getDouble("bound_box_y_bottom_left");
                     newDelta = cellRS.getDouble("delta");
+                    newDeltaX = cellRS.getDouble("delta_x");
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -478,7 +479,16 @@ public class EventHandlers {
 
                 // delta = clickedCellBoundBottomLeftY - clickedCellTopLeftY - BoundBox.unitHeightFactor;
                 newDelta = clickedCellBoundBottomLeftY - clickedCellTopLeftY - BoundBox.unitHeightFactor;
-                newDeltaX = clickedCellTopRightX - clickedCellTopLeftX - BoundBox.unitWidthFactor;
+
+                // calculate the new value of newDeltaX
+                try (ResultSet rs = HighlightDAOImpl.selectWhere("ELEMENT_ID = " + clickedCellID)){
+                    if (rs.next()) {
+                        newDeltaX = rs.getFloat("WIDTH") - BoundBox.unitWidthFactor;
+                        System.out.println("EventHandler::onMousePressedToCollapseTree on collapse: newDeltaX: " + newDeltaX);
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
                 double clickedCellBottomY = clickedCellTopLeftY + BoundBox.unitHeightFactor;
 
                 // deltaCache.put(clickedCellID, delta);
@@ -776,6 +786,8 @@ public class EventHandlers {
                     updateCollapseValForSubTreeBulk(topY, bottomY, rightX, statement, false, clickedCellId, nextCellId);
                     // expandSubtreeAndUpdateColValsRecursive(String.valueOf(clickedCellId));
                 }
+
+                updateClickedCellHighlights(clickedCellId, topY, delta, deltaX, statement);
 
                 // No upate required for single line children
                 if (delta == 0) {
@@ -1165,14 +1177,22 @@ public class EventHandlers {
                     "AND ELEMENT_ID < " + clickedCellId + " " +
                     "AND COLLAPSED = 0";
 
+            statement.addBatch(updateParentHighlights);
+            System.out.println("EventHandler::updateAllParentHighlightsInDB: updateParentHighlights: " + updateParentHighlights);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void updateClickedCellHighlights(int clickedCellId, double y, double delta, double deltaX, Statement statement) {
+        try {
             String updateParentHighlightsForClickedId = "UPDATE " + TableNames.HIGHLIGHT_ELEMENT + " " +
                     "SET HEIGHT = HEIGHT - " + delta + ", " +
                     "WIDTH = WIDTH - " + deltaX + " " +
                     "WHERE ELEMENT_ID = " + clickedCellId;
 
-            statement.addBatch(updateParentHighlights);
             statement.addBatch(updateParentHighlightsForClickedId);
-            System.out.println("EventHandler::updateAllParentHighlightsInDB: updateParentHighlights: " + updateParentHighlights);
             System.out.println("EventHandler::updateAllParentHighlightsInDB: updateParentHighlightsForClickedId: " + updateParentHighlightsForClickedId);
 
         } catch (SQLException e) {
