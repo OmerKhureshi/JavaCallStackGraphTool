@@ -22,6 +22,7 @@ public class Element {
     private int fkExitCallTrace;
     private int isCollapsed = 0;
     private double delta = 0;
+    private double deltaX = 0;
     private Element parent;
     private List<Element> children;
     private int indexInParent;
@@ -357,5 +358,9 @@ public class Element {
 
     public double getDelta() {
         return delta;
+    }
+
+    public double getDeltaX() {
+        return deltaX;
     }
 }

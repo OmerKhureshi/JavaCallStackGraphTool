@@ -50,4 +50,9 @@ public class RectangleCell extends Cell {
         this.setPrefHeight(height);
         rectangle.setHeight(height);
     }
+
+    public void setWidth(double width) {
+        this.setPrefWidth(width);
+        rectangle.setWidth(width);
+    }
 }
