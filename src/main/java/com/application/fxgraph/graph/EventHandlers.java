@@ -9,8 +9,6 @@ import com.application.fxgraph.cells.CircleCell;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.event.EventHandler;
-import javafx.geometry.BoundingBox;
-import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -26,18 +24,16 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.application.fxgraph.graph.BoundBox.unitWidthFactor;
 import static com.application.fxgraph.graph.Graph.cellLayer;
 
 public class EventHandlers {
 
     private static ConvertDBtoElementTree convertDBtoElementTree;
     final DragContext dragContext = new DragContext();
-    static Map<String, Double> deltaCache = new HashMap<>();
+    // static Map<String, Double> deltaCache = new HashMap<>();
     private boolean clickable = true;
     private boolean subtreeExpanded = true;
     private boolean posUpdated = true;
@@ -51,14 +47,14 @@ public class EventHandlers {
     }
 
     public static void resetEventHandlers() {
-        deltaCache = new HashMap<>();
+        // deltaCache = new HashMap<>();
     }
 
     public void setCustomMouseEventHandlers(final Node node) {
         // *****************
         // Show popup to display element details on mouse hover on an element.
         // node.setOnMouseEntered(onMouseHoverToShowInfoEventHandler);
-        // node.setOnMousePressed(onMouseHoverToShowInfoEventHandler);
+        node.setOnMousePressed(onMouseHoverToShowInfoEventHandler);
         // *****************
 
 
@@ -71,7 +67,7 @@ public class EventHandlers {
 
         // *****************
         // Click on an element to collapse the subtree rooted at that element.
-        node.setOnMousePressed(onMousePressedToCollapseTree);
+        // node.setOnMousePressed(onMousePressedToCollapseTree);
         // *****************
 
 
@@ -368,7 +364,7 @@ public class EventHandlers {
 
                     Button minMaxButton = new Button("min / max");
                     minMaxButton.setOnMouseClicked(event1 -> {
-                                invokeOnMousePressedEventHandler(cell);
+                                invokeOnMousePressedEventHandler(cell, threadId);
                             }
                     );
 
@@ -399,14 +395,8 @@ public class EventHandlers {
 
 
     @SuppressWarnings("Duplicates")
-    private void invokeOnMousePressedEventHandler(CircleCell cell) {
-
-    }
-
-
-    private EventHandler<MouseEvent> onMousePressedToCollapseTree = new EventHandler<MouseEvent>() {
-        @Override
-        public void handle(MouseEvent event) {
+    private void invokeOnMousePressedEventHandler(CircleCell cell, int threadId) {
+        {
 
             if (!clickable) {
                 System.out.println(">>>>>>>>>>>>>>>>>>> Clickable is false. <<<<<<<<<<<<<<<<<<<<<");
@@ -421,7 +411,7 @@ public class EventHandlers {
             // System.out.println("on click: set clickable: " + clickable);
 
             CellLayer cellLayer = (CellLayer) graph.getCellLayer();
-            CircleCell clickedCell = (CircleCell) event.getSource();
+            CircleCell clickedCell = cell;
             String clickedCellID = clickedCell.getCellId();
             int collapsed = 0;
             double clickedCellTopLeftY = 0;
@@ -500,13 +490,13 @@ public class EventHandlers {
                         "WHERE ID = " + clickedCellID;
                 DatabaseUtil.executeUpdate(updateClickedElement);
 
-                int nextCellId = getNextLowerSiblingOrAncestorNode(Integer.parseInt(clickedCellID), clickedCellTopLeftX, clickedCellTopLeftY);
-
+                int nextCellId = getNextLowerSiblingOrAncestorNode(Integer.parseInt(clickedCellID), clickedCellTopLeftX, clickedCellTopLeftY, threadId);
+                int lastCellId = getLowestCellInThread(threadId);
 
                 removeChildrenFromUI(Integer.parseInt(clickedCellID), nextCellId);
                 moveLowerTreeByDelta(clickedCellID, clickedCellBottomY, newDelta);
                 updateAllParentHighlightsOnUI(clickedCellID, clickedCellTopLeftX, clickedCellTopLeftY, newDelta, newDeltaX);
-                updateDBInBackgroundThread(Integer.parseInt(clickedCellID), clickedCellTopLeftY, clickedCellBoundBottomLeftY, clickedCellTopLeftX, clickedCellTopRightX, newDelta, newDeltaX, 1, nextCellId);
+                updateDBInBackgroundThread(Integer.parseInt(clickedCellID), clickedCellTopLeftY, clickedCellBoundBottomLeftY, clickedCellTopLeftX, clickedCellTopRightX, newDelta, newDeltaX, 1, nextCellId, threadId, lastCellId);
 
             } else if (collapsed == 2) {
                 // MAXIMIZE SUBTREE
@@ -519,8 +509,8 @@ public class EventHandlers {
 
                 // double delta = deltaCache.get(clickedCellID);
 
-                int nextCellId = getNextLowerSiblingOrAncestorNode(Integer.parseInt(clickedCellID), clickedCellTopLeftX, clickedCellTopLeftY);
-
+                int nextCellId = getNextLowerSiblingOrAncestorNode(Integer.parseInt(clickedCellID), clickedCellTopLeftX, clickedCellTopLeftY, threadId);
+                int lastCellId = getLowestCellInThread(threadId);
 
                 double clickedCellBottomY = clickedCellTopLeftY + BoundBox.unitHeightFactor;
                 double newClickedCellBottomY = clickedCellTopLeftY + BoundBox.unitHeightFactor + newDelta;
@@ -529,25 +519,53 @@ public class EventHandlers {
                 updateAllParentHighlightsOnUI(clickedCellID, clickedCellTopLeftX, clickedCellTopLeftY, -newDelta, -newDeltaX);
 
                 ElementDAOImpl.updateWhere("collapsed", "0", "id = " + clickedCellID);
-                updateDBInBackgroundThread(Integer.parseInt(clickedCellID), clickedCellTopLeftY, clickedCellBoundBottomLeftY, clickedCellTopLeftX, clickedCellTopRightX, -newDelta, -newDeltaX, 0, nextCellId);
-
+                updateDBInBackgroundThread(Integer.parseInt(clickedCellID), clickedCellTopLeftY, clickedCellBoundBottomLeftY, clickedCellTopLeftX, clickedCellTopRightX, -newDelta, -newDeltaX, 0, nextCellId, threadId, lastCellId);
             }
+        }
+    }
+
+
+    private EventHandler<MouseEvent> onMousePressedToCollapseTree = new EventHandler<MouseEvent>() {
+        @Override
+        public void handle(MouseEvent event) {
+            System.out.println("Nothing happens on in EventHandler::onMousePressedToCollapseTree Event");
         }
     };
 
-    private int getNextLowerSiblingOrAncestorNode(int clickedCellId, double x, double y) {
+    private int getLowestCellInThread(int threadId) {
+        String maxEleIdQuery = "SELECT MAX(E.ID) AS MAXID " +
+                "FROM " + TableNames.ELEMENT_TABLE + " AS E JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT " +
+                "ON E.ID_ENTER_CALL_TRACE = CT.ID " +
+                "WHERE CT.THREAD_ID = " + threadId;
+
+
+        try (ResultSet eleIdRS = DatabaseUtil.select(maxEleIdQuery)){
+            if (eleIdRS.next()) {
+                return eleIdRS.getInt("MAXID");
+
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return Integer.MAX_VALUE;
+    }
+
+    private int getNextLowerSiblingOrAncestorNode(int clickedCellId, double x, double y, int threadId) {
         String getNextQuery = "SELECT " +
                 "CASE " +
-                "WHEN MIN(ID) IS NULL THEN " + Integer.MAX_VALUE + " " +
-                "ELSE MIN(ID) " +
+                "WHEN MIN(E.ID) IS NULL THEN " + Integer.MAX_VALUE + " " +
+                "ELSE MIN(E.ID) " +
                 "END " +
                 "AS MINID " +
-                "FROM " + TableNames.ELEMENT_TABLE + " " +
-                "WHERE BOUND_BOX_Y_TOP_LEFT > " + y + " " +
-                "AND BOUND_BOX_X_TOP_LEFT <= " + x + " " +
-                "AND ID > " + clickedCellId;
+                "FROM " + TableNames.ELEMENT_TABLE + " AS E JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT " +
+                "ON E.ID_ENTER_CALL_TRACE = CT.ID " +
+                "WHERE E.BOUND_BOX_Y_TOP_LEFT > " + y + " " +
+                "AND E.BOUND_BOX_X_TOP_LEFT <= " + x + " " +
+                "AND E.ID > " + clickedCellId + " " +
+                "AND CT.THREAD_ID = " + threadId;
 
-        // System.out.println("EventHandler::getNextLowerSiblingOrAncestorNode: query: " + getNextQuery);
+        System.out.println("EventHandler::getNextLowerSiblingOrAncestorNode: query: " + getNextQuery);
 
 
         try (ResultSet rs = DatabaseUtil.select(getNextQuery)) {
@@ -767,7 +785,7 @@ public class EventHandlers {
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    private void updateDBInBackgroundThread(int clickedCellId, double topY, double bottomY, double leftX, double rightX, double delta, double deltaX, int min, int nextCellId) {
+    private void updateDBInBackgroundThread(int clickedCellId, double topY, double bottomY, double leftX, double rightX, double delta, double deltaX, int min, int nextCellId, int threadId, int lastCellId) {
 
         Statement statement = DatabaseUtil.createStatement();
         Task<Void> task = new Task<Void>() {
@@ -798,13 +816,13 @@ public class EventHandlers {
                 }
 
                 updateParentChainRecursive(clickedCellId, delta, statement);
-                updateAllParentHighlightsInDB(clickedCellId, topY, delta, deltaX, statement);
+                updateAllParentHighlightsInDB(clickedCellId, topY, delta, deltaX, statement, threadId);
 
                 statement.executeBatch();
 
                 if (nextCellId != Integer.MAX_VALUE) {
                     // only if next lower sibling ancestor node is present.
-                    updateTreeBelowYBulk(topY + BoundBox.unitHeightFactor, delta, statement, nextCellId);
+                    updateTreeBelowYBulk(topY + BoundBox.unitHeightFactor, delta, statement, nextCellId, lastCellId, threadId);
                     statement.executeBatch();
                 }
 
@@ -1022,7 +1040,7 @@ public class EventHandlers {
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    private void updateTreeBelowYBulk(double y, double delta, Statement statement, int nextCellId) {
+    private void updateTreeBelowYBulk(double y, double delta, Statement statement, int nextCellId, int lastCellId, int threadId) {
         // System.out.println("EventHandler::updateTreeBelowYBulk: method started");
         String updateCellsQuery = "UPDATE " + TableNames.ELEMENT_TABLE + " " +
                 "SET bound_box_y_top_left = bound_box_y_top_left - " + delta + ", " +
@@ -1031,24 +1049,28 @@ public class EventHandlers {
                 "bound_box_y_bottom_right = bound_box_y_bottom_right - " + delta + ", " +
                 "bound_box_y_coordinate = bound_box_y_coordinate - " + delta + " " +
                 "WHERE bound_box_y_coordinate >= " + y + " " +
-                "AND ID >= " + nextCellId;
+                "AND ID >= " + nextCellId + " " +
+                "AND ID <= " + lastCellId;
         // System.out.println("updateTreeBelowYBulk: updateCellsQuery: " + updateCellsQuery);
 
         String updateEdgeStartPoingQuery = "UPDATE " + TableNames.EDGE_TABLE + " " +
                 "SET START_Y =  START_Y - " + delta + " " +
                 "WHERE START_Y >= " + y + " " +
-                "AND FK_SOURCE_ELEMENT_ID >= " + nextCellId;
+                "AND FK_SOURCE_ELEMENT_ID >= " + nextCellId + " " +
+                "AND FK_SOURCE_ELEMENT_ID <= " + lastCellId;
         // System.out.println("updateTreeBelowYBulk: updateEdgeStartPoingQuery: " + updateEdgeStartPoingQuery);
 
         String updateEdgeEndPointQuery = "UPDATE " + TableNames.EDGE_TABLE + " " +
                 "SET END_Y =  END_Y - " + delta + " " +
                 "WHERE END_Y >= " + y + " " +
-                "AND FK_TARGET_ELEMENT_ID >= " + nextCellId;
+                "AND FK_TARGET_ELEMENT_ID >= " + nextCellId + " " +
+                "AND FK_TARGET_ELEMENT_ID <= " + lastCellId;
         // System.out.println("updateTreeBelowYBulk: updateEdgeEndPointQuery: " + updateEdgeEndPointQuery);
 
         String updateHighlightsQuery = "UPDATE " + TableNames.HIGHLIGHT_ELEMENT + " " +
                 "SET START_Y = START_Y - " + delta + " " +
-                "WHERE ELEMENT_ID >= " + nextCellId;
+                "WHERE ELEMENT_ID >= " + nextCellId + " " +
+                "AND THREAD_ID = " + threadId;
 
         System.out.println("EventHandler::updateTreeBelowYBulk: updateHighlightsQuery: " + updateHighlightsQuery);
 
@@ -1168,14 +1190,15 @@ public class EventHandlers {
         });
     }
 
-    private void updateAllParentHighlightsInDB(int clickedCellId, double y, double delta, double deltaX, Statement statement) {
+    private void updateAllParentHighlightsInDB(int clickedCellId, double y, double delta, double deltaX, Statement statement, int threadId) {
         try {
             String updateParentHighlights = "UPDATE " + TableNames.HIGHLIGHT_ELEMENT + " " +
                     "SET HEIGHT = HEIGHT - " + delta + " " +
                     "WHERE START_Y <= " + y + " " +
                     "AND START_Y + HEIGHT >= " + y + " " +
                     "AND ELEMENT_ID < " + clickedCellId + " " +
-                    "AND COLLAPSED = 0";
+                    "AND COLLAPSED = 0 " +
+                    "AND THREAD_ID = " + threadId;
 
             statement.addBatch(updateParentHighlights);
             System.out.println("EventHandler::updateAllParentHighlightsInDB: updateParentHighlights: " + updateParentHighlights);
