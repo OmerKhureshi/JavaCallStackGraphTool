@@ -3,7 +3,6 @@ package com.application.fxgraph.graph;
 import com.application.Main;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
 import javafx.scene.Group;
 import javafx.scene.Node;
@@ -37,10 +36,10 @@ public class ZoomableScrollPane extends ScrollPane {
         zoomGroup.setOnScroll(new ZoomHandler());
 
         hValProperty = hvalueProperty();
-        hValListener = (observable, oldValue, newValue) -> main.updateUi("hvalueListener");
+        hValListener = (observable, oldValue, newValue) -> main.updateUi();
 
         vValProperty = vvalueProperty();
-        vValListener = (observable, oldValue, newValue) -> main.updateUi("vValueListener");
+        vValListener = (observable, oldValue, newValue) -> main.updateUi();
         //
         // hValProperty.addListener(hValListener);
         // vValProperty.addListener(vValListener);
@@ -50,7 +49,7 @@ public class ZoomableScrollPane extends ScrollPane {
 
         viewportBoundsProperty().addListener((observable, oldValue, newValue) -> {
             if (main != null) {
-                main.updateUi("viewportBoundsListener");
+                main.updateUi();
             }
         });
 

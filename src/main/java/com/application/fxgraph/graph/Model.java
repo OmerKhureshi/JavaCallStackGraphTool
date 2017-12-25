@@ -1,13 +1,10 @@
 package com.application.fxgraph.graph;
 
-import com.application.Main;
 import com.application.fxgraph.ElementHelpers.Element;
 import com.application.fxgraph.cells.CircleCell;
 import com.application.fxgraph.cells.RectangleCell;
 import com.application.fxgraph.cells.TriangleCell;
 import javafx.scene.Node;
-import javafx.scene.shape.Rectangle;
-import org.w3c.dom.css.Rect;
 
 import java.util.*;
 
@@ -50,7 +47,7 @@ public class Model {
 
     public boolean uiUpdateRequired = true;
 
-    public void stackRectangles(String from) {
+    public void stackRectangles() {
 
         List<com.application.fxgraph.graph.RectangleCell> list = new ArrayList<>(highlightsOnUI.values());
 

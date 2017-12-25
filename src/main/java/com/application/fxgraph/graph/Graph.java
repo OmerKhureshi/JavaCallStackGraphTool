@@ -130,7 +130,7 @@ public class Graph {
             }
         });
 
-        model.stackRectangles("");
+        model.stackRectangles();
         model.uiUpdateRequired = false;
 
         // System.out.println("Graph::updateCellLayer: method ended");

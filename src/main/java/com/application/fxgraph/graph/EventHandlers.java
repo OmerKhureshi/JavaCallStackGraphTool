@@ -856,7 +856,14 @@ public class EventHandlers {
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    private void  updateCollapseValForSubTreeBulk(double topY, double bottomY, double leftX, Statement statement, boolean isMinimized, int startCellId, int endCellId) {
+    private void updateCollapseValForSubTreeBulk(double topY, double bottomY, double leftX, Statement statement, boolean isMinimized, int startCellId, int endCellId) {
+
+        // Collapsed value -> description
+        // 0               -> visible     AND  uncollapsed
+        // 2               -> visible     AND  collapsed
+        // >2              -> not visible AND  collapsed
+        // <0              -> not visible AND  collapsed
+
         // System.out.println("EventHandler::updateCollapseValForSubTreeBulk: method started");
         String updateCellQuery;
         String updateEdgeQuery;
@@ -908,7 +915,7 @@ public class EventHandlers {
                     "WHERE FK_TARGET_ELEMENT_ID IN " +
                     "(SELECT ELE.ID FROM " + TableNames.ELEMENT_TABLE + " AS ELE JOIN " + TableNames.EDGE_TABLE + " as EDGE " +
                     "ON ELE.ID = EDGE.FK_TARGET_ELEMENT_ID " +
-                    "WHERE EDGE.FK_TARGET_ELEMENT_ID > " +  startCellId + " " +
+                    "WHERE EDGE.FK_TARGET_ELEMENT_ID > " + startCellId + " " +
                     "AND EDGE.FK_TARGET_ELEMENT_ID < " + endCellId + " " +
                     // "AND ELE.COLLAPSED >= 0 " +
                     // "AND ELE.COLLAPSED <= 2" +

@@ -883,7 +883,7 @@ public class Main extends Application {
 
         // Graph.drawPlaceHolderLines();
 
-        updateUi("postDatabaseLoad");
+        updateUi();
 
         String firstThreadID = currentSelectedThread = threadsObsList.get(0).split(" ")[1];
         showThread(firstThreadID);
@@ -941,26 +941,24 @@ public class Main extends Application {
     // }
 
     public void showThread(String threadId) {
+        System.out.println("Main::showThread: clicked thread: " + threadId);
         currentSelectedThread = threadId;
 
         // Prevent triggering listeners from modifying circleCellsOnUI, edgesOnUI and highlightsOnUI HashMaps
         ZoomableScrollPane.turnOffListeners();
 
         // graph.getModel().uiUpdateRequired = true;
-        // System.out.println("Main::showThread: new updates show");
         convertDBtoElementTree.setCurrentThreadId(threadId);
-        // System.out.println("Main::showThread: before clearUI");
         convertDBtoElementTree.clearUI();
-        // System.out.println("Main::showThread: after clearUI");
-        updateUi("showThread");
-        // System.out.println("Main::showThread: END");
+        updateUi();
 
         // Prevent triggering listeners from modifying circleCellsOnUI, edgesOnUI and highlightsOnUI HashMaps
         ZoomableScrollPane.turnOnListeners();
-        graph.getModel().stackRectangles("showThread");
+        graph.getModel().stackRectangles();
+        System.out.println("Main::showThread: END");
     }
 
-    public void updateUi(String caller) {
+    public void updateUi() {
 
         if (convertDBtoElementTree != null && graph != null) {
             // System.out.println("Main::updateUi: called by " + caller + " thread " + Thread.currentThread().getName());
@@ -1370,10 +1368,10 @@ public class Main extends Application {
                 super.succeeded();
                 // System.out.println("Main::setUpHighlightsWindow::succeeded");
                 graph.getModel().uiUpdateRequired = true;
-                updateUi("taskOnApply");
+                updateUi();
 
                 // Stack highlights so that the larger ones are behind smaller ones.
-                graph.getModel().stackRectangles("succeeded");
+                graph.getModel().stackRectangles();
             }
         };
 
@@ -1512,7 +1510,13 @@ public class Main extends Application {
                 "'" + colorsMap.getOrDefault(fullName, Color.AQUAMARINE) + "', " +
 
                 // COLLAPSED
-                "0 " +
+                "(SELECT " +
+                    "CASE " +
+                        "WHEN E1.COLLAPSED = 0 THEN 0 " +
+                        "WHEN E1.COLLAPSED = 2 THEN 0 " +
+                        "ELSE 1 " +
+                    "END " +
+                "FROM " + TableNames.ELEMENT_TABLE + " AS E1 WHERE E1.ID = " + TableNames.ELEMENT_TABLE + ".ID) " +
 
 
                 "FROM " + TableNames.ELEMENT_TABLE + " " +
@@ -1527,7 +1531,7 @@ public class Main extends Application {
 
         String sql = highlightType.equalsIgnoreCase("SINGLE") ? sqlSingle : sqlFull;
 
-        // System.out.println( "Main::addInsertQueryToStatement: sql : " + sql);
+        System.out.println( "Main::addInsertQueryToStatement: sql : " + sql);
         try {
             statement.addBatch(sql);
         } catch (SQLException e) {
