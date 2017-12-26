@@ -105,6 +105,11 @@ public class Main extends Application {
     private MenuItem highlightMenuItem;
     private Glyph highlightItemsGlyph;
 
+    private Menu debugMenu;  // Debug menu button
+    private MenuItem printCellsMenuItem;
+    private MenuItem printEdgesMenuItem;
+    private MenuItem printHighlightsMenuItem;
+
     // Status bar
     private Group statusBar;
     private Label statusBarLabel = new Label();
@@ -311,7 +316,9 @@ public class Main extends Application {
         goToMenu.setDisable(true);
         menuItems.add(clearHistoryMenuItem);
 
-        // Highlight method invocations menu.
+        // *****************
+        // Highlights Menu
+        // *****************
         highlight = new Menu("Highlights");
         highlightItemsGlyph = new Glyph(font, FontAwesome.Glyph.FLAG);
         highlightItemsGlyph.setColor(ColorProp.ENABLED);
@@ -321,8 +328,19 @@ public class Main extends Application {
         highlight.setDisable(true);
         menuItems.add(highlightMenuItem);
 
-        // Main menu
-        menuBar.getMenus().addAll(fileMenu, runMenu, saveImgMenu, goToMenu, highlight);
+        // *****************
+        // Debug Menu
+        // *****************
+        debugMenu = new Menu("Debug");
+        printCellsMenuItem = new MenuItem("Print circles on canvas to console");
+        printEdgesMenuItem = new MenuItem("Print edges on canvas to console");
+        printHighlightsMenuItem = new MenuItem("Print highlights on canvas to console");
+        debugMenu.getItems().addAll(printCellsMenuItem, printEdgesMenuItem, printHighlightsMenuItem);
+
+        // *****************
+        // Main Menu
+        // *****************
+        menuBar.getMenus().addAll(fileMenu, runMenu, saveImgMenu, goToMenu, highlight, debugMenu);
         glyphs.addAll(Arrays.asList(methodDefnGlyph, callTraceGlyph, resetGlyph, runAnalysisGlyph,
                 saveImgGlyph, recentsGlyph, clearHistoryGlyph, highlightItemsGlyph));
 
@@ -417,8 +435,17 @@ public class Main extends Application {
         highlight.getItems().add(highlightMenuItem);
         menuItems.add(highlightMenuItem);
 
+        // *****************
+        // Debug Menu
+        // *****************
+        debugMenu = new Menu("Debug");
+        printCellsMenuItem = new MenuItem("Print circles on canvas to console");
+        printEdgesMenuItem = new MenuItem("Print edges on canvas to console");
+        printHighlightsMenuItem = new MenuItem("Print highlights on canvas to console");
+        debugMenu.getItems().addAll(printCellsMenuItem, printEdgesMenuItem, printHighlightsMenuItem);
+
         // Main menu
-        menuBar.getMenus().addAll(fileMenu, runMenu, saveImgMenu, goToMenu, highlight);
+        menuBar.getMenus().addAll(fileMenu, runMenu, saveImgMenu, goToMenu, highlight, debugMenu);
         glyphs.addAll(Arrays.asList(methodDefnGlyph, callTraceGlyph, resetGlyph, runAnalysisGlyph,
                 saveImgGlyph, recentsGlyph, clearHistoryGlyph, highlightItemsGlyph));
 
@@ -541,8 +568,38 @@ public class Main extends Application {
         // highlightMenuItem.setOnAction(event -> setUpMethodsWindow());
         highlightMenuItem.setOnAction(event -> setUpHighlightsWindow());
 
-        // System.out.println("Main::setUpMenuActions: method ended");
+        printCellsMenuItem.setOnAction(event -> {
+            System.out.println("-----------Cells on canvas ------------------------");
+            graph.getModel().getCircleCellsOnUI().keySet().stream().sorted(Comparator.comparingInt(Integer::valueOf)).forEach(id -> {
+                System.out.print(id + ", ");
+            });
+            System.out.println();
+            System.out.println("---------------------------------------------------");
+        });
 
+        printEdgesMenuItem.setOnAction(event -> {
+            System.out.println("-----------Edges on canvas ------------------------");
+            graph.getModel().getEdgesOnUI().keySet().stream().sorted(Comparator.comparingInt(Integer::valueOf)).forEach(id -> {
+                System.out.print(id + ", ");
+            });
+            System.out.println();
+            System.out.println("---------------------------------------------------");
+        });
+
+        printHighlightsMenuItem.setOnAction(event -> {
+            System.out.println("-----------Highlights on canvas --------------------");
+            graph.getModel().getHighlightsOnUI().keySet().stream().sorted().forEach(id -> {
+                System.out.print(id + ", ");
+            });
+            System.out.println();
+            System.out.println("---------------------------------------------------");
+        });
+
+        // System.out.println("Main::setUpMenuActions: method ended");
+    }
+
+    public String getCurrentSelectedThread() {
+        return currentSelectedThread;
     }
 
     private String currentSelectedThread;
@@ -1289,8 +1346,7 @@ public class Main extends Application {
                     colorPicker.setOnAction(event -> {
                         anyColorChange = true;
                         colorsMap.put(fullName, colorPicker.getValue());
-                        System.out.println(colorPicker.getValue());
-                        System.out.println(colorPicker.getValue().toString());
+                        // System.out.println(colorPicker.getValue());
                     });
                     colorPicker.getStyleClass().add("button");
                     colorPicker.setStyle(
@@ -1490,11 +1546,18 @@ public class Main extends Application {
                 TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT + " + topOffset + ", " +
 
                 // WIDTH
-                "(SELECT MAX(E1.BOUND_BOX_X_TOP_RIGHT) FROM " + TableNames.ELEMENT_TABLE + " AS E1 " +
-                "JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT ON E1.ID_ENTER_CALL_TRACE = CT.ID " +
-                "WHERE E1.BOUND_BOX_Y_COORDINATE >= " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT " +
-                "AND E1.BOUND_BOX_Y_COORDINATE <= " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_BOTTOM_LEFT " +
-                "AND CT.THREAD_ID = " + threadId + ") - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT + " + rightOffset + ", " +
+                // "CASE " +
+                //     "WHEN " + TableNames.ELEMENT_TABLE + ".COLLAPSED IN (0, 2) THEN " +
+                            "((SELECT MAX(E1.BOUND_BOX_X_TOP_RIGHT) FROM " + TableNames.ELEMENT_TABLE + " AS E1 " +
+                            "JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT ON E1.ID_ENTER_CALL_TRACE = CT.ID " +
+                            "WHERE E1.BOUND_BOX_Y_COORDINATE >= " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT " +
+                            "AND E1.BOUND_BOX_Y_COORDINATE < " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_BOTTOM_LEFT " +
+                            "AND CT.THREAD_ID = " + threadId + " " +
+                            "AND E1.COLLAPSED IN (0, 2) " +
+                            ") - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT + " + rightOffset + ") " +
+                    // "ELSE " + BoundBox.unitWidthFactor + " " +
+                // "END " +
+                ", " +
                 // TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_BOTTOM_RIGHT - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_BOTTOM_LEFT + " + endOffset + "," +
 
                 // HEIGHT

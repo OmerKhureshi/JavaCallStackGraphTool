@@ -169,7 +169,7 @@ public class ConvertDBtoElementTree {
      *
      */
     public void loadUIComponentsInsideVisibleViewPort(Graph graph) {
-        System.out.println("ConvertDBtoElementTree:loadUIComponentsInsideVisibleViewPort: Method started");
+        // System.out.println("ConvertDBtoElementTree:loadUIComponentsInsideVisibleViewPort: Method started");
         this.graph = graph;
         this.model = graph.getModel();
 
@@ -181,17 +181,17 @@ public class ConvertDBtoElementTree {
         // }
 
 
-        System.out.println("ConvertDBtoElementTree::loadUIComponentsInsideVisibleViewPort: before drawing, existing contents of cellLayer: ");
-        System.out.println("mapCircleCellsOnUI: size: " + graph.getModel().getCircleCellsOnUI().size());
-        graph.getModel().getCircleCellsOnUI().keySet().stream().sorted().forEach(id -> {
-            System.out.print(id + ", ");
-        });
+        // System.out.println("ConvertDBtoElementTree::loadUIComponentsInsideVisibleViewPort: before drawing, existing contents of cellLayer: ");
+        // System.out.println("mapCircleCellsOnUI: size: " + graph.getModel().getCircleCellsOnUI().size());
+        // graph.getModel().getCircleCellsOnUI().keySet().stream().sorted().forEach(id -> {
+        //     System.out.print(id + ", ");
+        // });
 
         // System.out.println("mapEdgesOnUI: ");
         // graph.getModel().getEdgesOnUI().keySet().stream().sorted().forEach(id -> {
         //     System.out.print(id + ", ");
         // });
-        //
+
         // System.out.println("highlightsOnUI: elementId : ");
         // graph.getModel().getHighlightsOnUI().values().stream().sorted().forEach(rect -> {
         //     System.out.print(rect.getElementId()+ ", ");
@@ -209,11 +209,11 @@ public class ConvertDBtoElementTree {
         graph.updateCellLayer();
 
 
-        System.out.println("ConvertDBtoElementTree::loadUIComponentsInsideVisibleViewPort: after drawing, contents of cellLayer: ");
-        System.out.println("mapCircleCellsOnUI: size: " + graph.getModel().getCircleCellsOnUI().size());
-        graph.getModel().getCircleCellsOnUI().keySet().stream().sorted().forEach(id -> {
-            System.out.print(id + ", ");
-        });
+        // System.out.println("ConvertDBtoElementTree::loadUIComponentsInsideVisibleViewPort: after drawing, contents of cellLayer: ");
+        // System.out.println("mapCircleCellsOnUI: size: " + graph.getModel().getCircleCellsOnUI().size());
+        // graph.getModel().getCircleCellsOnUI().keySet().stream().sorted().forEach(id -> {
+        //     System.out.print(id + ", ");
+        // });
     }
 
     public void forceUiRendering(Graph graph) {
@@ -316,7 +316,7 @@ public class ConvertDBtoElementTree {
                 " AND (E.COLLAPSED = 0" +
                 " OR E.COLLAPSED = 2)";
 
-        System.out.println("ConvertDBtoElementTree::addCircleCells: sql: " + sql);
+        // System.out.println("ConvertDBtoElementTree::addCircleCells: sql: " + sql);
         CircleCell curCircleCell;
         CircleCell parentCircleCell;
 
@@ -357,7 +357,7 @@ public class ConvertDBtoElementTree {
 
                 // Add circle cell to model and UI only if they are not already present on UI and if collapsed value is 0 or 2
                 if (!mapCircleCellsOnUI.containsKey(id) && (collapsed == 0 || collapsed == 2)) {
-                    System.out.println("ConvertDBtoElementTree::addCircleCells: adding new cells to UI: cell id: " + id);
+                    // System.out.println("ConvertDBtoElementTree::addCircleCells: adding new cells to UI: cell id: " + id);
                     curCircleCell = new CircleCell(id, xCoordinate, yCoordinate);
                     curCircleCell.setMethodName(methodName);
                     model.addCell(curCircleCell);
@@ -384,7 +384,7 @@ public class ConvertDBtoElementTree {
                                 float xCoordinateTemp = rsTemp.getFloat("bound_box_x_coordinate");
                                 float yCoordinateTemp = rsTemp.getFloat("bound_box_y_coordinate");
                                 parentCircleCell = new CircleCell(parentId, xCoordinateTemp, yCoordinateTemp);
-                                System.out.println("ConvertDBtoElementTree::addCircleCells: adding new parent cells to UI: cell id: " + parentId);
+                                // System.out.println("ConvertDBtoElementTree::addCircleCells: adding new parent cells to UI: cell id: " + parentId);
                                 model.addCell(parentCircleCell);
                             }
                         }
