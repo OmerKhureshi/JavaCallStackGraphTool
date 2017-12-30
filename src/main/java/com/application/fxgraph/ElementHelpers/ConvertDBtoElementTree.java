@@ -230,6 +230,22 @@ public class ConvertDBtoElementTree {
         // System.out.println("ConvertDBtoElementTree:forceUiRendering: method ended");
     }
 
+    public void ClearAndUpdateCellLayer() {
+        // remove all circles cells from UI
+        graph.getCellLayer().getChildren().removeAll(model.getCircleCellsOnUI().values());
+        model.getCircleCellsOnUI().clear();
+
+        // remove all Edges from UI
+        graph.getCellLayer().getChildren().removeAll(model.getEdgesOnUI().values());
+        model.getEdgesOnUI().clear();
+
+        // remove all Highlights from UI
+        graph.getCellLayer().getChildren().removeAll(model.getHighlightsOnUI().values());
+        model.getHighlightsOnUI().clear();
+
+        forceUiRendering(graph);
+    }
+
     private void addHighlights() {
         // System.out.println("ConvertDBtoElementTree::addHighlights: method started");
 
@@ -273,7 +289,7 @@ public class ConvertDBtoElementTree {
                     // rectangle.setArcHeight(20);
                     // rectangle.setArcWidth(20);
 
-                    RectangleCell rect = new RectangleCell(elementId, startX, startY, width, height);
+                    RectangleCell rect = new RectangleCell(id, elementId, startX, startY, width, height);
                     rect.setColor(color);
                     rect.setArcHeight(20);
                     rect.setArcWidth(20);

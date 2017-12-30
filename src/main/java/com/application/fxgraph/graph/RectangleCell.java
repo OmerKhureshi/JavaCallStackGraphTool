@@ -10,7 +10,9 @@ public class RectangleCell extends Cell {
     private Label idLabel;
 
     private int elementId;
-    public RectangleCell(int elementId, float startX, float startY, float width, float height) {
+    private int id;
+
+    public RectangleCell(int id, int elementId, float startX, float startY, float width, float height) {
         super(String.valueOf(elementId));
         this.elementId = elementId;
 
@@ -20,7 +22,7 @@ public class RectangleCell extends Cell {
         rectangle = new Rectangle(width, height);
         rectangle.setStroke(Color.BLACK);
 
-        idLabel = new Label(String.valueOf(elementId));
+        idLabel = new Label(String.valueOf(elementId) + ",id:" + id);
 
         getChildren().addAll(rectangle, idLabel);
         this.relocate(startX, startY);

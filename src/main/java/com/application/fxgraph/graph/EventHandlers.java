@@ -6,7 +6,6 @@ import com.application.db.DAOImplementation.*;
 import com.application.db.DatabaseUtil;
 import com.application.db.TableNames;
 import com.application.fxgraph.cells.CircleCell;
-import com.sun.xml.internal.ws.policy.spi.PolicyAssertionValidator;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.event.EventHandler;
@@ -19,7 +18,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import org.controlsfx.control.PopOver;
-import org.omg.CORBA.INTERNAL;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -425,6 +423,7 @@ public class EventHandlers {
             double clickedCellBoundBottomLeftY = 0;
             double newDelta = 0;
             double newDeltaX = 0;
+            int parentId = 0;
 
             try (ResultSet cellRS = ElementDAOImpl.selectWhere("id = " + clickedCellID)) {
                 if (cellRS.next()) {
@@ -435,6 +434,7 @@ public class EventHandlers {
                     clickedCellBoundBottomLeftY = cellRS.getDouble("bound_box_y_bottom_left");
                     newDelta = cellRS.getDouble("delta");
                     newDeltaX = cellRS.getDouble("delta_x");
+                    parentId = cellRS.getInt("parent_id");
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -515,7 +515,7 @@ public class EventHandlers {
                 removeChildrenFromUI(Integer.parseInt(clickedCellID), nextCellId);
                 moveLowerTreeByDelta(clickedCellID, clickedCellBottomY, newDelta);
                 updateAllParentHighlightsOnUI(clickedCellID, clickedCellTopLeftX, clickedCellTopLeftY, newDelta, newDeltaX);
-                updateDBInBackgroundThread(Integer.parseInt(clickedCellID), clickedCellTopLeftY, clickedCellBoundBottomLeftY, clickedCellTopLeftX, clickedCellTopRightX, newDelta, newDeltaX, 1, nextCellId, threadId, lastCellId);
+                updateDBInBackgroundThread(Integer.parseInt(clickedCellID), clickedCellTopLeftY, clickedCellBoundBottomLeftY, clickedCellTopLeftX, clickedCellTopRightX, newDelta, newDeltaX, 1, nextCellId, threadId, lastCellId, parentId);
 
             } else if (collapsed == 2) {
                 // MAXIMIZE SUBTREE
@@ -538,7 +538,7 @@ public class EventHandlers {
                 updateAllParentHighlightsOnUI(clickedCellID, clickedCellTopLeftX, clickedCellTopLeftY, -newDelta, -newDeltaX);
 
                 ElementDAOImpl.updateWhere("collapsed", "0", "id = " + clickedCellID);
-                updateDBInBackgroundThread(Integer.parseInt(clickedCellID), clickedCellTopLeftY, clickedCellBoundBottomLeftY, clickedCellTopLeftX, clickedCellTopRightX, -newDelta, -newDeltaX, 0, nextCellId, threadId, lastCellId);
+                updateDBInBackgroundThread(Integer.parseInt(clickedCellID), clickedCellTopLeftY, clickedCellBoundBottomLeftY, clickedCellTopLeftX, clickedCellTopRightX, -newDelta, -newDeltaX, 0, nextCellId, threadId, lastCellId, parentId);
             }
         }
     }
@@ -586,22 +586,6 @@ public class EventHandlers {
                 "AND E.BOUND_BOX_X_TOP_LEFT <= " + x + " " +
                 "AND E.ID > " + clickedCellId + " " +
                 "AND CT.THREAD_ID = " + threadId;
-
-        // String getNextQuery = "SELECT " +
-        //         "CASE " +
-        //         "WHEN MIN(E.ID) IS NULL THEN " + Integer.MAX_VALUE + " " +
-        //         "ELSE MIN(E.ID) " +
-        //         "END " +
-        //         "AS MINID " +
-        //         "FROM " + TableNames.ELEMENT_TABLE + " AS E JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT " +
-        //         "ON E.ID_ENTER_CALL_TRACE = CT.ID " +
-        //         "WHERE E.BOUND_BOX_Y_TOP_LEFT > " + y + " " +
-        //         "AND E.BOUND_BOX_X_TOP_LEFT <= " + x + " " +
-        //         "AND E.ID > " + clickedCellId + " " +
-        //         "AND CT.THREAD_ID = " + threadId;
-
-        // System.out.println("EventHandler::getNextLowerSiblingOrAncestorNode: query: " + getNextQuery);
-
 
         try (ResultSet rs = DatabaseUtil.select(getNextQuery)) {
             if (rs.next()) {
@@ -820,33 +804,30 @@ public class EventHandlers {
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    private void updateDBInBackgroundThread(int clickedCellId, double topY, double bottomY, double leftX, double rightX, double delta, double deltaX, int min, int nextCellId, int threadId, int lastCellId) {
+    private void updateDBInBackgroundThread(int clickedCellId, double topY, double bottomY, double leftX, double rightX, double delta, double deltaX, int min, int nextCellId, int threadId, int lastCellId, int parentId) {
 
         Statement statement = DatabaseUtil.createStatement();
         Task<Void> task = new Task<Void>() {
             @Override
             protected Void call() throws Exception {
                 // System.out.println("==================== Starting thread updateDBInBackgroundThread. ====================");
-                // int nextCellId = getNextLowerSiblingOrAncestorNode(clickedCellId, leftX, topY);
-
                 if (min == 1) {
                     // on minimization
-                    // int endCellId = nextCellId == 0 ? Integer.MAX_VALUE : nextCellId;
                     updateCollapseValForSubTreeBulk(topY, bottomY, rightX, statement, true, clickedCellId, nextCellId);
                 } else {
                     // on maximation
-                    // int endCellId = nextCellId == 0 ? Integer.MAX_VALUE : nextCellId;
                     updateCollapseValForSubTreeBulk(topY, bottomY, rightX, statement, false, clickedCellId, nextCellId);
-                    // expandSubtreeAndUpdateColValsRecursive(String.valueOf(clickedCellId));
                 }
 
                 updateClickedCellHighlights(clickedCellId, topY, delta, deltaX, statement);
+
+                beta(clickedCellId, true, statement);
 
                 // No upate required for single line children
                 if (delta == 0) {
                     // System.out.println("Optimized for singel line children collapses.");
                     statement.executeBatch();
-                    Platform.runLater(() -> convertDBtoElementTree.forceUiRendering(graph));
+                    Platform.runLater(() -> convertDBtoElementTree.ClearAndUpdateCellLayer());
                     return null;
                 }
 
@@ -861,7 +842,7 @@ public class EventHandlers {
                     statement.executeBatch();
                 }
 
-                Platform.runLater(() -> convertDBtoElementTree.forceUiRendering(graph));
+                Platform.runLater(() -> convertDBtoElementTree.ClearAndUpdateCellLayer());
                 return null;
             }
 
@@ -1175,58 +1156,13 @@ public class EventHandlers {
         graph.getModel().getHighlightsOnUI().forEach((id, rectangleCell) -> {
             // if this is the clicked cell, make highlight unit dimensions.
             if (rectangleCell.getElementId() == Integer.valueOf(clickedCellId)) {
-                // System.out.println("EventHandler::updateAllParentHighlightsOnUI: decreasing height of clicked highilght id: " + id +
-                //         " eleID: " + rectangleCell.getElementId() + " by: " + delta +" and " + deltaX);
                 rectangleCell.setHeight(rectangleCell.getPrefHeight() - delta);
                 rectangleCell.setWidth(rectangleCell.getPrefWidth() - deltaX);
             }
 
             // if this rectangle contains y, then shrink it by delta
             else if (rectangleCell.getBoundsInParent().contains(finalX, finalY)) {
-                // System.out.println("EventHandler::updateAllParentHighlightsOnUI: decreasing height of id: " + id + " eleID: " +
-                //         rectangleCell.getElementId() + " rectangleCell.getBoundsInParent(): " + rectangleCell.getBoundsInParent());
-                // System.out.println("rectangleCell.getBoundsInParent(): " + rectangleCell.getBoundsInParent());
-                // System.out.println("rectangleCell.getBoundsInLocal(): " + rectangleCell.getBoundsInLocal());
-                // System.out.println(" x, y : " + finalX + ", " + finalY);
-                // System.out.println("OLD");
-                // System.out.println("rectangleCell.getPrefHeight() " + rectangleCell.getPrefHeight() + " rectangleCell.getHeight(): " + rectangleCell.getHeight());
-                // System.out.println("rectangleCell.getBoundsInParent().getHeight() " + rectangleCell.getBoundsInParent().getHeight());
-                // System.out.println("rectangleCell.getRectangle().getBoundsInParent().getHeight(): " + rectangleCell.getRectangle().getBoundsInParent().getHeight());
-                // System.out.println("rectangleCell.getRectangle().getHeight(): " + rectangleCell.getRectangle().getHeight());
                 rectangleCell.setHeight(rectangleCell.getPrefHeight() - delta);
-                // System.out.println("NEW");
-                // System.out.println("rectangleCell.getPrefHeight() " + rectangleCell.getPrefHeight() + " rectangleCell.getHeight(): " + rectangleCell.getHeight());
-                // System.out.println("rectangleCell.getBoundsInParent().getHeight() " + rectangleCell.getBoundsInParent().getHeight());
-                // System.out.println("rectangleCell.getRectangle().getBoundsInParent().getHeight(): " + rectangleCell.getRectangle().getBoundsInParent().getHeight());
-                // System.out.println("rectangleCell.getRectangle().getHeight(): " + rectangleCell.getRectangle().getHeight());
-                // } else {
-                //     System.out.println("ELSE");
-                //     System.out.println("EventHandler::updateAllParentHighlightsOnUI: id: " + id + " eleID: " + rectangleCell.getElementId());
-                //     System.out.println("rectangleCell.getBoundsInParent(): " + rectangleCell.getBoundsInParent());
-                //     System.out.println("rectangleCell.getBoundsInLocal(): " + rectangleCell.getBoundsInLocal());
-                //     System.out.println(" x, y : " + finalX + ", " + finalY);
-                //     System.out.println("rectangleCell.getPrefHeight() " + rectangleCell.getPrefHeight() + " rectangleCell.getHeight(): " + rectangleCell.getHeight());
-                //     System.out.println("rectangleCell.getBoundsInParent().getHeight() " + rectangleCell.getBoundsInParent().getHeight());
-                //     System.out.println("rectangleCell.getRectangle().getBoundsInParent().getHeight(): " + rectangleCell.getRectangle().getBoundsInParent().getHeight());
-                //     System.out.println("rectangleCell.getRectangle().getHeight(): " + rectangleCell.getRectangle().getHeight());
-                //
-                //     if (rectangleCell.getBoundsInParent().getMinY() <= finalY && rectangleCell.getBoundsInParent().getMaxY() >= finalY) {
-                //         System.out.println("YES ME");
-                //         Bounds b = rectangleCell.getBoundsInParent();
-                //
-                //         System.out.println(finalX >= b.getMinX());
-                //         System.out.println(finalX <= b.getMaxX());
-                //         System.out.println((finalY >= b.getMinY()) + " " +
-                //                 (finalY <= b.getMaxY()) + " " +
-                //                 (0.0f >= b.getMinZ()) + " " +
-                //                 (0.0f <= b.getMaxZ()));
-                //
-                //         if (rectangleCell.getBoundsInParent().contains(finalX, finalY)) {
-                //             System.out.println("===yes again");
-                //         } else {
-                //             System.out.println("===not again");
-                //         }
-                //     }
 
             }
         });
@@ -1245,6 +1181,74 @@ public class EventHandlers {
             statement.addBatch(updateParentHighlights);
             // System.out.println("EventHandler::updateAllParentHighlightsInDB: updateParentHighlights: " + updateParentHighlights);
 
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void beta(int cellId, boolean isCollapsed, Statement statement){
+        System.out.println("EventHandlers.beta: method started");
+
+        if (cellId <= 1) {
+            System.out.println("EventHandlers.beta return 1");
+            return;
+        }
+
+        int threadId = 0;
+        double startX = 0, startY = 0, width = 0, height = 0;
+
+        try (ResultSet rs = HighlightDAOImpl.selectWhere("ELEMENT_ID = " + cellId)) {
+            if (rs.next()) {
+                startX = rs.getDouble("START_X");
+                startY = rs.getDouble("START_Y");
+                width = rs.getDouble("WIDTH");
+                height = rs.getDouble("HEIGHT");
+                threadId = rs.getInt("THREAD_ID");
+            } else {
+                System.out.println("EventHandlers.beta");
+                System.out.println(" returning");
+                return;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        String getAllParentIdsQuery = "SELECT ID " +
+                "FROM HIGHLIGHT_ELEMENT " +
+                "WHERE START_X <= " + startX + " " +
+                "AND START_X + WIDTH >=  " + (startX + width) + " " +
+                "AND START_Y <= " + startY + " " +
+                "AND START_Y + HEIGHT >= " + (startY + height) + " " +
+                "AND ELEMENT_ID < " + cellId + " " +
+                "AND COLLAPSED = 0 " +
+                "AND THREAD_ID = " + threadId;
+
+        System.out.println("EventHandlers.beta: getAllParentIdsQuery: " + getAllParentIdsQuery);
+
+        try (ResultSet getAllParentIdsRS = DatabaseUtil.select(getAllParentIdsQuery)) {
+            while (getAllParentIdsRS.next()) {
+                String updateParentHighlightsQuery = "UPDATE " + TableNames.HIGHLIGHT_ELEMENT + " AS H " +
+                        "SET H.WIDTH = " +
+                        "((SELECT MAX(H1.START_X + H1.WIDTH)" +
+                        "FROM HIGHLIGHT_ELEMENT AS H1 " +
+                        "WHERE H1.START_Y >= (SELECT H2.START_Y " +
+                        "FROM HIGHLIGHT_ELEMENT AS H2 " +
+                        "WHERE H2.ID = H.ID) " +
+                        "AND (H1.START_Y + H1.HEIGHT) <= (SELECT H3.START_Y + H3.HEIGHT " +
+                        "FROM HIGHLIGHT_ELEMENT AS H3 " +
+                        "WHERE H3.ID = H.ID) " +
+                        "AND H1.THREAD_ID = (SELECT H4.THREAD_ID " +
+                        "FROM HIGHLIGHT_ELEMENT AS H4 " +
+                        "WHERE H4.ID = H.ID) " +
+                        "AND H1.ID != H.ID " +
+                        "AND H1.COLLAPSED = 0) " +
+                        "- H.START_X) " +
+                        "WHERE H.ID = " + getAllParentIdsRS.getInt("ID");
+
+                statement.addBatch(updateParentHighlightsQuery);
+
+                System.out.println("EventHandlers.beta For cellId: " + cellId + " updateParentHighlightsQuery: " + updateParentHighlightsQuery);
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
