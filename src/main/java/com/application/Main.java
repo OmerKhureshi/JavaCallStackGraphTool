@@ -1182,8 +1182,8 @@ public class Main extends Application {
 
     private boolean firstTimeSetUpHighlightsWindowCall = true;
 
-    private Map<String, CheckBox> firstCBMap;
-    private Map<String, CheckBox> secondCBMap;
+    public Map<String, CheckBox> firstCBMap;
+    public Map<String, CheckBox> secondCBMap;
     private Map<String, Color> colorsMap;
     private boolean anyColorChange = false;
 
@@ -1440,6 +1440,7 @@ public class Main extends Application {
     }
 
     private void addInsertQueryToStatement(String fullName, Statement statement, String highlightType) {
+        System.out.println("Main.addInsertQueryToStatement: crafting query for " + fullName);
         double leftOffset = 30;
         double rightOffset = 30;
         double topOffset = -10;
@@ -1470,7 +1471,7 @@ public class Main extends Application {
                 TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT + " + leftOffset + ", " +
 
                 // START_Y
-                TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT + " + topOffset +", " +
+                TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT + " + topOffset + ", " +
 
                 // WIDTH
                 (BoundBox.unitWidthFactor + rightOffset) + ", " +
@@ -1546,17 +1547,17 @@ public class Main extends Application {
                 TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT + " + topOffset + ", " +
 
                 // WIDTH
-                // "CASE " +
-                //     "WHEN " + TableNames.ELEMENT_TABLE + ".COLLAPSED IN (0, 2) THEN " +
-                            "((SELECT MAX(E1.BOUND_BOX_X_TOP_RIGHT) FROM " + TableNames.ELEMENT_TABLE + " AS E1 " +
-                            "JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT ON E1.ID_ENTER_CALL_TRACE = CT.ID " +
-                            "WHERE E1.BOUND_BOX_Y_COORDINATE >= " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT " +
-                            "AND E1.BOUND_BOX_Y_COORDINATE < " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_BOTTOM_LEFT " +
-                            "AND CT.THREAD_ID = " + threadId + " " +
-                            "AND E1.COLLAPSED IN (0, 2) " +
-                            ") - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT + " + rightOffset + ") " +
-                    // "ELSE " + BoundBox.unitWidthFactor + " " +
-                // "END " +
+                "CASE " +
+                    "WHEN " + TableNames.ELEMENT_TABLE + ".COLLAPSED IN (0, 2) THEN " +
+                        "((SELECT MAX(E1.BOUND_BOX_X_TOP_RIGHT) FROM " + TableNames.ELEMENT_TABLE + " AS E1 " +
+                        "JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT ON E1.ID_ENTER_CALL_TRACE = CT.ID " +
+                        "WHERE E1.BOUND_BOX_Y_COORDINATE >= " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT " +
+                        "AND E1.BOUND_BOX_Y_COORDINATE < " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_BOTTOM_LEFT " +
+                        "AND CT.THREAD_ID = " + threadId + " " +
+                        "AND (E1.COLLAPSED IN (0, 2)  OR E1.ID = ELEMENT.ID)" +
+                        ") - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT + " + rightOffset + ") " +
+                        "ELSE " + BoundBox.unitWidthFactor + " " +
+                "END " +
                 ", " +
                 // TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_BOTTOM_RIGHT - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_BOTTOM_LEFT + " + endOffset + "," +
 
@@ -1574,11 +1575,11 @@ public class Main extends Application {
 
                 // COLLAPSED
                 "(SELECT " +
-                    "CASE " +
-                        "WHEN E1.COLLAPSED = 0 THEN 0 " +
-                        "WHEN E1.COLLAPSED = 2 THEN 0 " +
-                        "ELSE 1 " +
-                    "END " +
+                "CASE " +
+                "WHEN E1.COLLAPSED = 0 THEN 0 " +
+                "WHEN E1.COLLAPSED = 2 THEN 0 " +
+                "ELSE 1 " +
+                "END " +
                 "FROM " + TableNames.ELEMENT_TABLE + " AS E1 WHERE E1.ID = " + TableNames.ELEMENT_TABLE + ".ID) " +
 
 
@@ -1594,7 +1595,7 @@ public class Main extends Application {
 
         String sql = highlightType.equalsIgnoreCase("SINGLE") ? sqlSingle : sqlFull;
 
-        System.out.println( "Main::addInsertQueryToStatement: sql : " + sql);
+        System.out.println("Main::addInsertQueryToStatement: sql : " + sql);
         try {
             statement.addBatch(sql);
         } catch (SQLException e) {
