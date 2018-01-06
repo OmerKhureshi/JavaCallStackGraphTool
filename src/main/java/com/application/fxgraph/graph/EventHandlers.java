@@ -819,9 +819,9 @@ public class EventHandlers {
                     updateCollapseValForSubTreeBulk(topY, bottomY, rightX, statement, false, clickedCellId, nextCellId);
                 }
 
-                updateClickedCellHighlights(clickedCellId, topY, delta, deltaX, statement);
+                // updateClickedCellHighlights(clickedCellId, topY, delta, deltaX, statement);
 
-                beta(clickedCellId, isCollapsed, statement, delta, nextCellId);
+                updateParentHighlightsInDB(clickedCellId, isCollapsed, statement, delta, nextCellId, leftX, topY, threadId);
 
                 // No upate required for single line children
                 if (delta == 0) {
@@ -842,7 +842,7 @@ public class EventHandlers {
                     statement.executeBatch();
                 }
 
-                beta2(clickedCellId, isCollapsed, statement, delta, nextCellId);
+                updateChildrenHighlightsInDB(clickedCellId, isCollapsed, statement, delta, nextCellId, threadId);
                 statement.executeBatch();
 
                 Platform.runLater(() -> convertDBtoElementTree.ClearAndUpdateCellLayer());
@@ -1197,66 +1197,68 @@ public class EventHandlers {
         }
     }
 
-    private void beta2(int cellId, boolean isCollapsed, Statement statement, double delta, int nextCellId){
+    private void updateChildrenHighlightsInDB(int cellId, boolean isCollapsed, Statement statement, double delta, int nextCellId, int threadId) {
+        System.out.println("EventHandlers.updateChildrenHighlightsInDB: method started");
+
         if (cellId <= 1) {
-            System.out.println("EventHandlers.beta return 1");
+            System.out.println("EventHandlers.updateChildrenHighlightsInDB return 1");
             return;
         }
 
-        int threadId = 0;
         double startX = 0, startY = 0, width = 0, height = 0;
 
-        try (ResultSet rs = HighlightDAOImpl.selectWhere("ELEMENT_ID = " + cellId)) {
-            if (rs.next()) {
-                startX = rs.getDouble("START_X");
-                startY = rs.getDouble("START_Y");
-                width = rs.getDouble("WIDTH");
-                height = rs.getDouble("HEIGHT");
-                threadId = rs.getInt("THREAD_ID");
+        double startXOffset = 30;
+        double widthOffset = 30;
+        double startYOffset = -10;
+        double heightOffset = -20;
 
-                // System.out.println("isCollapsed: " + isCollapsed);
-                // System.out.println(" startX: " + startX + " startY: " + startY + " width: " + width + " height: " + height);
-            } else {
-                System.out.println("EventHandlers.beta");
-                System.out.println(" returning");
-                return;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        // try (ResultSet rs = HighlightDAOImpl.selectWhere("ELEMENT_ID = " + cellId)) {
+        //     if (rs.next()) {
+        //         startX = rs.getDouble("START_X");
+        //         startY = rs.getDouble("START_Y");
+        //         width = rs.getDouble("WIDTH");
+        //         height = rs.getDouble("HEIGHT");
+        //         threadId = rs.getInt("THREAD_ID");
+        //     } else {
+        //         System.out.println("EventHandlers.updateChildrenHighlightsInDB returning");
+        //         return;
+        //     }
+        // } catch (SQLException e) {
+        //     e.printStackTrace();
+        // }
 
         if (!isCollapsed) {
             // get all highlights that are contained within the expanded subtree.
-            String getAllChildrenIDsQuery2 = "SELECT ID " +
-                    "FROM HIGHLIGHT_ELEMENT " +
-                    "WHERE START_X >= " + startX + " " +
-                    "AND START_X + WIDTH <=  " + (startX + width) + " " +
-                    "AND START_Y >= " + startY + " " +
-                    "AND START_Y + HEIGHT <= " + (startY + height) + " " +
-                    "AND ELEMENT_ID >= " + cellId + " " +
-                    "AND COLLAPSED IN (0, 2) " +
-                    "AND THREAD_ID = " + threadId;
+            // String getAllChildrenIDsQuery2 = "SELECT ID " +
+            //         "FROM HIGHLIGHT_ELEMENT " +
+            //         "WHERE START_X >= " + startX + " " +
+            //         "AND START_X + WIDTH <=  " + (startX + width) + " " +
+            //         "AND START_Y >= " + startY + " " +
+            //         "AND START_Y + HEIGHT <= " + (startY + height) + " " +
+            //         "AND ELEMENT_ID >= " + cellId + " " +
+            //         "AND COLLAPSED IN (0, 2) " +
+            //         "AND THREAD_ID = " + threadId;
 
-            String getAllChildrenIDsQuery = "SELECT * " +
+            String getHighlightsToResize = "SELECT * " +
                     "FROM HIGHLIGHT_ELEMENT " +
-                    "WHERE  ELEMENT_ID >= " + cellId + " " +
+                    "WHERE  ELEMENT_ID > " + cellId + " " +
                     "AND ELEMENT_ID < " + nextCellId + " " +
                     "AND COLLAPSED IN (0, 2) " +
                     "AND HIGHLIGHT_TYPE = 'FULL' " +
                     "AND THREAD_ID = " + threadId;
 
-            System.out.println(" getAllChildrenIDsQuery: " + getAllChildrenIDsQuery);
+            System.out.println(" getHighlightsToResize: " + getHighlightsToResize);
 
-            try (ResultSet getAllChildrenIdsRS = DatabaseUtil.select(getAllChildrenIDsQuery)) {
-                while (getAllChildrenIdsRS.next()) {
+            try (ResultSet getHighlightsRS = DatabaseUtil.select(getHighlightsToResize)) {
+                while (getHighlightsRS.next()) {
 
-                    try (ResultSet rs = HighlightDAOImpl.selectWhere("ELEMENT_ID = " + getAllChildrenIdsRS.getInt("ELEMENT_ID"))) {
-                        if (rs.next()) {
-                            startX = rs.getDouble("START_X");
-                            startY = rs.getDouble("START_Y");
-                            width = rs.getDouble("WIDTH");
-                            height = rs.getDouble("HEIGHT");
-                            threadId = rs.getInt("THREAD_ID");
+                    try (ResultSet elementRS = HighlightDAOImpl.selectWhere("ELEMENT_ID = " + getHighlightsRS.getInt("ELEMENT_ID"))) {
+                        if (elementRS.next()) {
+                            startX = elementRS.getDouble("START_X");
+                            startY = elementRS.getDouble("START_Y");
+                            width = elementRS.getDouble("WIDTH");
+                            height = elementRS.getDouble("HEIGHT");
+                            threadId = elementRS.getInt("THREAD_ID");
                         }
                     }
 
@@ -1266,32 +1268,32 @@ public class EventHandlers {
                             "((SELECT MAX(E1.BOUND_BOX_X_TOP_RIGHT) FROM " + TableNames.ELEMENT_TABLE + " AS E1 " +
                             "JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT ON E1.ID_ENTER_CALL_TRACE = CT.ID " +
                             "WHERE E1.BOUND_BOX_Y_COORDINATE >= " + startY + " " +
-                            "AND E1.BOUND_BOX_Y_COORDINATE < " + ( startY + height) + " " +
+                            "AND E1.BOUND_BOX_Y_COORDINATE <= " + ( startY + height) + " " +
                             "AND E1.BOUND_BOX_X_COORDINATE >= " + startX + " " +
                             "AND CT.THREAD_ID = " + threadId + " " +
                             "AND E1.COLLAPSED IN (0, 2)" +
-                            ") - H.START_X) " +
-                            "WHERE H.ID = " + getAllChildrenIdsRS.getInt("ID");
+                            ") - H.START_X + " + widthOffset + ") " +
+                            "WHERE H.ID = " + getHighlightsRS.getInt("ID");
 
-                            // "((SELECT MAX(H1.START_X + H1.WIDTH)" +
-                            // "FROM HIGHLIGHT_ELEMENT AS H1 " +
-                            // "WHERE H1.START_Y >= (SELECT H2.START_Y " +
-                            // "FROM HIGHLIGHT_ELEMENT AS H2 " +
-                            // "WHERE H2.ID = H.ID) " +
-                            // "AND (H1.START_Y + H1.HEIGHT) <= (SELECT H3.START_Y + H3.HEIGHT " +
-                            // "FROM HIGHLIGHT_ELEMENT AS H3 " +
-                            // "WHERE H3.ID = H.ID) " +
-                            // "AND H1.THREAD_ID = (SELECT H4.THREAD_ID " +
-                            // "FROM HIGHLIGHT_ELEMENT AS H4 " +
-                            // "WHERE H4.ID = H.ID) " +
-                            // "AND H1.ID != H.ID " +
-                            // "AND H1.COLLAPSED = 0) " +
-                            // "- H.START_X) " +
-                            // "WHERE H.ID = " + getAllChildrenIdsRS.getInt("ID");
+                    // "((SELECT MAX(H1.START_X + H1.WIDTH)" +
+                    // "FROM HIGHLIGHT_ELEMENT AS H1 " +
+                    // "WHERE H1.START_Y >= (SELECT H2.START_Y " +
+                    // "FROM HIGHLIGHT_ELEMENT AS H2 " +
+                    // "WHERE H2.ID = H.ID) " +
+                    // "AND (H1.START_Y + H1.HEIGHT) <= (SELECT H3.START_Y + H3.HEIGHT " +
+                    // "FROM HIGHLIGHT_ELEMENT AS H3 " +
+                    // "WHERE H3.ID = H.ID) " +
+                    // "AND H1.THREAD_ID = (SELECT H4.THREAD_ID " +
+                    // "FROM HIGHLIGHT_ELEMENT AS H4 " +
+                    // "WHERE H4.ID = H.ID) " +
+                    // "AND H1.ID != H.ID " +
+                    // "AND H1.COLLAPSED = 0) " +
+                    // "- H.START_X) " +
+                    // "WHERE H.ID = " + getHighlightsRS.getInt("ID");
 
                     statement.addBatch(updatChildrenHighlightsQuery);
 
-                    System.out.println("EventHandlers.beta For cellId: " + cellId + " updatChildrenHighlightsQuery: " + updatChildrenHighlightsQuery);
+                    System.out.println("EventHandlers.updateChildrenHighlightsInDB For cellId: " + cellId + " updatChildrenHighlightsQuery: " + updatChildrenHighlightsQuery);
 
 
                 }
@@ -1299,75 +1301,115 @@ public class EventHandlers {
                 e.printStackTrace();
             }
         }
+        System.out.println("EventHandlers.updateChildrenHighlightsInDB: method ended");
     }
-    private void beta(int cellId, boolean isCollapsed, Statement statement, double delta, int nextCellId){
-        System.out.println("EventHandlers.beta: method started");
+
+
+    private void updateParentHighlightsInDB(int cellId, boolean isCollapsed, Statement statement, double delta, int nextCellId, double x, double y, int threadId){
+        System.out.println("EventHandlers.updateParentHighlightsInDB: method started");
 
         if (cellId <= 1) {
-            System.out.println("EventHandlers.beta return 1");
+            System.out.println("EventHandlers.updateParentHighlightsInDB return 1");
             return;
         }
 
-        int threadId = 0;
-        double startX = 0, startY = 0, width = 0, height = 0;
+        // int threadId = 0;
+        // double startX = 0, startY = 0, width = 0, height = 0;
+        //
+        // try (ResultSet rs = HighlightDAOImpl.selectWhere("ELEMENT_ID = " + cellId)) {
+        //     if (rs.next()) {
+        //         startX = rs.getDouble("START_X");
+        //         startY = rs.getDouble("START_Y");
+        //         width = rs.getDouble("WIDTH");
+        //         height = rs.getDouble("HEIGHT");
+        //         threadId = rs.getInt("THREAD_ID");
+        //     } else {
+        //         System.out.println("EventHandlers.updateParentHighlightsInDB returning");
+        //         return;
+        //     }
+        // } catch (SQLException e) {
+        //     e.printStackTrace();
+        // }
 
-        try (ResultSet rs = HighlightDAOImpl.selectWhere("ELEMENT_ID = " + cellId)) {
-            if (rs.next()) {
-                startX = rs.getDouble("START_X");
-                startY = rs.getDouble("START_Y");
-                width = rs.getDouble("WIDTH");
-                height = rs.getDouble("HEIGHT");
-                threadId = rs.getInt("THREAD_ID");
-            } else {
-                System.out.println("EventHandlers.beta returning");
-                return;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        // String getHighlightIdsToResize = "SELECT ID " +
+        //         "FROM HIGHLIGHT_ELEMENT " +
+        //         "WHERE START_X <= " + startX + " " +
+        //         "AND START_X + WIDTH >=  " + (startX + width) + " " +
+        //         "AND START_Y <= " + startY + " " +
+        //         "AND START_Y + HEIGHT >= " + (startY + height) + " " +
+        //         "AND ELEMENT_ID < " + cellId + " " +
+        //         "AND COLLAPSED = 0 " +
+        //         "AND THREAD_ID = " + threadId;
 
-        // get all highlights that contain the clicked cell highlight and belong to the same thread and have element id > clicked cell id.
-        String getAllParentIdsQuery = "SELECT ID " +
+
+        double startXOffset = 30;
+        double widthOffset = 30;
+        double startYOffset = -10;
+        double heightOffset = -20;
+
+        // get all highlights that contain the clicked cell and belong to the same thread and have element id < clicked cell id.
+        // i.e., get all the parent highlights.
+        String getHighlightIdsToResize = "SELECT ID " +
                 "FROM HIGHLIGHT_ELEMENT " +
-                "WHERE START_X <= " + startX + " " +
-                "AND START_X + WIDTH >=  " + (startX + width) + " " +
-                "AND START_Y <= " + startY + " " +
-                "AND START_Y + HEIGHT >= " + (startY + height) + " " +
-                "AND ELEMENT_ID < " + cellId + " " +
+                "WHERE START_X <= " + (x+startXOffset) + " " +
+                "AND START_X + WIDTH >=  " + (x+startXOffset) + " " +
+                "AND START_Y <= " + (y+startYOffset) + " " +
+                "AND START_Y + HEIGHT >= " + (y+startYOffset) + " " +
+                "AND ELEMENT_ID <= " + cellId + " " +
                 "AND COLLAPSED = 0 " +
+                "AND HIGHLIGHT_TYPE = 'FULL' " +
                 "AND THREAD_ID = " + threadId;
 
-        System.out.println("EventHandlers.beta: getAllParentIdsQuery: " + getAllParentIdsQuery);
+        System.out.println("EventHandlers.updateParentHighlightsInDB: getHighlightIdsToResize: " + getHighlightIdsToResize);
 
-        try (ResultSet getAllParentIdsRS = DatabaseUtil.select(getAllParentIdsQuery)) {
-            while (getAllParentIdsRS.next()) {
+        try (ResultSet rs = DatabaseUtil.select(getHighlightIdsToResize)) {
+            while (rs.next()) {
                 // For all the highlights obtained above, adjust their widht and height so that the highlights cover only the visible cells.
-                String updateParentHighlightsQuery = "UPDATE " + TableNames.HIGHLIGHT_ELEMENT + " AS H " +
-                        "SET H.HEIGHT = HEIGHT - " + delta + ", " +
+                String updateHighlightHeight = "UPDATE " + TableNames.HIGHLIGHT_ELEMENT + " AS H " +
+                        "SET H.HEIGHT = HEIGHT - " + delta + " " +
+                        "WHERE H.ID = " + rs.getInt("ID");
+
+                String updateHighlighWidth = "UPDATE " + TableNames.HIGHLIGHT_ELEMENT + " AS H " +
+                        "SET " +
+                        // "H.HEIGHT = HEIGHT - " + delta + ", " +
                         "H.WIDTH = " +
-                        "((SELECT MAX(H1.START_X + H1.WIDTH)" +
-                        "FROM HIGHLIGHT_ELEMENT AS H1 " +
-                        "WHERE H1.START_Y >= (SELECT H2.START_Y " +
-                        "FROM HIGHLIGHT_ELEMENT AS H2 " +
-                        "WHERE H2.ID = H.ID) " +
-                        "AND (H1.START_Y + H1.HEIGHT) <= (SELECT H3.START_Y + H3.HEIGHT " +
-                        "FROM HIGHLIGHT_ELEMENT AS H3 " +
-                        "WHERE H3.ID = H.ID) " +
-                        "AND H1.THREAD_ID = (SELECT H4.THREAD_ID " +
-                        "FROM HIGHLIGHT_ELEMENT AS H4 " +
-                        "WHERE H4.ID = H.ID) " +
-                        "AND H1.ID != H.ID " +
-                        "AND H1.COLLAPSED = 0) " +
-                        "- H.START_X) " +
-                        "WHERE H.ID = " + getAllParentIdsRS.getInt("ID");
+                            "((SELECT MAX(E1.BOUND_BOX_X_TOP_RIGHT) FROM " + TableNames.ELEMENT_TABLE + " AS E1 " +
+                            "JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT ON E1.ID_ENTER_CALL_TRACE = CT.ID " +
+                            "WHERE E1.BOUND_BOX_Y_COORDINATE >= H.START_Y " +
+                            "AND E1.BOUND_BOX_Y_COORDINATE <= (H.START_Y + H.HEIGHT) " +
+                            // "AND E1.BOUND_BOX_X_COORDINATE >= H.START_X " +
+                            // "AND E1.BOUND_BOX_X_COORDINATE <= (H.START_X + H.WIDTH) " +
+                            "AND CT.THREAD_ID = " + threadId + " " +
+                            "AND E1.COLLAPSED IN (0, 2)" +
+                            ") - H.START_X + " + widthOffset + ") " +
 
-                statement.addBatch(updateParentHighlightsQuery);
+                        // "((SELECT MAX(H1.START_X + H1.WIDTH)" +
+                        // "FROM HIGHLIGHT_ELEMENT AS H1 " +
+                        // "WHERE H1.START_Y >= (SELECT H2.START_Y " +
+                        // "FROM HIGHLIGHT_ELEMENT AS H2 " +
+                        // "WHERE H2.ID = H.ID) " +
+                        // "AND (H1.START_Y + H1.HEIGHT) <= (SELECT H3.START_Y + H3.HEIGHT " +
+                        // "FROM HIGHLIGHT_ELEMENT AS H3 " +
+                        // "WHERE H3.ID = H.ID) " +
+                        // "AND H1.THREAD_ID = (SELECT H4.THREAD_ID " +
+                        // "FROM HIGHLIGHT_ELEMENT AS H4 " +
+                        // "WHERE H4.ID = H.ID) " +
+                        // "AND H1.ID != H.ID " +
+                        // "AND H1.COLLAPSED = 0) " +
+                        // "- H.START_X) " +
 
-                System.out.println("EventHandlers.beta For cellId: " + cellId + " updateParentHighlightsQuery: " + updateParentHighlightsQuery);
+                        "WHERE H.ID = " + rs.getInt("ID");
+
+                statement.addBatch(updateHighlightHeight);
+                statement.addBatch(updateHighlighWidth);
+
+                System.out.println("EventHandlers.updateParentHighlightsInDB For cellId: " + cellId + " updateHighlightHeight " + updateHighlightHeight);
+                System.out.println("EventHandlers.updateParentHighlightsInDB For cellId: " + cellId + " updateHighlighWidth: " + updateHighlighWidth);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        System.out.println("EventHandlers.updateParentHighlightsInDB method ends");
     }
 
     private void updateClickedCellHighlights(int clickedCellId, double y, double delta, double deltaX, Statement statement) {

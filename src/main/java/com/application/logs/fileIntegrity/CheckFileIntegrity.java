@@ -90,7 +90,7 @@ public class CheckFileIntegrity {
             // throw new NoSuchElementException("Error occurred in line due to mismatch in count of enters and exits. " +
             //         "Error at line: " + linesRead + "; Line is: " + line);
         } finally {
-            System.out.println("File integrity check completed. If no exceptions were thrown, then file is good.");
+            System.out.println("Log file integrity check completed. If no exceptions were thrown, then log file format is valid.");
         }
 
     }

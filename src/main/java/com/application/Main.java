@@ -1441,10 +1441,10 @@ public class Main extends Application {
 
     private void addInsertQueryToStatement(String fullName, Statement statement, String highlightType) {
         System.out.println("Main.addInsertQueryToStatement: crafting query for " + fullName);
-        double leftOffset = 30;
-        double rightOffset = 30;
-        double topOffset = -10;
-        double bottomOffset = -20;
+        double startXOffset = 30;
+        double widthOffset = 30;
+        double startYOffset = -10;
+        double heightOffset = -20;
 
         String[] arr = fullName.split("\\.");
         String methodName = arr[arr.length - 1];
@@ -1468,16 +1468,16 @@ public class Main extends Application {
                 "'" + highlightType + "', " +
 
                 // START_X
-                TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT + " + leftOffset + ", " +
+                TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT + " + startXOffset + ", " +
 
                 // START_Y
-                TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT + " + topOffset + ", " +
+                TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT + " + startYOffset + ", " +
 
                 // WIDTH
-                (BoundBox.unitWidthFactor + rightOffset) + ", " +
+                (BoundBox.unitWidthFactor + widthOffset) + ", " +
 
                 // HEIGHT
-                (BoundBox.unitHeightFactor + bottomOffset) + ", " +
+                (BoundBox.unitHeightFactor + heightOffset) + ", " +
                 // "(" + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_RIGHT - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT), " +
                 // "(" + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_BOTTOM_LEFT - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT), " +
 
@@ -1541,10 +1541,10 @@ public class Main extends Application {
                 "'" + highlightType + "', " +
 
                 // START_X
-                TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT + " + leftOffset + ", " +
+                TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT + " + startXOffset + ", " +
 
                 // START_Y
-                TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT + " + topOffset + ", " +
+                TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT + " + startYOffset + ", " +
 
                 // WIDTH
                 "CASE " +
@@ -1555,8 +1555,8 @@ public class Main extends Application {
                         "AND E1.BOUND_BOX_Y_COORDINATE < " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_BOTTOM_LEFT " +
                         "AND CT.THREAD_ID = " + threadId + " " +
                         "AND (E1.COLLAPSED IN (0, 2)  OR E1.ID = ELEMENT.ID)" +
-                        ") - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT + " + rightOffset + ") " +
-                        "ELSE " + BoundBox.unitWidthFactor + " " +
+                        ") - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT + " + widthOffset + ") " +
+                        "ELSE " + (BoundBox.unitWidthFactor + widthOffset) + " " +
                 "END " +
                 ", " +
                 // TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_BOTTOM_RIGHT - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_BOTTOM_LEFT + " + endOffset + "," +
@@ -1568,7 +1568,7 @@ public class Main extends Application {
                 // "AND E1.BOUND_BOX_Y_COORDINATE <= " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_BOTTOM_LEFT " +
                 // "AND E1.BOUND_BOX_X_COORDINATE >= " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT " +
                 // "AND CT.THREAD_ID = " + threadId + ") - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT + " + endOffset + ", " +
-                TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_BOTTOM_LEFT - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT + " + bottomOffset + "," +
+                TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_BOTTOM_LEFT - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT + " + heightOffset + "," +
 
                 // COLOR
                 "'" + colorsMap.getOrDefault(fullName, Color.AQUAMARINE) + "', " +
