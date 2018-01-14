@@ -1440,7 +1440,7 @@ public class Main extends Application {
     }
 
     private void addInsertQueryToStatement(String fullName, Statement statement, String highlightType) {
-        System.out.println("Main.addInsertQueryToStatement: crafting query for " + fullName);
+        // System.out.println("Main.addInsertQueryToStatement: crafting query for " + fullName);
         double startXOffset = 30;
         double widthOffset = 30;
         double startYOffset = -10;
@@ -1555,7 +1555,8 @@ public class Main extends Application {
                         "AND E1.BOUND_BOX_Y_COORDINATE < " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_BOTTOM_LEFT " +
                         "AND CT.THREAD_ID = " + threadId + " " +
                         "AND (E1.COLLAPSED IN (0, 2)  OR E1.ID = ELEMENT.ID)" +
-                        ") - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT + " + widthOffset + ") " +
+                        // ") - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT + " + widthOffset + ") " +
+                        ") - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT) " +
                         "ELSE " + (BoundBox.unitWidthFactor + widthOffset) + " " +
                 "END " +
                 ", " +
@@ -1595,7 +1596,7 @@ public class Main extends Application {
 
         String sql = highlightType.equalsIgnoreCase("SINGLE") ? sqlSingle : sqlFull;
 
-        System.out.println("Main::addInsertQueryToStatement: sql : " + sql);
+        // System.out.println("Main::addInsertQueryToStatement: sql : " + sql);
         try {
             statement.addBatch(sql);
         } catch (SQLException e) {
