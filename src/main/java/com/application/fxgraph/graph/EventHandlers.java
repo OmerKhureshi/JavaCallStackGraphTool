@@ -23,9 +23,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.application.fxgraph.graph.Graph.cellLayer;
 
@@ -314,16 +312,10 @@ public class EventHandlers {
                                 double width = graph.getScrollPane().getContent().getBoundsInLocal().getWidth();
                                 double height = graph.getScrollPane().getContent().getBoundsInLocal().getHeight();
 
-
                                 // go to location.
                                 Button button = new Button();
                                 button.setOnMouseClicked(event1 -> {
-                                    ConvertDBtoElementTree.resetRegions();
-                                    main.showThread(targetThreadId);
-                                    Main.makeSelection(targetThreadId);
-                                    graph.moveScrollPane(xCoordinate, yCoordinate);
-
-                                    System.out.println("Moving scroll pane: " + xCoordinate + " " + yCoordinate);
+                                    jumpTo(elementId, targetThreadId);
                                 });
                                 buttonList.add(button);
                             }
@@ -400,7 +392,6 @@ public class EventHandlers {
 
     private void invokeOnMousePressedEventHandler(CircleCell cell, int threadId) {
         {
-
             if (!clickable) {
                 System.out.println(">>>>>>>>>>>>>>>>>>> Clickable is false. <<<<<<<<<<<<<<<<<<<<<");
                 return;
@@ -491,14 +482,6 @@ public class EventHandlers {
                     e.printStackTrace();
                 }
 
-                // try (ResultSet rs = HighlightDAOImpl.selectWhere("ELEMENT_ID = " + clickedCellID)){
-                //     if (rs.next()) {
-                //         newDeltaX = rs.getFloat("WIDTH") - BoundBox.unitWidthFactor;
-                //         System.out.println("EventHandler::onMousePressedToCollapseTree on collapse: newDeltaX: " + newDeltaX);
-                //     }
-                // } catch (SQLException e) {
-                //     e.printStackTrace();
-                // }
                 double clickedCellBottomY = clickedCellTopLeftY + BoundBox.unitHeightFactor;
 
                 // deltaCache.put(clickedCellID, delta);
@@ -514,7 +497,9 @@ public class EventHandlers {
                 removeChildrenFromUI(Integer.parseInt(clickedCellID), nextCellId);
                 moveLowerTreeByDelta(clickedCellID, clickedCellBottomY, newDelta);
                 // updateAllParentHighlightsOnUI(clickedCellID, clickedCellTopLeftX, clickedCellTopLeftY, newDelta, newDeltaX);
-                updateDBInBackgroundThread(Integer.parseInt(clickedCellID), clickedCellTopLeftY, clickedCellBoundBottomLeftY, clickedCellTopLeftX, clickedCellTopRightX, newDelta, newDeltaX, true, nextCellId, threadId, lastCellId, parentId);
+                updateDBInBackgroundThread(Integer.parseInt(clickedCellID), clickedCellTopLeftY, clickedCellBoundBottomLeftY, clickedCellTopLeftX,
+                        clickedCellTopRightX, newDelta, newDeltaX, true,
+                        nextCellId, threadId, lastCellId, parentId);
 
             } else if (collapsed == 2) {
                 // MAXIMIZE SUBTREE
@@ -527,20 +512,58 @@ public class EventHandlers {
 
                 // double delta = deltaCache.get(clickedCellID);
 
-                int nextCellId = getNextLowerSiblingOrAncestorNode(Integer.parseInt(clickedCellID), clickedCellTopLeftX, clickedCellTopLeftY, threadId);
-                int lastCellId = getLowestCellInThread(threadId);
-
-                double clickedCellBottomY = clickedCellTopLeftY + BoundBox.unitHeightFactor;
-                double newClickedCellBottomY = clickedCellTopLeftY + BoundBox.unitHeightFactor + newDelta;
-
-                moveLowerTreeByDelta(clickedCellID, clickedCellBottomY, -newDelta);
-                updateAllParentHighlightsOnUI(clickedCellID, clickedCellTopLeftX, clickedCellTopLeftY, -newDelta, -newDeltaX);
-
-                ElementDAOImpl.updateWhere("collapsed", "0", "id = " + clickedCellID);
-                updateDBInBackgroundThread(Integer.parseInt(clickedCellID), clickedCellTopLeftY, clickedCellBoundBottomLeftY, clickedCellTopLeftX, clickedCellTopRightX, -newDelta, -newDeltaX, false, nextCellId, threadId, lastCellId, parentId);
+                expandTreeAt(clickedCellID, parentId, threadId, newDelta, newDeltaX,
+                        clickedCellTopLeftX, clickedCellTopLeftY, clickedCellBoundBottomLeftY, clickedCellTopRightX );
             }
         }
     }
+
+    private void expandTreeAt(String clickedCellID, int parentId, int threadId, double newDelta, double newDeltaX,
+                              double clickedCellTopLeftX, double clickedCellTopLeftY, double clickedCellBoundBottomLeftY, double clickedCellTopRightX) {
+        int nextCellId = getNextLowerSiblingOrAncestorNode(Integer.parseInt(clickedCellID), clickedCellTopLeftX, clickedCellTopLeftY, threadId);
+        int lastCellId = getLowestCellInThread(threadId);
+
+        double clickedCellBottomY = clickedCellTopLeftY + BoundBox.unitHeightFactor;
+        double newClickedCellBottomY = clickedCellTopLeftY + BoundBox.unitHeightFactor + newDelta;
+
+        moveLowerTreeByDelta(clickedCellID, clickedCellBottomY, -newDelta);
+        updateAllParentHighlightsOnUI(clickedCellID, clickedCellTopLeftX, clickedCellTopLeftY, -newDelta, -newDeltaX);
+
+        ElementDAOImpl.updateWhere("collapsed", "0", "id = " + clickedCellID);
+        updateDBInBackgroundThread(Integer.parseInt(clickedCellID), clickedCellTopLeftY, clickedCellBoundBottomLeftY,
+                clickedCellTopLeftX, clickedCellTopRightX, -newDelta, -newDeltaX, false,
+                nextCellId, threadId, lastCellId, parentId);
+    }
+
+    private void expandTreeAt(String cellId, int threadId) {
+        String clickedCellID = cellId;
+        int collapsed = 0;
+        double clickedCellTopLeftY = 0;
+        double clickedCellTopLeftX = 0;
+        double clickedCellTopRightX = 0;
+        double clickedCellBoundBottomLeftY = 0;
+        double newDelta = 0;
+        double newDeltaX = 0;
+        int parentId = 0;
+
+        try (ResultSet cellRS = ElementDAOImpl.selectWhere("id = " + clickedCellID)) {
+            if (cellRS.next()) {
+                collapsed = cellRS.getInt("collapsed");
+                clickedCellTopLeftY = cellRS.getDouble("bound_box_y_top_left");
+                clickedCellTopLeftX = cellRS.getDouble("bound_box_x_top_left");
+                clickedCellTopRightX = cellRS.getDouble("bound_box_x_top_right");
+                clickedCellBoundBottomLeftY = cellRS.getDouble("bound_box_y_bottom_left");
+                newDelta = cellRS.getDouble("delta");
+                newDeltaX = cellRS.getDouble("delta_x");
+                parentId = cellRS.getInt("parent_id");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        expandTreeAt(clickedCellID, parentId, threadId, newDelta, newDeltaX, clickedCellTopLeftX, clickedCellTopLeftY, clickedCellBoundBottomLeftY, clickedCellTopRightX);
+    }
+
 
 
     private EventHandler<MouseEvent> onMousePressedToCollapseTree = new EventHandler<MouseEvent>() {
@@ -550,6 +573,52 @@ public class EventHandlers {
             invokeOnMousePressedEventHandler((CircleCell) event.getSource(), Integer.valueOf(main.getCurrentSelectedThread()));
         }
     };
+
+    private void expandParentTreeChain(int cellId, int threadId) {
+        System.out.println("EventHandlers.expandParentTreeChain: method started");
+        Deque<Integer> stack = new LinkedList<>();
+
+        String query = "SELECT MAX(ID) AS IDS " +
+                "FROM " + TableNames.ELEMENT_TABLE + " " +
+                "WHERE ID < " + cellId + " " +
+                "AND BOUND_BOX_X_COORDINATE < (SELECT BOUND_BOX_X_COORDINATE " +
+                                                    "FROM " + TableNames.ELEMENT_TABLE + " AS E1 " +
+                                                    "WHERE E1.ID = " + cellId + ") " +
+                "AND PARENT_ID > 1 " +
+                "AND COLLAPSED <> 0 " +
+                "ORDER BY IDS ASC " +
+                "GROUP BY BOUND_BOX_X_COORDINATE";
+
+        try (ResultSet rs = DatabaseUtil.select(query)) {
+            while (rs.next()) {
+                System.out.println("EventHandlers.expandParentTreeChain: expandTreeAt: " + String.valueOf(rs.getInt("IDS")));
+                expandTreeAt(String.valueOf(rs.getInt("IDS")), threadId);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("EventHandlers.expandParentTreeChain: method ended");
+    }
+
+    private void jumpTo(int cellId, String threadId) {
+        System.out.println("EventHandlers.jumpTo: method started");
+        expandParentTreeChain(cellId, Integer.parseInt(threadId));
+
+        ConvertDBtoElementTree.resetRegions();
+        main.showThread(threadId);
+        Main.makeSelection(threadId);
+
+        try (ResultSet rs = ElementDAOImpl.selectWhere("ID = " + cellId)){
+            double xCord = rs.getDouble("BOUND_BOX_X_COORDINATE");
+            double yCord = rs.getDouble("BOUND_BOX_Y_COORDINATE");
+            graph.moveScrollPane(xCord, yCord);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("EventHandlers.jumpTo: method ended");
+    }
 
     private int getLowestCellInThread(int threadId) {
         String maxEleIdQuery = "SELECT MAX(E.ID) AS MAXID " +

@@ -1442,7 +1442,7 @@ public class Main extends Application {
     private void addInsertQueryToStatement(String fullName, Statement statement, String highlightType) {
         // System.out.println("Main.addInsertQueryToStatement: crafting query for " + fullName);
         double startXOffset = 30;
-        double widthOffset = 30;
+        double widthOffset = 0;
         double startYOffset = -10;
         double heightOffset = -20;
 
@@ -1557,7 +1557,7 @@ public class Main extends Application {
                         "AND (E1.COLLAPSED IN (0, 2)  OR E1.ID = ELEMENT.ID)" +
                         // ") - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT + " + widthOffset + ") " +
                         ") - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT) " +
-                        "ELSE " + (BoundBox.unitWidthFactor + widthOffset) + " " +
+                    "ELSE " + (BoundBox.unitWidthFactor + widthOffset) + " " +
                 "END " +
                 ", " +
                 // TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_BOTTOM_RIGHT - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_BOTTOM_LEFT + " + endOffset + "," +
