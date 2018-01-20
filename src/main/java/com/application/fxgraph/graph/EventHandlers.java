@@ -52,8 +52,8 @@ public class EventHandlers {
         // *****************
         // Show popup to display element details on mouse hover on an element.
         // node.setOnMouseEntered(onMouseHoverToShowInfoEventHandler);
-        // node.setOnMousePressed(onMouseHoverToShowInfoEventHandler);
-        node.setOnMousePressed(onMousePressedToCollapseTree);
+         node.setOnMousePressed(onMouseHoverToShowInfoEventHandler);
+//        node.setOnMousePressed(onMousePressedToCollapseTree);
         // *****************
 
 
@@ -578,7 +578,7 @@ public class EventHandlers {
         System.out.println("EventHandlers.expandParentTreeChain: method started");
         Deque<Integer> stack = new LinkedList<>();
 
-        String query = "SELECT MAX(ID) AS IDS " +
+        String getAllParentIDsQuery = "SELECT MAX(ID) AS IDS " +
                 "FROM " + TableNames.ELEMENT_TABLE + " " +
                 "WHERE ID < " + cellId + " " +
                 "AND BOUND_BOX_X_COORDINATE < (SELECT BOUND_BOX_X_COORDINATE " +
@@ -589,7 +589,7 @@ public class EventHandlers {
                 "ORDER BY IDS ASC " +
                 "GROUP BY BOUND_BOX_X_COORDINATE";
 
-        try (ResultSet rs = DatabaseUtil.select(query)) {
+        try (ResultSet rs = DatabaseUtil.select(getAllParentIDsQuery)) {
             while (rs.next()) {
                 System.out.println("EventHandlers.expandParentTreeChain: expandTreeAt: " + String.valueOf(rs.getInt("IDS")));
                 expandTreeAt(String.valueOf(rs.getInt("IDS")), threadId);
@@ -603,8 +603,11 @@ public class EventHandlers {
 
     private void jumpTo(int cellId, String threadId) {
         System.out.println("EventHandlers.jumpTo: method started");
+
+        // make changes in DB if needed
         expandParentTreeChain(cellId, Integer.parseInt(threadId));
 
+        // update UI
         ConvertDBtoElementTree.resetRegions();
         main.showThread(threadId);
         Main.makeSelection(threadId);

@@ -12,3 +12,6 @@ target/
 
 # UI Images
 *.png
+
+# intelliJ files
+*.iml
