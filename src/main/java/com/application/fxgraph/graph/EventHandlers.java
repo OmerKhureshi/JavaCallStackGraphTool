@@ -52,8 +52,8 @@ public class EventHandlers {
         // *****************
         // Show popup to display element details on mouse hover on an element.
         // node.setOnMouseEntered(onMouseHoverToShowInfoEventHandler);
-         node.setOnMousePressed(onMouseHoverToShowInfoEventHandler);
-//        node.setOnMousePressed(onMousePressedToCollapseTree);
+        node.setOnMousePressed(onMouseHoverToShowInfoEventHandler);
+        // node.setOnMousePressed(onMousePressedToCollapseTree);
         // *****************
 
 
@@ -586,8 +586,8 @@ public class EventHandlers {
                                                     "WHERE E1.ID = " + cellId + ") " +
                 "AND PARENT_ID > 1 " +
                 "AND COLLAPSED <> 0 " +
-                "ORDER BY IDS ASC " +
-                "GROUP BY BOUND_BOX_X_COORDINATE";
+                "GROUP BY BOUND_BOX_X_COORDINATE " +
+                "ORDER BY IDS ASC ";
 
         try (ResultSet rs = DatabaseUtil.select(getAllParentIDsQuery)) {
             while (rs.next()) {
@@ -613,9 +613,11 @@ public class EventHandlers {
         Main.makeSelection(threadId);
 
         try (ResultSet rs = ElementDAOImpl.selectWhere("ID = " + cellId)){
-            double xCord = rs.getDouble("BOUND_BOX_X_COORDINATE");
-            double yCord = rs.getDouble("BOUND_BOX_Y_COORDINATE");
-            graph.moveScrollPane(xCord, yCord);
+            if (rs.next()) {
+                double xCord = rs.getDouble("BOUND_BOX_X_COORDINATE");
+                double yCord = rs.getDouble("BOUND_BOX_Y_COORDINATE");
+                graph.moveScrollPane(xCord, yCord);
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
