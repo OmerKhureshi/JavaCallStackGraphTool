@@ -353,8 +353,7 @@ public class EventHandlers {
                         gridPane.add(button, 1, rowIndex++);
                     }
 
-                    // For debugging.
-
+                    // Collapse and Expand subtree button
                     Button minMaxButton = new Button("min / max");
                     minMaxButton.setOnMouseClicked(event1 -> {
                                 if (popOver != null) {
@@ -884,7 +883,7 @@ public class EventHandlers {
             @Override
             protected Void call() throws Exception {
                 // System.out.println("==================== Starting thread updateDBInBackgroundThread. ====================");
-                updateCollapseValForSubTreeBulk(topY, bottomY, rightX, statement, isCollapsed, clickedCellId, nextCellId);
+                updateCollapseValForSubTreeBulk(topY, bottomY, rightX, statement, isCollapsed, clickedCellId, nextCellId, threadId);
 
                 // No upate required for single line children
                 if (delta == 0) {
@@ -938,7 +937,7 @@ public class EventHandlers {
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    private void updateCollapseValForSubTreeBulk(double topY, double bottomY, double leftX, Statement statement, boolean isMinimized, int startCellId, int endCellId) {
+    private void updateCollapseValForSubTreeBulk(double topY, double bottomY, double leftX, Statement statement, boolean isMinimized, int startCellId, int endCellId, int threadId) {
 
         // Collapsed value -> description
         // 0               -> visible     AND  uncollapsed
@@ -954,20 +953,25 @@ public class EventHandlers {
 
         if (isMinimized) {
             // Update the collapse value in the subtree rooted at the clicked cell.
-            updateCellQuery = "UPDATE " + TableNames.ELEMENT_TABLE + " " +
-                    "SET COLLAPSED = " +
+            updateCellQuery = "UPDATE " + TableNames.ELEMENT_TABLE + " AS E " +
+                    "SET E.COLLAPSED = " +
                     "CASE " +
-                    "WHEN COLLAPSED <= 0 THEN COLLAPSED - 1 " +
-                    "WHEN COLLAPSED >= 2 THEN COLLAPSED + 1 " +
-                    "ELSE COLLAPSED " +
+                    "WHEN E.COLLAPSED <= 0 THEN E.COLLAPSED - 1 " +
+                    "WHEN E.COLLAPSED >= 2 THEN E.COLLAPSED + 1 " +
+                    "ELSE E.COLLAPSED " +
                     "END " +
                     "WHERE " +
                     // "(bound_box_y_coordinate >= " + topY + " " +
                     // "AND bound_box_y_coordinate < " + bottomY + " " +
                     // "AND bound_box_x_coordinate >= " + leftX + ") " +
                     // "AND " +
-                    "ID > " + startCellId + " " +
-                    "AND ID < " + endCellId;
+                    "E.ID > " + startCellId + " " +
+                    "AND E.ID < " + endCellId + " " +
+                    "AND EXISTS (SELECT * FROM " + TableNames.CALL_TRACE_TABLE + " AS CT " +
+                                    "WHERE CT.ID = E.ID_ENTER_CALL_TRACE AND " +
+                                    "CT.THREAD_ID = " + threadId + ")";
+
+            // and exists (select * from call_trace where id=id_enter_call_trace and thread_id=something.
 
             // System.out.println("updateCollapseValForSubTreeBulk for minimize:cell query: " + updateCellQuery);
 
@@ -995,13 +999,13 @@ public class EventHandlers {
                     "ELSE COLLAPSED " +
                     "END " +
                     "WHERE FK_TARGET_ELEMENT_ID IN " +
-                    "(SELECT ELE.ID FROM " + TableNames.ELEMENT_TABLE + " AS ELE JOIN " + TableNames.EDGE_TABLE + " as EDGE " +
-                    "ON ELE.ID = EDGE.FK_TARGET_ELEMENT_ID " +
-                    "WHERE EDGE.FK_TARGET_ELEMENT_ID > " + startCellId + " " +
-                    "AND EDGE.FK_TARGET_ELEMENT_ID < " + endCellId + " " +
-                    // "AND ELE.COLLAPSED >= 0 " +
-                    // "AND ELE.COLLAPSED <= 2" +
-                    ")";
+                        "(SELECT ELE.ID FROM " + TableNames.ELEMENT_TABLE + " AS ELE JOIN " + TableNames.EDGE_TABLE + " as EDGE " +
+                        "ON ELE.ID = EDGE.FK_TARGET_ELEMENT_ID " +
+                        "WHERE EDGE.FK_TARGET_ELEMENT_ID > " + startCellId + " " +
+                        "AND EDGE.FK_TARGET_ELEMENT_ID < " + endCellId + " " +
+                        "AND ELE.COLLAPSED NOT IN (0, 2) " +
+                        // "AND ELE.COLLAPSED <= 2" +
+                        ")";
 
             // System.out.println("updateCollapseValForSubTreeBulk for minimize: edge query: " + updateEdgeQuery2);
 
