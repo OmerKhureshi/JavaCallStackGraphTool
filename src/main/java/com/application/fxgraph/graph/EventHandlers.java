@@ -578,14 +578,17 @@ public class EventHandlers {
         Deque<Integer> stack = new LinkedList<>();
 
         String getAllParentIDsQuery = "SELECT MAX(ID) AS IDS " +
-                "FROM " + TableNames.ELEMENT_TABLE + " " +
-                "WHERE ID < " + cellId + " " +
-                "AND BOUND_BOX_X_COORDINATE < (SELECT BOUND_BOX_X_COORDINATE " +
+                "FROM " + TableNames.ELEMENT_TABLE + " AS E " +
+                "WHERE E.ID < " + cellId + " " +
+                "AND E.BOUND_BOX_X_COORDINATE < (SELECT BOUND_BOX_X_COORDINATE " +
                                                     "FROM " + TableNames.ELEMENT_TABLE + " AS E1 " +
                                                     "WHERE E1.ID = " + cellId + ") " +
-                "AND PARENT_ID > 1 " +
-                "AND COLLAPSED <> 0 " +
-                "GROUP BY BOUND_BOX_X_COORDINATE " +
+                "AND EXISTS (SELECT * FROM " + TableNames.CALL_TRACE_TABLE + " AS CT " +
+                                "WHERE CT.ID = E.ID_ENTER_CALL_TRACE AND " +
+                                "CT.THREAD_ID = " + threadId + ")" +
+                "AND E.PARENT_ID > 1 " +
+                "AND E.COLLAPSED <> 0 " +
+                "GROUP BY E.BOUND_BOX_X_COORDINATE " +
                 "ORDER BY IDS ASC ";
 
         try (ResultSet rs = DatabaseUtil.select(getAllParentIDsQuery)) {
@@ -1019,20 +1022,23 @@ public class EventHandlers {
 
 
         } else {
-            updateCellQuery = "UPDATE " + TableNames.ELEMENT_TABLE + " " +
-                    "SET COLLAPSED = " +
+            updateCellQuery = "UPDATE " + TableNames.ELEMENT_TABLE + " AS E " +
+                    "SET E.COLLAPSED = " +
                     "CASE " +
-                    "WHEN COLLAPSED < 0 THEN COLLAPSED + 1 " +
-                    "WHEN COLLAPSED > 2 THEN COLLAPSED - 1 " +
-                    "ELSE COLLAPSED " +
+                    "WHEN E.COLLAPSED < 0 THEN E.COLLAPSED + 1 " +
+                    "WHEN E.COLLAPSED > 2 THEN E.COLLAPSED - 1 " +
+                    "ELSE E.COLLAPSED " +
                     "END " +
                     "WHERE " +
                     // "bound_box_y_coordinate >= " + topY + " " +
                     // "AND bound_box_y_coordinate < " + bottomY + " " +
                     // "AND bound_box_x_coordinate >= " + leftX + " " +
                     // "AND " +
-                    "ID > " + startCellId + " " +
-                    "AND ID < " + endCellId + " ";
+                    "E.ID > " + startCellId + " " +
+                    "AND E.ID < " + endCellId + " " +
+                    "AND EXISTS (SELECT * FROM " + TableNames.CALL_TRACE_TABLE + " AS CT " +
+                                    "WHERE CT.ID = E.ID_ENTER_CALL_TRACE AND " +
+                                    "CT.THREAD_ID = " + threadId + ")";
 
             // System.out.println("updateCollapseValForSubTreeBulk for mazimize: cell query: " + updateCellQuery);
 
