@@ -36,7 +36,6 @@ public class EventHandlers {
     private boolean subtreeExpanded = true;
     private boolean posUpdated = true;
 
-
     Graph graph;
     static Main main;
 
@@ -564,11 +563,9 @@ public class EventHandlers {
     }
 
 
-
     private EventHandler<MouseEvent> onMousePressedToCollapseTree = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {
-            // System.out.println("Nothing happens on in EventHandler::onMousePressedToCollapseTree Event");
             invokeOnMousePressedEventHandler((CircleCell) event.getSource(), Integer.valueOf(main.getCurrentSelectedThread()));
         }
     };
@@ -876,9 +873,6 @@ public class EventHandlers {
     }
 
 
-    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     private void updateDBInBackgroundThread(int clickedCellId, double topY, double bottomY, double leftX, double rightX, double delta, double deltaX, boolean isCollapsed, int nextCellId, int threadId, int lastCellId, int parentId) {
 
         Statement statement = DatabaseUtil.createStatement();
@@ -937,9 +931,6 @@ public class EventHandlers {
         new Thread(task).start();
     }
 
-    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     private void updateCollapseValForSubTreeBulk(double topY, double bottomY, double leftX, Statement statement, boolean isMinimized, int startCellId, int endCellId, int threadId) {
 
         // Collapsed value -> description
@@ -1098,55 +1089,6 @@ public class EventHandlers {
         // System.out.println("EventHandler::updateCollapseValForSubTreeBulk: method ended");
     }
 
-    private void insertHighlightsInExpandedSubTree(double topY, double bottomY, double leftX, Statement statement, boolean isMinimized, int startCellId, int endCellId) {
-
-        main.firstCBMap.forEach((pckgFullName, ignore) -> {
-
-        });
-
-    }
-
-    private void updateCollapseValForEdgesSubTreeBulk(Statement statement, boolean isMinimized, int startCellId, int endCellId) throws SQLException {
-        String updateEdgeQuery2;
-
-        if (isMinimized) {
-            updateEdgeQuery2 = "UPDATE " + TableNames.EDGE_TABLE + " " +
-                    "SET COLLAPSED = " +
-                    "CASE " +
-                    "WHEN COLLAPSED = 0 THEN 1 " +
-                    "ELSE COLLAPSED " +
-                    "END " +
-                    "WHERE FK_TARGET_ELEMENT_ID IN " +
-                    "(SELECT ELE.ID FROM " + TableNames.ELEMENT_TABLE + " AS ELE JOIN " + TableNames.EDGE_TABLE + " as EDGE " +
-                    "ON ELE.ID = EDGE.FK_TARGET_ELEMENT_ID " +
-                    "WHERE EDGE.FK_TARGET_ELEMENT_ID > " + startCellId + " " +
-                    "AND EDGE.FK_TARGET_ELEMENT_ID < " + endCellId + " " +
-                    "AND (ELE.COLLAPSED <> 0 OR ELE.COLLAPSED <> 2)" +
-                    ")";
-        } else {
-
-            updateEdgeQuery2 = "UPDATE " + TableNames.EDGE_TABLE + " " +
-                    "SET COLLAPSED = " +
-                    "CASE " +
-                    "WHEN COLLAPSED = 1 THEN 0 " +
-                    "ELSE COLLAPSED " +
-                    "END " +
-                    "WHERE FK_TARGET_ELEMENT_ID IN " +
-                    "(SELECT ELE.ID FROM " + TableNames.ELEMENT_TABLE + " AS ELE JOIN " + TableNames.EDGE_TABLE + " as EDGE " +
-                    "ON ELE.ID = EDGE.FK_TARGET_ELEMENT_ID " +
-                    "WHERE EDGE.FK_TARGET_ELEMENT_ID > " + startCellId + " " +
-                    "AND EDGE.FK_TARGET_ELEMENT_ID < " + endCellId + " " +
-                    "AND ELE.COLLAPSED = 0 " +
-                    "AND ELE.COLLAPSED = 2" +
-                    ")";
-        }
-        statement.addBatch(updateEdgeQuery2);
-
-    }
-
-    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     private void updateTreeBelowYBulk(double y, double delta, Statement statement, int nextCellId, int lastCellId, int threadId) {
         // System.out.println("EventHandler::updateTreeBelowYBulk: method started");
         String updateCellsQuery = "UPDATE " + TableNames.ELEMENT_TABLE + " " +
@@ -1192,9 +1134,6 @@ public class EventHandlers {
         // System.out.println("EventHandler::updateTreeBelowYBulk: method ended.");
     }
 
-    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     /**
      * This method gets cell's BOUND_BOX_Y_BOTTOM_LEFT and calculates it's new value.
      * Then updates cell's BOUND_BOX_Y_BOTTOM_LEFT and BOUND_BOX_Y_BOTTOM_RIGHT values.
@@ -1250,24 +1189,6 @@ public class EventHandlers {
 
             }
         });
-    }
-
-    private void updateAllParentHighlightsInDB(int clickedCellId, double y, double delta, double deltaX, Statement statement, int threadId) {
-        try {
-            String updateParentHighlights = "UPDATE " + TableNames.HIGHLIGHT_ELEMENT + " " +
-                    "SET HEIGHT = HEIGHT - " + delta + " " +
-                    "WHERE START_Y <= " + y + " " +
-                    "AND START_Y + HEIGHT >= " + y + " " +
-                    "AND ELEMENT_ID < " + clickedCellId + " " +
-                    "AND COLLAPSED = 0 " +
-                    "AND THREAD_ID = " + threadId;
-
-            statement.addBatch(updateParentHighlights);
-            // System.out.println("EventHandler::updateAllParentHighlightsInDB: updateParentHighlights: " + updateParentHighlights);
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
     }
 
     private void updateChildrenHighlightsInDB(int cellId, boolean isCollapsed, Statement statement, double delta, int nextCellId, int threadId) {
@@ -1445,244 +1366,6 @@ public class EventHandlers {
         // System.out.println("EventHandlers.updateParentHighlightsInDB method ends");
     }
 
-    private void updateClickedCellHighlights(int clickedCellId, double y, double delta, double deltaX, Statement statement) {
-        try {
-            String updateParentHighlightsForClickedId = "UPDATE " + TableNames.HIGHLIGHT_ELEMENT + " " +
-                    "SET HEIGHT = HEIGHT - " + delta + ", " +
-                    "WIDTH = WIDTH - " + deltaX + " " +
-                    "WHERE ELEMENT_ID = " + clickedCellId;
-
-            statement.addBatch(updateParentHighlightsForClickedId);
-            // System.out.println("EventHandler::updateAllParentHighlightsInDB: updateParentHighlightsForClickedId: " + updateParentHighlightsForClickedId);
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    // This method returns the edge update query.
-    // It accepts target x and y coordinate and get the source x and y coordinates.
-    private String getEdgePosUpdateQuery(int targetId, double endX, double endY) {
-        // Get the element row for source cell
-        String getSourceElementRow = "SELECT * FROM " + TableNames.ELEMENT_TABLE + " " +
-                "WHERE ID = (" +
-                "SELECT FK_SOURCE_ELEMENT_ID FROM " + TableNames.EDGE_TABLE + " " +
-                "WHERE FK_TARGET_ELEMENT_ID = " + targetId + ")";
-
-        String edgeUpdateQuery = null;
-
-        try (ResultSet sourceCellRS = DatabaseUtil.select(getSourceElementRow)) {
-            if (sourceCellRS.next()) {
-                // Update edge only if it exists. Edge only exists if there is a source cell for the current cell (target cell)
-                // get x and y coordinates of source and target cell. The current cell is target cell.
-                double edgeNewStartX = sourceCellRS.getDouble("bound_box_x_coordinate");
-                double edgeNewStartY = sourceCellRS.getDouble("bound_box_y_coordinate");
-                double edgeNewEndX = endX;
-                double edgeNewEndY = endY;
-
-                // For edges, update the pos values.
-                edgeUpdateQuery = "UPDATE " + TableNames.EDGE_TABLE + " " +
-                        "SET START_X = " + edgeNewStartX + ", " +
-                        "START_Y = " + edgeNewStartY + ", " +
-                        "END_X = " + edgeNewEndX + ", " +
-                        "END_Y = " + edgeNewEndY +
-                        "WHERE FK_TARGET_ELEMENT_ID = " + targetId;
-
-
-                // System.out.println("EventHandler::getEdgePosUpdateQuery: Update query for edge: " + edgeUpdateQuery);
-
-            }
-        } catch (SQLException e) {
-            System.out.println("SQL that threw exception: " + getSourceElementRow);
-            e.printStackTrace();
-        }
-
-        return edgeUpdateQuery;
-    }
-
-
-    private static void addEdgePosUpdateQueryToStatement(int targetId, double y, Statement statement) throws SQLException {
-
-
-        // Update the startX and startY values of all edges that start at current cell.
-        String updateEdgeStartPosQuery = "UPDATE " + TableNames.EDGE_TABLE + " " +
-                "SET START_Y = " + y + " " +
-                "WHERE FK_SOURCE_ELEMENT_ID = " + targetId;
-
-        // System.out.println("EventHandler::getEdgePosUpdateQuery: Update query for edge: change of start pos: " + updateEdgeStartPosQuery);
-
-        // Update the endX and endY values of all edges that end at current cell.
-        String updateEdgeEndPosQuery = "UPDATE " + TableNames.EDGE_TABLE + " " +
-                "SET END_Y = " + y + " " +
-                "WHERE FK_TARGET_ELEMENT_ID = " + targetId;
-
-        // System.out.println("EventHandler::getEdgePosUpdateQuery: Update query for edge: change of end pos: " + updateEdgeEndPosQuery);
-
-        statement.addBatch(updateEdgeStartPosQuery);
-        statement.addBatch(updateEdgeEndPosQuery);
-
-    }
-
-
-    public void expandSubtreeAndUpdateColValsOfSubtreeRootedAt(String cellId) {
-        Task<Void> expandSubtree = new Task<Void>() {
-            @Override
-            protected Void call() throws Exception {
-                expandSubtreeAndUpdateColValsRecursive(cellId);
-                return null;
-            }
-
-            @Override
-            protected void succeeded() {
-                super.succeeded();
-                subtreeExpanded = true;
-                System.out.println("set subtreeExpanded: " + subtreeExpanded);
-                Platform.runLater(() -> setClickable());
-                // System.out.println("EventHandler::updatePosValForLowerTree:  Updated the entire tree successfully");
-            }
-
-            @Override
-            protected void failed() {
-                super.failed();
-                System.out.println("EventHandler::updatePosValForLowerTree:  Failed to update tree.");
-                try {
-                    throw new Exception("updatePosValForLowerTree failed");
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-
-        // catch the exception in the thread.
-        expandSubtree.setOnFailed(event -> {
-            expandSubtree.getException().printStackTrace();
-        });
-        new Thread(expandSubtree).start();
-
-
-    }
-
-    public void expandSubtreeAndUpdateColValsRecursive(String cellId) {
-        // Get element row for this cell
-        try (ResultSet elementRS = ElementDAOImpl.selectWhere("id = " + cellId)) {
-            if (elementRS.next()) {
-                int collapsed = elementRS.getInt("collapsed");
-                if (collapsed == 0) {
-                    throw new IllegalStateException("Collapsed cannot be 0 here at CellID: " + cellId);
-                } else if (collapsed == 1) {
-                    System.out.println(" ==> collapse 1 -> 0 at cellId: " + cellId);
-                    ElementDAOImpl.updateWhere("collapsed", "0", "id = " + cellId);
-
-                    // Create a new circle cell and add to UI
-                    float xCoordinateTemp = elementRS.getFloat("bound_box_x_coordinate");
-                    float yCoordinateTemp = elementRS.getFloat("bound_box_y_coordinate");
-                    CircleCell cell = new CircleCell(cellId, xCoordinateTemp, yCoordinateTemp);
-                    Platform.runLater(() -> graph.getModel().addCell(cell));
-
-
-                    // Create a new edge and add to UI. Update edge's collapsed=0
-                    try (ResultSet parentRS = ElementToChildDAOImpl.selectWhere("child_id = " + cellId)) {
-                        if (parentRS.next()) {
-                            String parentId = String.valueOf(parentRS.getInt("parent_id"));
-                            CircleCell parentCell = graph.getModel().getCircleCellsOnUI().get(parentId);
-
-                            Edge edge = new Edge(parentCell, cell);
-
-                            EdgeDAOImpl.updateWhere("collapsed", "0",
-                                    "fk_target_element_id = " + cellId);
-
-                            Platform.runLater(() -> graph.getModel().addEdge(edge));
-                        }
-                    }
-
-                    // graph.myEndUpdate();
-                    Platform.runLater(() -> graph.updateCellLayer());
-
-
-                    // Recurse to this cells children
-                    try (ResultSet childrenRS = ElementToChildDAOImpl.selectWhere("parent_id = " + cellId)) {
-                        while (childrenRS.next()) {
-                            String childId = String.valueOf(childrenRS.getInt("child_id"));
-                            expandSubtreeAndUpdateColValsRecursive(childId);
-                        }
-                    }
-
-                } else if (collapsed == 2) {
-                    System.out.println(" ==> collapse 2 -> 0 at cellId: " + cellId);
-
-                    // update collapsed=0
-                    ElementDAOImpl.updateWhere("collapsed", "0", "id = " + cellId);
-                    // for all children with collapsed=1, show and update collapsed=0
-                    try (ResultSet childrenRS = ElementToChildDAOImpl.selectWhere("parent_id = " + cellId)) {
-                        while (childrenRS.next()) {
-                            String childId = String.valueOf(childrenRS.getInt("child_id"));
-                            expandSubtreeAndUpdateColValsRecursive(childId);
-                        }
-                    }
-
-                } else if (collapsed == 3) {
-                    System.out.println(" ==> collapse 3 -> 2 at cellId: " + cellId);
-
-                    // update collapsed=2
-                    ElementDAOImpl.updateWhere("collapsed", "2", "id = " + cellId);
-
-                    // Create new circle cell and add to UI
-                    float xCoordinateTemp = elementRS.getFloat("bound_box_x_coordinate");
-                    float yCoordinateTemp = elementRS.getFloat("bound_box_y_coordinate");
-                    CircleCell cell = new CircleCell(cellId, xCoordinateTemp, yCoordinateTemp);
-                    Platform.runLater(() -> graph.getModel().addCell(cell));
-
-                    // Create a new edge and add to UI. Update edge's collapsed=0
-                    try (ResultSet parentRS = ElementToChildDAOImpl.selectWhere("child_id = " + cellId)) {
-                        if (parentRS.next()) {
-                            String parentId = String.valueOf(parentRS.getInt("parent_id"));
-                            CircleCell parentCell = graph.getModel().getCircleCellsOnUI().get(parentId);
-
-                            Edge edge = new Edge(parentCell, cell);
-                            EdgeDAOImpl.updateWhere("collapsed", "0",
-                                    "fk_target_element_id = " + cellId);
-
-                            Platform.runLater(() -> graph.getModel().addEdge(edge));
-
-                        }
-                    }
-                    // graph.myEndUpdate();
-                    Platform.runLater(() -> graph.updateCellLayer());
-
-                    // Do not recurse to children. Stop at this cell.
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-    }
-
-
-    public void updateCollapseValForSubTreeRootedAtRecursive(String cellId, List<String> removeCircleCells, List<String> removeEdges) {
-        try (ResultSet childrenRS = ElementToChildDAOImpl.selectWhere("parent_id = " + cellId)) {
-            try {
-                while (childrenRS.next()) {
-                    String childId = String.valueOf(childrenRS.getInt("child_id"));
-                    removeCircleCells.add(childId);
-                    removeEdges.add(childId);
-
-                    ElementDAOImpl.updateWhere("collapsed", "1",
-                            "id = " + childId + " AND collapsed = 0");
-                    ElementDAOImpl.updateWhere("collapsed", "3",
-                            "id = " + childId + " AND collapsed = 2");
-
-                    EdgeDAOImpl.updateWhere("collapsed", "1",
-                            "fk_target_element_id = " + childId);
-
-                    updateCollapseValForSubTreeRootedAtRecursive(childId, removeCircleCells, removeEdges);
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        } catch (SQLException e) {
-        }
-    }
 
     @SuppressWarnings("unused")
     EventHandler<MouseEvent> onMousePressedEventHandler = new EventHandler<MouseEvent>() {
