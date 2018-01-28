@@ -20,6 +20,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Arc;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.Shape;
 import javafx.util.Duration;
 import org.controlsfx.control.PopOver;
 import org.controlsfx.glyphfont.Glyph;
@@ -405,19 +406,15 @@ public class EventHandlers {
             Group node = (Group) event.getSource();
             Arc arc = (Arc) node.getChildren().get(0);
             Glyph glyph = ((Glyph) node.getChildren().get(1));
+            Node glyphNode = node.getChildren().get(1);
 
-            // FillTransition ftArc = new FillTransition(Duration.millis(100), arc, Color.TRANSPARENT, Color.web("#DDDDDD"));
-            // ftArc.setCycleCount(4);
-            // ftArc.setAutoReverse(true);
-            // ftArc.play();
+            FillTransition ftArc = new FillTransition(Duration.millis(50), arc, Color.TRANSPARENT, Color.web("#DDDDDD"));
+            ftArc.setOnFinished(e -> {
+                glyph.setColor(Color.BLACK);
+            });
 
-            // FillTransition ftGlyph = new FillTransition(Duration.millis(500), glyph , Color.TRANSPARENT, Color.BLACK);
-            // ftGlyph.setCycleCount(4);
-            // ftGlyph.setAutoReverse(true);
-            // ftGlyph.play();
+            ftArc.play();
 
-            arc.setFill(Color.web("#DDDDDD"));
-            glyph.setColor(Color.BLACK);
         }
     };
 
@@ -428,8 +425,11 @@ public class EventHandlers {
             Arc arc = (Arc) node.getChildren().get(0);
             Glyph glyph = ((Glyph) node.getChildren().get(1));
 
-            arc.setFill(Color.TRANSPARENT);
-            glyph.setColor(Color.TRANSPARENT);
+            FillTransition ftArc = new FillTransition(Duration.millis(50), arc, Color.web("#DDDDDD"), Color.TRANSPARENT);
+            ftArc.setOnFinished(e -> {
+                glyph.setColor(Color.TRANSPARENT);
+            });
+            ftArc.play();
         }
     };
 

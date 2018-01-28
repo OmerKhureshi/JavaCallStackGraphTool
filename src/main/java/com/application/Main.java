@@ -42,10 +42,6 @@ import org.controlsfx.glyphfont.Glyph;
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -54,7 +50,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Main extends Application {
-
 
     // Main UI screen
     private Graph graph;
@@ -113,6 +108,10 @@ public class Main extends Application {
     private MenuItem printCellsMenuItem;
     private MenuItem printEdgesMenuItem;
     private MenuItem printHighlightsMenuItem;
+
+    private Menu viewMenu;  // View menu button
+    private MenuItem refreshGraphWindowMenuItem;
+    private Glyph refreshGraphWindowGlyph;
 
     // Status bar
     private Group statusBar;
@@ -321,6 +320,18 @@ public class Main extends Application {
         menuItems.add(clearHistoryMenuItem);
 
         // *****************
+        // View Menu
+        // *****************
+        viewMenu = new Menu("View");
+        refreshGraphWindowGlyph = new Glyph(font, FontAwesome.Glyph.REFRESH);
+        refreshGraphWindowGlyph.setColor(ColorProp.ENABLED);
+        refreshGraphWindowMenuItem = new MenuItem("Refresh graph widow", refreshGraphWindowGlyph);
+
+        viewMenu.getItems().addAll(refreshGraphWindowMenuItem);
+        menuItems.add(refreshGraphWindowMenuItem);
+        glyphs.add(refreshGraphWindowGlyph);
+
+        // *****************
         // Highlights Menu
         // *****************
         highlight = new Menu("Highlights");
@@ -339,12 +350,13 @@ public class Main extends Application {
         printCellsMenuItem = new MenuItem("Print circles on canvas to console");
         printEdgesMenuItem = new MenuItem("Print edges on canvas to console");
         printHighlightsMenuItem = new MenuItem("Print highlights on canvas to console");
+
         debugMenu.getItems().addAll(printCellsMenuItem, printEdgesMenuItem, printHighlightsMenuItem);
 
         // *****************
         // Main Menu
         // *****************
-        menuBar.getMenus().addAll(fileMenu, runMenu, saveImgMenu, goToMenu, highlight, debugMenu);
+        menuBar.getMenus().addAll(fileMenu, runMenu, viewMenu, saveImgMenu, goToMenu, highlight, debugMenu);
         glyphs.addAll(Arrays.asList(methodDefnGlyph, callTraceGlyph, resetGlyph, runAnalysisGlyph,
                 saveImgGlyph, recentsGlyph, clearHistoryGlyph, highlightItemsGlyph));
 
@@ -430,7 +442,9 @@ public class Main extends Application {
         goToMenu.getItems().addAll(recentMenu, clearHistoryMenuItem);
         menuItems.add(clearHistoryMenuItem);
 
-        // Highlight method invocations menu.
+        // *****************
+        // Highlights Menu
+        // *****************
         highlight = new Menu("Highlights");
         highlightItemsGlyph = new Glyph(font, FontAwesome.Glyph.FLAG);
         highlightItemsGlyph.setColor(ColorProp.ENABLED_COLORFUL);
@@ -438,6 +452,18 @@ public class Main extends Application {
 
         highlight.getItems().add(highlightMenuItem);
         menuItems.add(highlightMenuItem);
+
+        // *****************
+        // View Menu
+        // *****************
+        viewMenu = new Menu("View");
+        refreshGraphWindowGlyph = new Glyph(font, FontAwesome.Glyph.REFRESH);
+        refreshGraphWindowGlyph.setColor(ColorProp.ENABLED);
+        refreshGraphWindowMenuItem = new MenuItem("Refresh graph widow", refreshGraphWindowGlyph);
+
+        viewMenu.getItems().addAll(refreshGraphWindowMenuItem);
+        menuItems.add(refreshGraphWindowMenuItem);
+        glyphs.add(refreshGraphWindowGlyph);
 
         // *****************
         // Debug Menu
@@ -449,7 +475,7 @@ public class Main extends Application {
         debugMenu.getItems().addAll(printCellsMenuItem, printEdgesMenuItem, printHighlightsMenuItem);
 
         // Main menu
-        menuBar.getMenus().addAll(fileMenu, runMenu, saveImgMenu, goToMenu, highlight, debugMenu);
+        menuBar.getMenus().addAll(fileMenu, runMenu, viewMenu, saveImgMenu, goToMenu, highlight, debugMenu);
         glyphs.addAll(Arrays.asList(methodDefnGlyph, callTraceGlyph, resetGlyph, runAnalysisGlyph,
                 saveImgGlyph, recentsGlyph, clearHistoryGlyph, highlightItemsGlyph));
 
@@ -597,6 +623,10 @@ public class Main extends Application {
             });
             System.out.println();
             System.out.println("---------------------------------------------------");
+        });
+
+        refreshGraphWindowMenuItem.setOnAction(event -> {
+            refreshGraphWindow();
         });
 
         // System.out.println("Main::setUpMenuActions: method ended");
@@ -1004,6 +1034,14 @@ public class Main extends Application {
     //     return resMap;
     // }
 
+
+    private void refreshGraphWindow() {
+        System.out.println("Main.refreshGraphWindow: method started. ");
+        graph.getModel().uiUpdateRequired = true;
+        showThread(currentSelectedThread);
+        System.out.println("Main.refreshGraphWindow: method ended. ");
+    }
+
     public void showThread(String threadId) {
         saveScrollBarPos(Integer.valueOf(currentSelectedThread));
         currentSelectedThread = threadId;
@@ -1013,9 +1051,13 @@ public class Main extends Application {
 
         // graph.getModel().uiUpdateRequired = true;
         convertDBtoElementTree.setCurrentThreadId(threadId);
+        System.out.println("Main.showThread: before clear UI");
         convertDBtoElementTree.clearUI();
+        System.out.println("Main.showThread: before after UI");
         positionScrollBarFromHistory(Integer.valueOf(threadId));
+
         updateUi();
+        System.out.println("Main.showThread: after updateUI()");
 
         // Prevent triggering listeners from modifying circleCellsOnUI, edgesOnUI and highlightsOnUI HashMaps
         ZoomableScrollPane.turnOnListeners();
