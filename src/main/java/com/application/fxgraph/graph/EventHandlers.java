@@ -6,18 +6,23 @@ import com.application.db.DAOImplementation.*;
 import com.application.db.DatabaseUtil;
 import com.application.db.TableNames;
 import com.application.fxgraph.cells.CircleCell;
+import javafx.animation.FillTransition;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Arc;
 import javafx.scene.shape.Circle;
+import javafx.util.Duration;
 import org.controlsfx.control.PopOver;
+import org.controlsfx.glyphfont.Glyph;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -51,10 +56,19 @@ public class EventHandlers {
         // *****************
         // Show popup to display element details on mouse hover on an element.
         // node.setOnMouseEntered(onMouseHoverToShowInfoEventHandler);
-        node.setOnMousePressed(onMouseHoverToShowInfoEventHandler);
+        // node.setOnMousePressed(onMouseHoverToShowInfoEventHandler);
         // node.setOnMousePressed(onMousePressedToCollapseTree);
         // *****************
 
+        // ((CircleCell)node).getInfoArc().setOnMouseEntered(infoEnterEventHandler);
+
+        ((CircleCell)node).getInfoGroup().setOnMouseEntered(infoEnterEventHandler);
+        ((CircleCell)node).getInfoGroup().setOnMouseExited(infoExitEventHandler);
+        ((CircleCell)node).getInfoGroup().setOnMousePressed(onMouseHoverToShowInfoEventHandler);
+
+        ((CircleCell)node).getMinMaxGroup().setOnMouseEntered(minMaxEnterEventHandler);
+        ((CircleCell)node).getMinMaxGroup().setOnMouseExited(minMaxExitEventHandler);
+        ((CircleCell)node).getMinMaxGroup().setOnMousePressed(onMousePressedToCollapseTree);
 
         // *****************
         // For debugging. Prints all mouse events.
@@ -96,7 +110,8 @@ public class EventHandlers {
             }
 
             Node node = (Node) event.getSource();
-            CircleCell cell = (CircleCell) node;
+            // CircleCell cell = (CircleCell) node;
+            CircleCell cell = (CircleCell) node.getParent();
             String timeStamp;
             int methodId, processId, threadId;
             String parameters, packageName = "", methodName = "", parameterTypes = "", eventType, lockObjectId;
@@ -355,9 +370,6 @@ public class EventHandlers {
                     // Collapse and Expand subtree button
                     Button minMaxButton = new Button("min / max");
                     minMaxButton.setOnMouseClicked(event1 -> {
-                                if (popOver != null) {
-                                    popOver.hide();
-                                }
                                 invokeOnMousePressedEventHandler(cell, threadId);
                             }
                     );
@@ -387,9 +399,72 @@ public class EventHandlers {
         }
     };
 
+    EventHandler<MouseEvent> infoEnterEventHandler = new EventHandler<MouseEvent>() {
+        @Override
+        public void handle(MouseEvent event) {
+            Group node = (Group) event.getSource();
+            Arc arc = (Arc) node.getChildren().get(0);
+            Glyph glyph = ((Glyph) node.getChildren().get(1));
+
+            // FillTransition ftArc = new FillTransition(Duration.millis(100), arc, Color.TRANSPARENT, Color.web("#DDDDDD"));
+            // ftArc.setCycleCount(4);
+            // ftArc.setAutoReverse(true);
+            // ftArc.play();
+
+            // FillTransition ftGlyph = new FillTransition(Duration.millis(500), glyph , Color.TRANSPARENT, Color.BLACK);
+            // ftGlyph.setCycleCount(4);
+            // ftGlyph.setAutoReverse(true);
+            // ftGlyph.play();
+
+            arc.setFill(Color.web("#DDDDDD"));
+            glyph.setColor(Color.BLACK);
+        }
+    };
+
+    EventHandler<MouseEvent> infoExitEventHandler = new EventHandler<MouseEvent>() {
+        @Override
+        public void handle(MouseEvent event) {
+            Group node = (Group) event.getSource();
+            Arc arc = (Arc) node.getChildren().get(0);
+            Glyph glyph = ((Glyph) node.getChildren().get(1));
+
+            arc.setFill(Color.TRANSPARENT);
+            glyph.setColor(Color.TRANSPARENT);
+        }
+    };
+
+
+    EventHandler<MouseEvent> minMaxEnterEventHandler = new EventHandler<MouseEvent>() {
+        @Override
+        public void handle(MouseEvent event) {
+            Group node = (Group) event.getSource();
+            Arc arc = (Arc) node.getChildren().get(0);
+            Glyph glyph = ((Glyph) node.getChildren().get(1));
+
+            arc.setFill(Color.web("#DDDDDD"));
+            glyph.setColor(Color.BLACK);
+        }
+    };
+
+    EventHandler<MouseEvent> minMaxExitEventHandler = new EventHandler<MouseEvent>() {
+        @Override
+        public void handle(MouseEvent event) {
+            Group node = (Group) event.getSource();
+            Arc arc = (Arc) node.getChildren().get(0);
+            Glyph glyph = ((Glyph) node.getChildren().get(1));
+
+            arc.setFill(Color.TRANSPARENT);
+            glyph.setColor(Color.TRANSPARENT);
+        }
+    };
+
 
     private void invokeOnMousePressedEventHandler(CircleCell cell, int threadId) {
         {
+            if (popOver != null) {
+                popOver.hide();
+            }
+
             if (!clickable) {
                 System.out.println(">>>>>>>>>>>>>>>>>>> Clickable is false. <<<<<<<<<<<<<<<<<<<<<");
                 return;
@@ -443,14 +518,13 @@ public class EventHandlers {
                 // MINIMIZE SUBTREE
 
                 // System.out.println(">>>> clicked on a collapsed = 0  cell.");
-                ((Circle) clickedCell.getChildren().get(0)).setFill(Color.BLUE);
+                // ((Circle) clickedCell.getChildren().get(0)).setFill(Color.BLUE);
 
                 // ((Circle) ( (Group)cell.getView() )
                 //             .getChildren().get(0))
                 //             .setFill(Color.BLUE);
                 // cell.getChildren().get(0).setStyle("-fx-background-color: blue");
                 // cell.setStyle("-fx-background-color: blue");
-                clickedCell.setLabel("+");
                 main.setStatus("Please wait ......");
 
                 subtreeExpanded = true;
@@ -502,9 +576,8 @@ public class EventHandlers {
             } else if (collapsed == 2) {
                 // MAXIMIZE SUBTREE
 
-                ((Circle) clickedCell.getChildren().get(0)).setFill(Color.RED);
+                // ((Circle) clickedCell.getChildren().get(0)).setFill(Color.RED);
                 // ( (Circle) ( (Group)cell.getView() ).getChildren().get(0) ).setFill(Color.RED);
-                clickedCell.setLabel("-");
                 main.setStatus("Please wait ......");
                 System.out.println("====== Maximize cellId: " + clickedCellID + " ++++++ ");
 
@@ -566,7 +639,8 @@ public class EventHandlers {
     private EventHandler<MouseEvent> onMousePressedToCollapseTree = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {
-            invokeOnMousePressedEventHandler((CircleCell) event.getSource(), Integer.valueOf(main.getCurrentSelectedThread()));
+            CircleCell cell = ((CircleCell) ((Node) event.getSource()).getParent());
+            invokeOnMousePressedEventHandler(cell, Integer.valueOf(main.getCurrentSelectedThread()));
         }
     };
 

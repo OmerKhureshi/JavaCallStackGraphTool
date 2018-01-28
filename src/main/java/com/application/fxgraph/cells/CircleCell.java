@@ -3,28 +3,42 @@ package com.application.fxgraph.cells;
 import com.application.fxgraph.ElementHelpers.Element;
 import com.application.fxgraph.graph.Cell;
 import javafx.geometry.Pos;
+import javafx.scene.Group;
 import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Arc;
+import javafx.scene.shape.ArcType;
 import javafx.scene.shape.Circle;
+import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
+import org.controlsfx.glyphfont.FontAwesome;
+import org.controlsfx.glyphfont.Glyph;
 
 public class CircleCell extends Cell {
 
     private Label label;
-    private Label idLabel;
     private Label methodName;
     private Circle circle;
+
+    private Group minMaxGroup;
+    private Group infoGroup;
 
     public CircleCell(String id) {
         super(id);
 
-        // Uncomment to see yellow background on the whole circle cell stack pane.
+        // Uncomment to see a colored background on the whole circle cell stack pane.
         // setStyle("-fx-background-color: mediumslateblue");
 
         circle = new Circle(20);
-        label = new Label("This is a long string");
-        idLabel = new Label("-" + id + "-");
 
+        label = new Label("This is a long string");
+
+        // id label
+        Label idLabel = new Label(id);
+        idLabel.relocate(12, 10);
+        idLabel.setFont(Font.font(15));
+
+        // method name label
         methodName = new Label("");
         methodName.setPrefWidth(85);
         methodName.setWrapText(true);
@@ -35,10 +49,41 @@ public class CircleCell extends Cell {
         circle.setFill(Color.web("#6699CC"));
         circle.relocate(0,0);
 
-        // getChildren().setAll(circle, label);
-        getChildren().add(circle);
-        getChildren().add(methodName);
-        getChildren().add(idLabel);
+        // Min-Max button
+        Arc minMaxArc = new Arc();
+        minMaxArc.setCenterX(20);
+        minMaxArc.setCenterY(20);
+        minMaxArc.setRadiusX(20);
+        minMaxArc.setRadiusY(20);
+        minMaxArc.setStartAngle(270);
+        minMaxArc.setLength(180);
+        minMaxArc.setType(ArcType.ROUND);
+        minMaxArc.setFill(Color.TRANSPARENT);
+
+        Glyph minMaxGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.EXPAND);
+        minMaxGlyph.setColor(Color.TRANSPARENT);
+        minMaxGlyph.relocate(25, 13);
+
+        minMaxGroup = new Group(minMaxArc, minMaxGlyph);
+
+        // info button
+        Arc infoArc = new Arc();
+        infoArc.setCenterX(20);
+        infoArc.setCenterY(20);
+        infoArc.setRadiusX(20);
+        infoArc.setRadiusY(20);
+        infoArc.setStartAngle(90);
+        infoArc.setLength(180);
+        infoArc.setType(ArcType.ROUND);
+        infoArc.setFill(Color.TRANSPARENT);
+
+        Glyph infoGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.INFO_CIRCLE);
+        infoGlyph.setColor(Color.TRANSPARENT);
+        infoGlyph.relocate(5, 13);
+        infoGroup = new Group(infoArc, infoGlyph);
+
+        getChildren().addAll(circle, methodName, idLabel, minMaxGroup, infoGroup);
+
         // setView(group);
         this.toFront();
     }
@@ -58,16 +103,8 @@ public class CircleCell extends Cell {
         this.toFront();
     }
 
-    public String getLabel() {
-        return label.getText();
-    }
-
     public void setLabel(String text) {
         this.label.setText(text);
-    }
-
-    public String getMethodName() {
-        return methodName.getText();
     }
 
     public void setMethodName(String methodName) {
@@ -83,6 +120,13 @@ public class CircleCell extends Cell {
         circle.setFill(color);
     }
 
+    public Group getMinMaxGroup() {
+        return minMaxGroup;
+    }
+
+    public Group getInfoGroup() {
+        return infoGroup;
+    }
 
     @Override
     public String toString() {

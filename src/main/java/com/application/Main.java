@@ -42,6 +42,10 @@ import org.controlsfx.glyphfont.Glyph;
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -789,16 +793,19 @@ public class Main extends Application {
 
     }
 
-
-    private int imgId = 0;
-
     private void saveUIImage() {
         System.out.println("In saveUIImage.");
         ScrollPane scrollPane = graph.getScrollPane();
         WritableImage image = scrollPane.snapshot(new SnapshotParameters(), null);
 
-        File file = new File("screenshot-" + imgId + ".png");
-        imgId++;
+        // Create screenshots folder if id doesn't exist.
+        File dir = new File("Screenshots");
+        if (!dir.exists()) {
+                dir.mkdir();
+        }
+
+        String imgPath = "Screenshots" + File.separator + "screenshot-" + dir.list().length + ".png";
+        File file = new File(imgPath);
         try {
             ImageIO.write(SwingFXUtils.fromFXImage(image, null), "png", file);
         } catch (IOException e) {
@@ -998,7 +1005,7 @@ public class Main extends Application {
     // }
 
     public void showThread(String threadId) {
-        System.out.println("Main::showThread: clicked thread: " + threadId);
+        saveScrollBarPos(Integer.valueOf(currentSelectedThread));
         currentSelectedThread = threadId;
 
         // Prevent triggering listeners from modifying circleCellsOnUI, edgesOnUI and highlightsOnUI HashMaps
@@ -1007,16 +1014,33 @@ public class Main extends Application {
         // graph.getModel().uiUpdateRequired = true;
         convertDBtoElementTree.setCurrentThreadId(threadId);
         convertDBtoElementTree.clearUI();
+        positionScrollBarFromHistory(Integer.valueOf(threadId));
         updateUi();
 
         // Prevent triggering listeners from modifying circleCellsOnUI, edgesOnUI and highlightsOnUI HashMaps
         ZoomableScrollPane.turnOnListeners();
         graph.getModel().stackRectangles();
-        System.out.println("Main::showThread: END");
+    }
+
+    Map<Integer, Double> vScrollBarPos = new HashMap<>();
+    Map<Integer, Double> hScrollBarPos = new HashMap<>();
+
+    private void saveScrollBarPos(int threadId) {
+        vScrollBarPos.put(threadId, graph.getScrollPane().getVvalue());
+        hScrollBarPos.put(threadId, graph.getScrollPane().getHvalue());
+    }
+
+    private void positionScrollBarFromHistory(int threadId) {
+        graph.getScrollPane().setVvalue(vScrollBarPos.getOrDefault(threadId, 0.0));
+        if (vScrollBarPos.get(threadId) != null) {
+        }
+        graph.getScrollPane().setHvalue(hScrollBarPos.getOrDefault(threadId, 0.0));
+
+        if (hScrollBarPos.get(threadId) != null) {
+        }
     }
 
     public void updateUi() {
-
         if (convertDBtoElementTree != null && graph != null) {
             // System.out.println("Main::updateUi: called by " + caller + " thread " + Thread.currentThread().getName());
             BoundingBox viewPortDims = graph.getViewPortDims();
