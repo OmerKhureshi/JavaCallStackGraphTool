@@ -17,6 +17,11 @@ public class Graph {
     private Model model;
     private Group canvas;
     private ZoomableScrollPane scrollPane;
+
+    public EventHandlers getEventHandlers() {
+        return eventHandlers;
+    }
+
     //    private ScrollPane scrollPane;
     EventHandlers eventHandlers;
 

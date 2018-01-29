@@ -100,7 +100,7 @@ public class Main extends Application {
     private MenuItem clearHistoryMenuItem;
     private Glyph clearHistoryGlyph;
 
-    private Menu highlight;
+    private Menu highlightMenu;
     private MenuItem highlightMenuItem;
     private Glyph highlightItemsGlyph;
 
@@ -112,6 +112,11 @@ public class Main extends Application {
     private Menu viewMenu;  // View menu button
     private MenuItem refreshGraphWindowMenuItem;
     private Glyph refreshGraphWindowGlyph;
+
+    private Menu bookmarksMenu;  // Bookmarks menu button
+    private Menu bookmarksSubMenu;
+    private Glyph bookmarksGlyph;
+
 
     // Status bar
     private Group statusBar;
@@ -334,14 +339,26 @@ public class Main extends Application {
         // *****************
         // Highlights Menu
         // *****************
-        highlight = new Menu("Highlights");
+        highlightMenu = new Menu("Highlights");
         highlightItemsGlyph = new Glyph(font, FontAwesome.Glyph.FLAG);
         highlightItemsGlyph.setColor(ColorProp.ENABLED);
         highlightMenuItem = new MenuItem("Highlight method invocations", highlightItemsGlyph);
 
-        highlight.getItems().add(highlightMenuItem);
-        highlight.setDisable(true);
+        highlightMenu.getItems().add(highlightMenuItem);
+        highlightMenu.setDisable(true);
         menuItems.add(highlightMenuItem);
+
+        // *****************
+        // Bookmarks Menu
+        // *****************
+        bookmarksMenu = new Menu("Bookmarks");
+        bookmarksGlyph = new Glyph(font, FontAwesome.Glyph.BOOKMARK);
+        bookmarksSubMenu = new Menu("Bookmarks", bookmarksGlyph);
+
+        bookmarksMenu.getItems().add(bookmarksSubMenu);
+        bookmarksMenu.setDisable(true);
+        menuItems.add(bookmarksMenu);
+        glyphs.add(bookmarksGlyph);
 
         // *****************
         // Debug Menu
@@ -356,7 +373,7 @@ public class Main extends Application {
         // *****************
         // Main Menu
         // *****************
-        menuBar.getMenus().addAll(fileMenu, runMenu, viewMenu, saveImgMenu, goToMenu, highlight, debugMenu);
+        menuBar.getMenus().addAll(fileMenu, runMenu, viewMenu, saveImgMenu, goToMenu, highlightMenu, debugMenu);
         glyphs.addAll(Arrays.asList(methodDefnGlyph, callTraceGlyph, resetGlyph, runAnalysisGlyph,
                 saveImgGlyph, recentsGlyph, clearHistoryGlyph, highlightItemsGlyph));
 
@@ -445,13 +462,25 @@ public class Main extends Application {
         // *****************
         // Highlights Menu
         // *****************
-        highlight = new Menu("Highlights");
+        highlightMenu = new Menu("Highlights");
         highlightItemsGlyph = new Glyph(font, FontAwesome.Glyph.FLAG);
         highlightItemsGlyph.setColor(ColorProp.ENABLED_COLORFUL);
         highlightMenuItem = new MenuItem("Highlight method invocations", highlightItemsGlyph);
 
-        highlight.getItems().add(highlightMenuItem);
+        highlightMenu.getItems().add(highlightMenuItem);
         menuItems.add(highlightMenuItem);
+
+        // *****************
+        // Bookmarks Menu
+        // *****************
+        bookmarksMenu = new Menu("Bookmarks");
+        bookmarksGlyph = new Glyph(font, FontAwesome.Glyph.BOOKMARK);
+        bookmarksSubMenu = new Menu("Bookmarks", bookmarksGlyph);
+
+        bookmarksMenu.getItems().add(bookmarksSubMenu);
+        bookmarksMenu.setDisable(true);
+        menuItems.add(bookmarksMenu);
+        glyphs.add(bookmarksGlyph);
 
         // *****************
         // View Menu
@@ -475,7 +504,7 @@ public class Main extends Application {
         debugMenu.getItems().addAll(printCellsMenuItem, printEdgesMenuItem, printHighlightsMenuItem);
 
         // Main menu
-        menuBar.getMenus().addAll(fileMenu, runMenu, viewMenu, saveImgMenu, goToMenu, highlight, debugMenu);
+        menuBar.getMenus().addAll(fileMenu, runMenu, viewMenu, saveImgMenu, goToMenu, highlightMenu, debugMenu);
         glyphs.addAll(Arrays.asList(methodDefnGlyph, callTraceGlyph, resetGlyph, runAnalysisGlyph,
                 saveImgGlyph, recentsGlyph, clearHistoryGlyph, highlightItemsGlyph));
 
@@ -539,7 +568,7 @@ public class Main extends Application {
 
                 saveImgMenu.setDisable(false);
                 goToMenu.setDisable(false);
-                highlight.setDisable(false);
+                highlightMenu.setDisable(false);
             }
 
         });
@@ -598,6 +627,8 @@ public class Main extends Application {
         // highlightMenuItem.setOnAction(event -> setUpMethodsWindow());
         highlightMenuItem.setOnAction(event -> setUpHighlightsWindow());
 
+        bookmarksSubMenu.setOnAction(event -> showBookmarks());
+
         printCellsMenuItem.setOnAction(event -> {
             System.out.println("-----------Cells on canvas ------------------------");
             graph.getModel().getCircleCellsOnUI().keySet().stream().sorted(Comparator.comparingInt(Integer::valueOf)).forEach(id -> {
@@ -630,6 +661,25 @@ public class Main extends Application {
         });
 
         // System.out.println("Main::setUpMenuActions: method ended");
+    }
+
+    private void showBookmarks() {
+        bookmarksSubMenu.getItems().clear();
+        BookmarksDAOImpl.getBookmarks().forEach((id, bookmark) -> {
+            MenuItem bookmarkMenuItem = new MenuItem(
+                    "Id:" + bookmark.getElementId() +
+                    " method:" + bookmark.getMethodName() +
+                    " thread:" + bookmark.getThreadId());
+
+            bookmarksSubMenu.getItems().add(bookmarkMenuItem);
+
+            bookmarkMenuItem.setOnAction(event -> {
+                System.out.println("Main.showBookmarks: jumpTo: elementId: " + bookmark.getElementId() );
+                graph.getEventHandlers().jumpTo(Integer.valueOf(bookmark.getElementId()), bookmark.getThreadId());
+            });
+
+        });
+
     }
 
     public String getCurrentSelectedThread() {
@@ -728,7 +778,7 @@ public class Main extends Application {
             // Get its element id. Get its parent id.
             // Get clicked cell's parent cell coordinates.
             // scroll to parent.
-            // highlight parent.
+            // highlightMenu parent.
 
             // Go To First child.
             // When an element is clicked. Highlight it.
@@ -738,7 +788,7 @@ public class Main extends Application {
             // Get its element id. Get its child's id.
             // Get clicked cell's child cell coordinates.
             // scroll to child
-            // highlight parent.
+            // highlightMenu parent.
 
 
         });
@@ -1708,7 +1758,7 @@ public class Main extends Application {
     private void resetHighlights() {
         // firstTimeSetUpMethodsWindowCall = true;
         firstTimeSetUpHighlightsWindowCall = true;
-        highlight.setDisable(true);
+        highlightMenu.setDisable(true);
     }
 
 }

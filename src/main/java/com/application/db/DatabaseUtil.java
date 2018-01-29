@@ -372,6 +372,7 @@ public class DatabaseUtil {
         EdgeDAOImpl.dropTable();
         HighlightDAOImpl.dropTable();
         FilesDAOImpl.dropTable();
+        BookmarksDAOImpl.dropTable();
 
         CallTraceDAOImpl.createTable();
         MethodDefnDAOImpl.createTable();

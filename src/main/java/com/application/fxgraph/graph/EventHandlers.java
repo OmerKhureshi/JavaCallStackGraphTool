@@ -116,7 +116,7 @@ public class EventHandlers {
             // CircleCell cell = (CircleCell) node;
             CircleCell cell = (CircleCell) node.getParent();
             String timeStamp;
-            int methodId, processId, threadId;
+            int elementId, methodId, processId, threadId;
             String parameters, packageName = "", methodName = "", parameterTypes = "", eventType, lockObjectId;
             double xCord, yCord;
 
@@ -138,6 +138,7 @@ public class EventHandlers {
                 // try (ResultSet callTraceRS = CallTraceDAOImpl.selectWhere("id = (Select id_enter_call_trace FROM " + TableNames.ELEMENT_TABLE +
                 //         " WHERE id = " + cell.getCellId() + ")")) {
                 if (callTraceRS.next()) {
+                    elementId = callTraceRS.getInt(TableNames.ELEMENT_TABLE + ".ID");
                     timeStamp = callTraceRS.getString("time_instant");
                     methodId = callTraceRS.getInt("method_id");
                     processId = callTraceRS.getInt("process_id");
@@ -235,8 +236,8 @@ public class EventHandlers {
                         try (ResultSet elementRS = ElementDAOImpl.selectWhere("id_enter_call_trace = " + ctId)) {
                             // Expecting to see a single row.
                             if (elementRS.next()) {
-                                int elementId = elementRS.getInt("id");
-                                eleIdList.add(elementId);
+                                int eId = elementRS.getInt("id");
+                                eleIdList.add(eId);
                             }
                         }
                     } else if (eventType.equalsIgnoreCase("NOTIFY-ENTER")) {
@@ -269,8 +270,8 @@ public class EventHandlers {
                             try (ResultSet elementRS = ElementDAOImpl.selectWhere("id_exit_call_trace = " + ctId)) {
                                 // Expecting to see a single row.
                                 if (elementRS.next()) {
-                                    int elementId = elementRS.getInt("id");
-                                    eleIdList.add(elementId);
+                                    int eId = elementRS.getInt("id");
+                                    eleIdList.add(eId);
                                 }
                             }
                         }
@@ -302,8 +303,8 @@ public class EventHandlers {
                                 try (ResultSet elementRS = ElementDAOImpl.selectWhere("id_exit_call_trace = " + id)) {
                                     // Can be more than a single row.
                                     while (elementRS.next()) {
-                                        int elementId = elementRS.getInt("id");
-                                        eleIdList.add(elementId);
+                                        int eId = elementRS.getInt("id");
+                                        eleIdList.add(eId);
                                     }
                                 } catch (SQLException e) {
                                 }
@@ -314,13 +315,13 @@ public class EventHandlers {
                     List<Button> buttonList = new ArrayList<>();
                     String finalPackageName = packageName;
                     String finalMethodName = methodName;
-                    eleIdList.stream().forEach(elementId -> {
+                    eleIdList.stream().forEach(eId -> {
                         String query = "SELECT E.ID AS EID, bound_box_x_coordinate, bound_box_y_coordinate, THREAD_ID " +
                                 "FROM CALL_TRACE AS CT " +
                                 "JOIN ELEMENT AS E ON CT.ID = E.ID_ENTER_CALL_TRACE " +
-                                "WHERE E.ID = " + elementId;
+                                "WHERE E.ID = " + eId;
                         try (ResultSet elementRS = DatabaseUtil.select(query)) {
-                            // try (ResultSet elementRS = ElementDAOImpl.selectWhere("id = " + elementId)){
+                            // try (ResultSet elementRS = ElementDAOImpl.selectWhere("id = " + eId)){
                             if (elementRS.next()) {
                                 int id = elementRS.getInt("EID");
                                 String targetThreadId = String.valueOf(elementRS.getInt("thread_id"));
@@ -332,7 +333,7 @@ public class EventHandlers {
                                 // go to location.
                                 Button button = new Button();
                                 button.setOnMouseClicked(event1 -> {
-                                    jumpTo(elementId, targetThreadId);
+                                    jumpTo(eId, targetThreadId);
                                 });
                                 buttonList.add(button);
                             }
@@ -378,6 +379,13 @@ public class EventHandlers {
                     );
 
                     gridPane.add(minMaxButton, 1, rowIndex++);
+
+
+                    // Add Bookmark button
+                    Button addBookmarkButton = new Button("Add Bookmark");
+                    addBookmarkButton.setOnMouseClicked(event1 -> {
+                        System.out.println("to be done.");
+                    });
 
                     popOver = new PopOver(gridPane);
                     popOver.setAnimated(true);
@@ -696,7 +704,7 @@ public class EventHandlers {
         System.out.println("EventHandlers.expandParentTreeChain: method ended");
     }
 
-    private void jumpTo(int cellId, String threadId) {
+    public void jumpTo(int cellId, String threadId) {
         System.out.println("EventHandlers.jumpTo: method started");
 
         // make changes in DB if needed
