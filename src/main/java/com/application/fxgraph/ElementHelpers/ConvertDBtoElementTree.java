@@ -5,9 +5,11 @@ import com.application.db.DatabaseUtil;
 import com.application.db.TableNames;
 import com.application.fxgraph.cells.CircleCell;
 import com.application.fxgraph.graph.*;
+import com.sun.xml.internal.rngom.digested.DUnaryPattern;
 import javafx.application.Platform;
 import javafx.geometry.BoundingBox;
 import javafx.scene.shape.Line;
+import sun.java2d.pipe.SpanShapeRenderer;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -377,6 +379,9 @@ public class ConvertDBtoElementTree {
                     curCircleCell = new CircleCell(id, xCoordinate, yCoordinate);
                     curCircleCell.setMethodName(methodName);
                     model.addCell(curCircleCell);
+                    SimplifiedElement ele = new SimplifiedElement(id, methodName);
+                    model.addSimplifiedElementToMap(ele);
+
                     String label = "";
                     switch (eventType.toUpperCase()) {
                         case "WAIT-ENTER":
@@ -395,6 +400,7 @@ public class ConvertDBtoElementTree {
                     // Add parent circle cell if not already added earlier.
                     parentCircleCell = mapCircleCellsOnUI.get(parentId);
                     if (!mapCircleCellsOnUI.containsKey(parentId)) {
+                        System.out.println("now you know this executes ------------------ ");
                         try (ResultSet rsTemp = ElementDAOImpl.selectWhere("id = " + parentId)) {
                             if (rsTemp.next() && rsTemp.getInt("LEVEL_COUNT") > 1) {
                                 float xCoordinateTemp = rsTemp.getFloat("bound_box_x_coordinate");
@@ -404,6 +410,33 @@ public class ConvertDBtoElementTree {
                                 model.addCell(parentCircleCell);
                             }
                         }
+                    }
+
+
+                    // 1 -> 2 -> 3
+                    String pId = String.valueOf(rs.getInt("PARENT_ID"));
+                    SimplifiedElement childSE = ele, parentSE;
+                    try {
+                        while (Integer.valueOf(pId) != -1) {
+                            System.out.println("stuck here pId: " + pId + "------");
+                            String q = "SELECT * FROM " + TableNames.ELEMENT_TABLE + " AS E " +
+                                    "JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT " +
+                                    "ON E.ID_ENTER_CALL_TRACE = CT.ID " +
+                                    "WHERE E.ID = " + pId;
+                            ResultSet pRS = DatabaseUtil.select(q);
+                            if (pRS.next()) {
+                                String mName = pRS.getString("MESSAGE");
+                                parentSE = new SimplifiedElement(pId, mName);
+                                childSE.setParentElement(parentSE);
+                                pId = String.valueOf(pRS.getInt("PARENT_ID"));
+                                childSE = parentSE;
+                            } else {
+                                pId = "-1";
+                            }
+                        }
+                        System.out.println("out ------");
+                    } catch (SQLException e) {
+                        e.printStackTrace();
                     }
                 }
                 // else {
@@ -488,6 +521,8 @@ public class ConvertDBtoElementTree {
             CircleCell cell = entry.getValue();
             if (!preloadBox.contains(cell.getLayoutX(), cell.getLayoutY())) {
                 removeCircleCells.add(cell.getCellId());
+
+                model.removeSimplifiedElementFromMap(cell.getCellId());
             }
         }
 

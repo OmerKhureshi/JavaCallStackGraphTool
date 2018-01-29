@@ -5,6 +5,7 @@ import com.application.Main;
 import com.application.db.DAOImplementation.*;
 import com.application.db.DatabaseUtil;
 import com.application.db.TableNames;
+import com.application.fxgraph.ElementHelpers.SimplifiedElement;
 import com.application.fxgraph.cells.CircleCell;
 import javafx.animation.FillTransition;
 import javafx.application.Platform;
@@ -24,6 +25,7 @@ import javafx.scene.shape.Shape;
 import javafx.util.Duration;
 import org.controlsfx.control.PopOver;
 import org.controlsfx.glyphfont.Glyph;
+import sun.java2d.pipe.SpanShapeRenderer;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -61,7 +63,7 @@ public class EventHandlers {
         // node.setOnMousePressed(onMousePressedToCollapseTree);
         // *****************
 
-        // ((CircleCell)node).getInfoArc().setOnMouseEntered(infoEnterEventHandler);
+        node.setOnMouseEntered(onMouseEnterToShowNav);
 
         ((CircleCell)node).getInfoGroup().setOnMouseEntered(infoEnterEventHandler);
         ((CircleCell)node).getInfoGroup().setOnMouseExited(infoExitEventHandler);
@@ -389,6 +391,26 @@ public class EventHandlers {
             }
 
 
+        }
+    };
+
+    EventHandler<MouseEvent> onMouseEnterToShowNav = new EventHandler<MouseEvent>() {
+        @Override
+        public void handle(MouseEvent event) {
+            CircleCell cell = ((CircleCell) event.getSource());
+            SimplifiedElement ele = graph.getModel().getSimplifiedElementMap().get(cell.getCellId());
+
+            ArrayList<String> methodNames = new ArrayList<>();
+            while (ele.getParentElement() != null) {
+                methodNames.add("Id: " + ele.getElementId() + "   Method: " + ele.getMethodName());
+                System.out.println("at id: " + ele.getElementId());
+                ele = ele.getParentElement();
+            }
+
+            Collections.reverse(methodNames);
+            String navString = String.join(" > ", methodNames);
+            System.out.println("-----------------hover over: " + cell.getCellId() + "------------------------------- ");
+            System.out.println(navString);
         }
     };
 
