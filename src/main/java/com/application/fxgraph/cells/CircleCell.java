@@ -6,6 +6,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import javafx.scene.shape.Arc;
 import javafx.scene.shape.ArcType;
 import javafx.scene.shape.Circle;
@@ -127,6 +128,12 @@ public class CircleCell extends Cell {
     public Group getInfoGroup() {
         return infoGroup;
     }
+
+    public void bookmarkCell(String color) {
+        circle.setStroke(Paint.valueOf(color));
+        circle.setStrokeWidth(5);
+    }
+
 
     @Override
     public String toString() {

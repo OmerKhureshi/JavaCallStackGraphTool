@@ -1,5 +1,6 @@
 package com.application.fxgraph.graph;
 
+import com.application.db.model.Bookmark;
 import com.application.fxgraph.ElementHelpers.ConvertDBtoElementTree;
 import com.application.Main;
 import com.application.db.DAOImplementation.*;
@@ -15,6 +16,7 @@ import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.ColorPicker;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
@@ -130,15 +132,16 @@ public class EventHandlers {
 
             // Please. Please do not try to combine the next two queries into one. Unless you want to spend another day tyring to prove it to yourself.
 
-            String sql = "Select * from " + TableNames.ELEMENT_TABLE + " " +
-                    "JOIN " + TableNames.CALL_TRACE_TABLE + " ON " + TableNames.CALL_TRACE_TABLE + ".id = " + TableNames.ELEMENT_TABLE + ".ID_ENTER_CALL_TRACE " +
-                    "WHERE " + TableNames.ELEMENT_TABLE + ".ID = " + cell.getCellId();
+            String sql = "Select E.ID as EID, TIME_INSTANT, METHOD_ID, PROCESS_ID, THREAD_ID, PARAMETERS, " +
+                    "MESSAGE, LOCKOBJID, BOUND_BOX_X_COORDINATE, BOUND_BOX_Y_COORDINATE from " + TableNames.ELEMENT_TABLE + " AS E " +
+                    "JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT ON CT.id = E.ID_ENTER_CALL_TRACE " +
+                    "WHERE E.ID = " + cell.getCellId();
 
             try (ResultSet callTraceRS = DatabaseUtil.select(sql)) {
                 // try (ResultSet callTraceRS = CallTraceDAOImpl.selectWhere("id = (Select id_enter_call_trace FROM " + TableNames.ELEMENT_TABLE +
                 //         " WHERE id = " + cell.getCellId() + ")")) {
                 if (callTraceRS.next()) {
-                    elementId = callTraceRS.getInt(TableNames.ELEMENT_TABLE + ".ID");
+                    elementId = callTraceRS.getInt("EID");
                     timeStamp = callTraceRS.getString("time_instant");
                     methodId = callTraceRS.getInt("method_id");
                     processId = callTraceRS.getInt("process_id");
@@ -243,8 +246,6 @@ public class EventHandlers {
                     } else if (eventType.equalsIgnoreCase("NOTIFY-ENTER")) {
 
                         try (Connection conn = DatabaseUtil.getConnection(); Statement ps = conn.createStatement()) {
-
-
                             sql = "SELECT * FROM " + TableNames.CALL_TRACE_TABLE + " AS parent\n" +
                                     "WHERE MESSAGE = 'WAIT-EXIT' \n" +
                                     "AND LOCKOBJID = '" + lockObjectId + "' " +
@@ -380,11 +381,47 @@ public class EventHandlers {
 
                     gridPane.add(minMaxButton, 1, rowIndex++);
 
-
                     // Add Bookmark button
+                    // Group bookmarkGroup = new Group();
+                    final Color[] bookmarkColor = new Color[1];
+                    bookmarkColor[0] = Color.INDIANRED;
+
+                    ColorPicker bookmarkColorPicker = new ColorPicker(Color.INDIANRED);
+                    bookmarkColorPicker.setOnAction(e -> {
+                        bookmarkColor[0] = bookmarkColorPicker.getValue();
+                    });
+                    // bookmarkColorPicker.getStyleClass().add("button");
+                    // bookmarkColorPicker.setStyle(
+                    //         "-fx-color-label-visible: false; " +
+                    //                 "-fx-background-radius: 15 15 15 15;");
+
                     Button addBookmarkButton = new Button("Add Bookmark");
+                    String finalMethodNameTemp = methodName;
                     addBookmarkButton.setOnMouseClicked(event1 -> {
-                        System.out.println("to be done.");
+                        System.out.println("EventHandlers.handle: adding bookmark to db: id: " + elementId);
+                        Bookmark bookmark = new Bookmark( String.valueOf(elementId),
+                                String.valueOf(threadId),
+                                finalMethodNameTemp,
+                                bookmarkColor[0].toString(),
+                                xCord,
+                                yCord);
+
+                        BookmarksDAOImpl.insertBookmark(bookmark);
+                        graph.getModel().updateBookmarkMap();
+                        convertDBtoElementTree.forceUiRendering();
+                    });
+
+                    gridPane.add(bookmarkColorPicker, 1, rowIndex++);
+                    gridPane.add(addBookmarkButton, 1, rowIndex++);
+
+                    Button removeBookmarkButton = new Button("Remove bookmark");
+                    removeBookmarkButton.setDisable(!graph.getModel().getBookmarkMap().containsKey(elementId));
+
+                    removeBookmarkButton.setOnMouseClicked(eve -> {
+                        System.out.println("EventHandlers.handle: deleting bookmark: " + elementId);
+                        BookmarksDAOImpl.deleteBookmark(String.valueOf(elementId));
+                        graph.getModel().updateBookmarkMap();
+                        convertDBtoElementTree.forceUiRendering();
                     });
 
                     popOver = new PopOver(gridPane);
@@ -411,14 +448,11 @@ public class EventHandlers {
             ArrayList<String> methodNames = new ArrayList<>();
             while (ele.getParentElement() != null) {
                 methodNames.add("Id: " + ele.getElementId() + "   Method: " + ele.getMethodName());
-                System.out.println("at id: " + ele.getElementId());
                 ele = ele.getParentElement();
             }
 
             Collections.reverse(methodNames);
             String navString = String.join(" > ", methodNames);
-            System.out.println("-----------------hover over: " + cell.getCellId() + "------------------------------- ");
-            System.out.println(navString);
         }
     };
 

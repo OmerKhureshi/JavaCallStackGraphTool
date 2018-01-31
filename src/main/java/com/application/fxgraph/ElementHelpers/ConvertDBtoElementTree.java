@@ -3,6 +3,7 @@ package com.application.fxgraph.ElementHelpers;
 import com.application.db.DAOImplementation.*;
 import com.application.db.DatabaseUtil;
 import com.application.db.TableNames;
+import com.application.db.model.Bookmark;
 import com.application.fxgraph.cells.CircleCell;
 import com.application.fxgraph.graph.*;
 import com.sun.xml.internal.rngom.digested.DUnaryPattern;
@@ -11,6 +12,7 @@ import javafx.geometry.BoundingBox;
 import javafx.scene.shape.Line;
 import sun.java2d.pipe.SpanShapeRenderer;
 
+import java.awt.print.Book;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
@@ -202,6 +204,9 @@ public class ConvertDBtoElementTree {
         // Add circle cells
         addCircleCells();
 
+        // Add bookmarks to bookmarked cells
+        addBookmarks();
+
         // Add edges
         addEdges();
 
@@ -218,11 +223,13 @@ public class ConvertDBtoElementTree {
         // });
     }
 
-    public void forceUiRendering(Graph graph) {
+    public void forceUiRendering() {
         // System.out.println("ConvertDBtoElementTree:forceUiRendering: method started");
 
         // Add circle cells
         addCircleCells();
+        // Add bookmarks to bookmarked cells
+        addBookmarks();
         // Add edges
         addEdges();
         // Add highlights
@@ -245,7 +252,7 @@ public class ConvertDBtoElementTree {
         graph.getCellLayer().getChildren().removeAll(model.getHighlightsOnUI().values());
         model.getHighlightsOnUI().clear();
 
-        forceUiRendering(graph);
+        forceUiRendering();
     }
 
     private void addHighlights() {
@@ -307,6 +314,19 @@ public class ConvertDBtoElementTree {
         // System.out.println("ConvertDBtoElementTree::addHighlights: method ended");
 
     }
+
+    private void addBookmarks() {
+        Map<String, Bookmark> bookmarkMap = graph.getModel().updateAndGetBookmarkMap();
+        Map<String, CircleCell> mapCircleCellsOnUI = model.getCircleCellsOnUI();
+
+        bookmarkMap.forEach((cellId, bookmark) -> {
+            System.out.println("ConvertDBtoElementTree.addBookmarks: bookmark at : " + cellId);
+            if (mapCircleCellsOnUI.containsKey(cellId)) {
+                mapCircleCellsOnUI.get(cellId).bookmarkCell(bookmark.getColor());
+            }
+        });
+    }
+
 
     private void addCircleCells() {
         Map<String, CircleCell> mapCircleCellsOnUI = model.getCircleCellsOnUI();
@@ -418,7 +438,6 @@ public class ConvertDBtoElementTree {
                     SimplifiedElement childSE = ele, parentSE;
                     try {
                         while (Integer.valueOf(pId) != -1) {
-                            System.out.println("stuck here pId: " + pId + "------");
                             String q = "SELECT * FROM " + TableNames.ELEMENT_TABLE + " AS E " +
                                     "JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT " +
                                     "ON E.ID_ENTER_CALL_TRACE = CT.ID " +
@@ -434,7 +453,6 @@ public class ConvertDBtoElementTree {
                                 pId = "-1";
                             }
                         }
-                        System.out.println("out ------");
                     } catch (SQLException e) {
                         e.printStackTrace();
                     }

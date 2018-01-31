@@ -45,7 +45,6 @@ public class Element {
         this.parent = parent;
         if (parent != null ) {
             // If this element has a parent.
-            // Todo Performance: Can improve. Use guava?
             parent.setChildren(new ArrayList<>(Arrays.asList(this)));
             setIndexInParent(parent.getChildren().size()-1);
         } else {
@@ -97,7 +96,6 @@ public class Element {
         this.parent = parent;
         if (parent != null ) {
             // If this element has a parent.
-            // Todo Performance: Can improve. Use guava?
 //            parent.setChildren(new ArrayList<>(Collections.singletonList(this)));
             setIndexInParent(parent.getChildren().size()-1);
         } else {

@@ -2,7 +2,6 @@ package com.application.db.model;
 
 public class Bookmark {
 
-    private String id;
     private String elementId;
     private String threadId;
     private String methodName;
@@ -10,8 +9,7 @@ public class Bookmark {
     private double xCoordinate;
     private double yCoordinate;
 
-    public Bookmark(String id, String elementId, String threadId, String methodName, String color, double xCoordinate, double yCoordinate) {
-        this.id = id;
+    public Bookmark( String elementId, String threadId, String methodName, String color, double xCoordinate, double yCoordinate) {
         this.elementId = elementId;
         this.threadId = threadId;
         this.methodName = methodName;
@@ -20,20 +18,24 @@ public class Bookmark {
         this.yCoordinate = yCoordinate;
     }
 
+    @Override
+    public String toString() {
+        return "Bookmark{" +
+                "elementId='" + elementId + '\'' +
+                ", threadId='" + threadId + '\'' +
+                ", methodName='" + methodName + '\'' +
+                ", color='" + color + '\'' +
+                ", xCoordinate=" + xCoordinate +
+                ", yCoordinate=" + yCoordinate +
+                '}';
+    }
+
     public String getThreadId() {
         return threadId;
     }
 
     public void setThreadId(String threadId) {
         this.threadId = threadId;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public String getElementId() {

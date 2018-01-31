@@ -53,7 +53,6 @@ public class Main extends Application {
 
     // Main UI screen
     private Graph graph;
-    Model model;
     private BorderPane root;
     private ConvertDBtoElementTree convertDBtoElementTree;
     private Stage primaryStage;
@@ -242,8 +241,8 @@ public class Main extends Application {
     }
 
     private void setUpMenu() {
-        List<Glyph> glyphs = new ArrayList<>();
-        List<MenuItem> menuItems = new ArrayList<>();
+        List<Glyph> glyphsStyling = new ArrayList<>();
+        List<MenuItem> menuItemsStyling = new ArrayList<>();
 
         menuBar = new MenuBar();
         menuBar.setStyle(SizeProp.PADDING_MENU);
@@ -267,8 +266,8 @@ public class Main extends Application {
         // chooseCallTraceMenuItem.setStyle(SizeProp.PADDING_SUBMENU);
 
         fileMenu.getItems().addAll(chooseMethodDefnMenuItem, chooseCallTraceMenuItem);
-        menuItems.add(chooseMethodDefnMenuItem);
-        menuItems.add(chooseCallTraceMenuItem);
+        menuItemsStyling.add(chooseMethodDefnMenuItem);
+        menuItemsStyling.add(chooseCallTraceMenuItem);
 
         // *****************
         // Run Menu
@@ -290,8 +289,8 @@ public class Main extends Application {
         runAnalysisHistoryMenuItem.setDisable(firstTimeLoad);
 
         runMenu.getItems().addAll(runAnalysisMenuItem, resetMenuItem, runAnalysisHistoryMenuItem);
-        menuItems.add(runAnalysisMenuItem);
-        menuItems.add(resetMenuItem);
+        menuItemsStyling.add(runAnalysisMenuItem);
+        menuItemsStyling.add(resetMenuItem);
 
 
         // *****************
@@ -304,7 +303,7 @@ public class Main extends Application {
 
         saveImgMenu.getItems().add(saveImgMenuItem);
         saveImgMenu.setDisable(true);
-        menuItems.add(saveImgMenuItem);
+        menuItemsStyling.add(saveImgMenuItem);
 
 
         // *****************
@@ -322,7 +321,7 @@ public class Main extends Application {
 
         goToMenu.getItems().addAll(recentMenu, clearHistoryMenuItem);
         goToMenu.setDisable(true);
-        menuItems.add(clearHistoryMenuItem);
+        menuItemsStyling.add(clearHistoryMenuItem);
 
         // *****************
         // View Menu
@@ -333,8 +332,8 @@ public class Main extends Application {
         refreshGraphWindowMenuItem = new MenuItem("Refresh graph widow", refreshGraphWindowGlyph);
 
         viewMenu.getItems().addAll(refreshGraphWindowMenuItem);
-        menuItems.add(refreshGraphWindowMenuItem);
-        glyphs.add(refreshGraphWindowGlyph);
+        menuItemsStyling.add(refreshGraphWindowMenuItem);
+        glyphsStyling.add(refreshGraphWindowGlyph);
 
         // *****************
         // Highlights Menu
@@ -346,7 +345,7 @@ public class Main extends Application {
 
         highlightMenu.getItems().add(highlightMenuItem);
         highlightMenu.setDisable(true);
-        menuItems.add(highlightMenuItem);
+        menuItemsStyling.add(highlightMenuItem);
 
         // *****************
         // Bookmarks Menu
@@ -356,9 +355,9 @@ public class Main extends Application {
         bookmarksSubMenu = new Menu("Bookmarks", bookmarksGlyph);
 
         bookmarksMenu.getItems().add(bookmarksSubMenu);
-        bookmarksMenu.setDisable(true);
-        menuItems.add(bookmarksMenu);
-        glyphs.add(bookmarksGlyph);
+        // bookmarksMenu.setDisable(true);
+        menuItemsStyling.add(bookmarksMenu);
+        glyphsStyling.add(bookmarksGlyph);
 
         // *****************
         // Debug Menu
@@ -373,12 +372,12 @@ public class Main extends Application {
         // *****************
         // Main Menu
         // *****************
-        menuBar.getMenus().addAll(fileMenu, runMenu, viewMenu, saveImgMenu, goToMenu, highlightMenu, debugMenu);
-        glyphs.addAll(Arrays.asList(methodDefnGlyph, callTraceGlyph, resetGlyph, runAnalysisGlyph,
+        menuBar.getMenus().addAll(fileMenu, runMenu, viewMenu, saveImgMenu, goToMenu, bookmarksMenu, highlightMenu, debugMenu);
+        glyphsStyling.addAll(Arrays.asList(methodDefnGlyph, callTraceGlyph, resetGlyph, runAnalysisGlyph,
                 saveImgGlyph, recentsGlyph, clearHistoryGlyph, highlightItemsGlyph));
 
-        menuItems.forEach(menuItem -> menuItem.setStyle(SizeProp.PADDING_SUBMENU));
-        glyphs.forEach(glyph -> glyph.setStyle(SizeProp.PADDING_ICONS));
+        menuItemsStyling.forEach(menuItem -> menuItem.setStyle(SizeProp.PADDING_SUBMENU));
+        glyphsStyling.forEach(glyph -> glyph.setStyle(SizeProp.PADDING_ICONS));
         root.setTop(menuBar);
     }
 
@@ -478,7 +477,7 @@ public class Main extends Application {
         bookmarksSubMenu = new Menu("Bookmarks", bookmarksGlyph);
 
         bookmarksMenu.getItems().add(bookmarksSubMenu);
-        bookmarksMenu.setDisable(true);
+        // bookmarksMenu.setDisable(true);
         menuItems.add(bookmarksMenu);
         glyphs.add(bookmarksGlyph);
 
@@ -504,7 +503,7 @@ public class Main extends Application {
         debugMenu.getItems().addAll(printCellsMenuItem, printEdgesMenuItem, printHighlightsMenuItem);
 
         // Main menu
-        menuBar.getMenus().addAll(fileMenu, runMenu, viewMenu, saveImgMenu, goToMenu, highlightMenu, debugMenu);
+        menuBar.getMenus().addAll(fileMenu, runMenu, viewMenu, saveImgMenu, goToMenu, bookmarksMenu, highlightMenu, debugMenu);
         glyphs.addAll(Arrays.asList(methodDefnGlyph, callTraceGlyph, resetGlyph, runAnalysisGlyph,
                 saveImgGlyph, recentsGlyph, clearHistoryGlyph, highlightItemsGlyph));
 
@@ -627,7 +626,8 @@ public class Main extends Application {
         // highlightMenuItem.setOnAction(event -> setUpMethodsWindow());
         highlightMenuItem.setOnAction(event -> setUpHighlightsWindow());
 
-        bookmarksSubMenu.setOnAction(event -> showBookmarks());
+        // bookmarksSubMenu.setOnShowing(event -> showBookmarks());
+        bookmarksMenu.setOnShowing(event -> showBookmarks());
 
         printCellsMenuItem.setOnAction(event -> {
             System.out.println("-----------Cells on canvas ------------------------");
@@ -665,21 +665,23 @@ public class Main extends Application {
 
     private void showBookmarks() {
         bookmarksSubMenu.getItems().clear();
-        BookmarksDAOImpl.getBookmarks().forEach((id, bookmark) -> {
-            MenuItem bookmarkMenuItem = new MenuItem(
-                    "Id:" + bookmark.getElementId() +
-                    " method:" + bookmark.getMethodName() +
-                    " thread:" + bookmark.getThreadId());
+        if (graph.getModel() != null) {
+            System.out.println("Main.showBookmarks: model not null");
+            graph.getModel().getBookmarkMap().forEach((id, bookmark) -> {
+                System.out.println("Main.showBookmarks: at bookmark: id: " + id);
+                MenuItem bookmarkMenuItem = new MenuItem(
+                        "Id:" + bookmark.getElementId() +
+                                " method:" + bookmark.getMethodName() +
+                                " thread:" + bookmark.getThreadId());
 
-            bookmarksSubMenu.getItems().add(bookmarkMenuItem);
+                bookmarksSubMenu.getItems().add(bookmarkMenuItem);
 
-            bookmarkMenuItem.setOnAction(event -> {
-                System.out.println("Main.showBookmarks: jumpTo: elementId: " + bookmark.getElementId() );
-                graph.getEventHandlers().jumpTo(Integer.valueOf(bookmark.getElementId()), bookmark.getThreadId());
+                bookmarkMenuItem.setOnAction(event -> {
+                    System.out.println("Main.showBookmarks: jumpTo: elementId: " + bookmark.getElementId() );
+                    graph.getEventHandlers().jumpTo(Integer.valueOf(bookmark.getElementId()), bookmark.getThreadId());
+                });
             });
-
-        });
-
+        }
     }
 
     public String getCurrentSelectedThread() {
@@ -881,7 +883,7 @@ public class Main extends Application {
         // Create screenshots folder if id doesn't exist.
         File dir = new File("Screenshots");
         if (!dir.exists()) {
-                dir.mkdir();
+            dir.mkdir();
         }
 
         String imgPath = "Screenshots" + File.separator + "screenshot-" + dir.list().length + ".png";
@@ -1244,9 +1246,9 @@ public class Main extends Application {
         instructionsNode = new FlowPane();
 
         /*
-        * root.setCenter() has to be invoked before root.setTop(). Otherwise, methodDefnInfoLabel will go blank.
-        * I do not know the reason why this is happening.
-        * */
+         * root.setCenter() has to be invoked before root.setTop(). Otherwise, methodDefnInfoLabel will go blank.
+         * I do not know the reason why this is happening.
+         * */
         root.setCenter(instructionsNode);
 
         methodDefnInfoGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.ARROW_RIGHT);
@@ -1664,16 +1666,16 @@ public class Main extends Application {
 
                 // WIDTH
                 "CASE " +
-                    "WHEN " + TableNames.ELEMENT_TABLE + ".COLLAPSED IN (0, 2) THEN " +
-                        "((SELECT MAX(E1.BOUND_BOX_X_TOP_RIGHT) FROM " + TableNames.ELEMENT_TABLE + " AS E1 " +
-                        "JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT ON E1.ID_ENTER_CALL_TRACE = CT.ID " +
-                        "WHERE E1.BOUND_BOX_Y_COORDINATE >= " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT " +
-                        "AND E1.BOUND_BOX_Y_COORDINATE < " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_BOTTOM_LEFT " +
-                        "AND CT.THREAD_ID = " + threadId + " " +
-                        "AND (E1.COLLAPSED IN (0, 2)  OR E1.ID = ELEMENT.ID)" +
-                        // ") - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT + " + widthOffset + ") " +
-                        ") - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT) " +
-                    "ELSE " + (BoundBox.unitWidthFactor + widthOffset) + " " +
+                "WHEN " + TableNames.ELEMENT_TABLE + ".COLLAPSED IN (0, 2) THEN " +
+                "((SELECT MAX(E1.BOUND_BOX_X_TOP_RIGHT) FROM " + TableNames.ELEMENT_TABLE + " AS E1 " +
+                "JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT ON E1.ID_ENTER_CALL_TRACE = CT.ID " +
+                "WHERE E1.BOUND_BOX_Y_COORDINATE >= " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_TOP_LEFT " +
+                "AND E1.BOUND_BOX_Y_COORDINATE < " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_Y_BOTTOM_LEFT " +
+                "AND CT.THREAD_ID = " + threadId + " " +
+                "AND (E1.COLLAPSED IN (0, 2)  OR E1.ID = ELEMENT.ID)" +
+                // ") - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT + " + widthOffset + ") " +
+                ") - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_TOP_LEFT) " +
+                "ELSE " + (BoundBox.unitWidthFactor + widthOffset) + " " +
                 "END " +
                 ", " +
                 // TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_BOTTOM_RIGHT - " + TableNames.ELEMENT_TABLE + ".BOUND_BOX_X_BOTTOM_LEFT + " + endOffset + "," +

@@ -1,5 +1,7 @@
 package com.application.fxgraph.graph;
 
+import com.application.db.DAOImplementation.BookmarksDAOImpl;
+import com.application.db.model.Bookmark;
 import com.application.fxgraph.ElementHelpers.Element;
 import com.application.fxgraph.ElementHelpers.SimplifiedElement;
 import com.application.fxgraph.cells.CircleCell;
@@ -34,6 +36,12 @@ public class Model {
 
     private Map<String, SimplifiedElement> simplifiedElementMap = new HashMap<>();
 
+    private Map<String, Bookmark> bookmarkMap = new HashMap<>();
+
+    public Map<String, Bookmark> getBookmarkMap() {
+        return bookmarkMap;
+    }
+
     public Model() {
         graphParent = new Cell("_ROOT_");
         // clear model, create lists
@@ -45,7 +53,14 @@ public class Model {
      */
 
 
-    // Adders
+    public Map<String, Bookmark> updateAndGetBookmarkMap() {
+        bookmarkMap = BookmarksDAOImpl.getBookmarks();
+        return bookmarkMap;
+    }
+
+    public void updateBookmarkMap() {
+        bookmarkMap = BookmarksDAOImpl.getBookmarks();
+    }
 
     public boolean uiUpdateRequired = true;
 

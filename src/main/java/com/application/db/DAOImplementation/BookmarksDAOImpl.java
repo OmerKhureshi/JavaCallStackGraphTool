@@ -27,7 +27,7 @@ public class BookmarksDAOImpl {
                         "collapsed INT" +
                         ")";
                 ps.execute(sql);
-                System.out.println("** Creating table " + TableNames.HIGHLIGHT_ELEMENT);
+                System.out.println("** Creating table " + TableNames.BOOKMARKS);
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -38,7 +38,7 @@ public class BookmarksDAOImpl {
         if (isTableCreated()) {
             try (Connection c = DatabaseUtil.getConnection(); Statement ps = c.createStatement()) {
                 String sql = "DROP TABLE " + TableNames.BOOKMARKS;
-                System.out.println(">> Dropping table " + TableNames.HIGHLIGHT_ELEMENT);
+                System.out.println(">> Dropping table " + TableNames.BOOKMARKS);
                 ps.execute(sql);
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -87,22 +87,25 @@ public class BookmarksDAOImpl {
     }
 
     public static Map<String, Bookmark> getBookmarks() {
+        if (!isTableCreated())
+            createTable();
+
         Map<String, Bookmark> result = new HashMap<>();
-        String query = "SELECT * FROM " + TableNames.BOOKMARKS + " AS B " +
+        String query = "SELECT E.ID as EID, CT.THREAD_ID, CT.MESSAGE, B.COLOR, E.BOUND_BOX_X_COORDINATE, E.BOUND_BOX_Y_COORDINATE " +
+                "FROM " + TableNames.BOOKMARKS + " AS B " +
                 "JOIN " + TableNames.ELEMENT_TABLE + " AS E ON B.ELEMENT_ID = E.ID " +
                 "JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT ON E.ID_ENTER_CALL_TRACE = CT.ID ";
 
         try (ResultSet rs = DatabaseUtil.select(query)) {
             while (rs.next()) {
-                result.put(rs.getString("B.ID"),
+                result.put(rs.getString("EID"),
                         new Bookmark(
-                                rs.getString("B.ID"),
-                                rs.getString("E.ID"),
-                                rs.getString("CT.THREAD_ID"),
-                                rs.getString("CT.MESSAGE"),
-                                rs.getString("B.COLOR"),
-                                rs.getDouble("E.BOUND_BOX_X_COORDINATE"),
-                                rs.getDouble("E.BOUND_BOX_Y_COORDINATE")
+                                rs.getString("EID"),
+                                rs.getString("THREAD_ID"),
+                                rs.getString("MESSAGE"),
+                                rs.getString("COLOR"),
+                                rs.getDouble("BOUND_BOX_X_COORDINATE"),
+                                rs.getDouble("BOUND_BOX_Y_COORDINATE")
                         ));
             }
         } catch (SQLException e) {
@@ -113,7 +116,23 @@ public class BookmarksDAOImpl {
     }
 
     public static void insertBookmark(Bookmark bookmark) {
+        if (!isTableCreated())
+            createTable();
 
+        String query = "INSERT INTO " + TableNames.BOOKMARKS + " " +
+                "(ELEMENT_ID, COLOR, COLLAPSED) " +
+                "VALUES (" +
+                bookmark.getElementId() + ", '" +
+                bookmark.getColor() + "', " +
+                "0)";
+
+        DatabaseUtil.executeUpdate(query);
+
+    }
+
+    public static void deleteBookmark(String cellId) {
+        String query = "DELETE FROM " + TableNames.BOOKMARKS + " WHERE ID = " + cellId;
+        DatabaseUtil.executeUpdate(query);
     }
 
 
