@@ -352,6 +352,7 @@ public class Main extends Application {
         // *****************
         bookmarksMenu = new Menu("Bookmarks");
         bookmarksGlyph = new Glyph(font, FontAwesome.Glyph.BOOKMARK);
+        bookmarksGlyph.setColor(ColorProp.ENABLED);
         bookmarksSubMenu = new Menu("Bookmarks", bookmarksGlyph);
 
         bookmarksMenu.getItems().add(bookmarksSubMenu);
@@ -666,9 +667,7 @@ public class Main extends Application {
     private void showBookmarks() {
         bookmarksSubMenu.getItems().clear();
         if (graph.getModel() != null) {
-            System.out.println("Main.showBookmarks: model not null");
             graph.getModel().getBookmarkMap().forEach((id, bookmark) -> {
-                System.out.println("Main.showBookmarks: at bookmark: id: " + id);
                 MenuItem bookmarkMenuItem = new MenuItem(
                         "Id:" + bookmark.getElementId() +
                                 " method:" + bookmark.getMethodName() +
@@ -677,11 +676,25 @@ public class Main extends Application {
                 bookmarksSubMenu.getItems().add(bookmarkMenuItem);
 
                 bookmarkMenuItem.setOnAction(event -> {
-                    System.out.println("Main.showBookmarks: jumpTo: elementId: " + bookmark.getElementId() );
-                    graph.getEventHandlers().jumpTo(Integer.valueOf(bookmark.getElementId()), bookmark.getThreadId());
+                    graph.getEventHandlers().jumpTo(Integer.valueOf(bookmark.getElementId()), bookmark.getThreadId(), bookmark.getCollapsed());
                 });
             });
         }
+
+        // clear bookmarks button and logic
+        Glyph clearBookmarksGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.TRASH);
+        clearBookmarksGlyph.setColor(ColorProp.ENABLED);
+
+        MenuItem clearBookmarksMenuItem = new MenuItem("Delete all", clearBookmarksGlyph);
+        clearBookmarksGlyph.setDisable(graph.getModel().getBookmarkMap().size() == 0);
+        clearBookmarksMenuItem.setOnAction(event -> {
+            BookmarksDAOImpl.deleteBookmarks();
+            bookmarksSubMenu.getItems().clear();
+            graph.getModel().updateBookmarkMap();
+            convertDBtoElementTree.clearAndUpdateCellLayer();
+        });
+
+        bookmarksSubMenu.getItems().add(clearBookmarksMenuItem);
     }
 
     public String getCurrentSelectedThread() {
@@ -1103,13 +1116,13 @@ public class Main extends Application {
 
         // graph.getModel().uiUpdateRequired = true;
         convertDBtoElementTree.setCurrentThreadId(threadId);
-        System.out.println("Main.showThread: before clear UI");
+        // System.out.println("Main.showThread: before clear UI");
         convertDBtoElementTree.clearUI();
-        System.out.println("Main.showThread: before after UI");
+        // System.out.println("Main.showThread: before after UI");
         positionScrollBarFromHistory(Integer.valueOf(threadId));
 
         updateUi();
-        System.out.println("Main.showThread: after updateUI()");
+        // System.out.println("Main.showThread: after updateUI()");
 
         // Prevent triggering listeners from modifying circleCellsOnUI, edgesOnUI and highlightsOnUI HashMaps
         ZoomableScrollPane.turnOnListeners();

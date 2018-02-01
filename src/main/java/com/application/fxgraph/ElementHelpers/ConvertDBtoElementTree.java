@@ -6,13 +6,10 @@ import com.application.db.TableNames;
 import com.application.db.model.Bookmark;
 import com.application.fxgraph.cells.CircleCell;
 import com.application.fxgraph.graph.*;
-import com.sun.xml.internal.rngom.digested.DUnaryPattern;
 import javafx.application.Platform;
 import javafx.geometry.BoundingBox;
 import javafx.scene.shape.Line;
-import sun.java2d.pipe.SpanShapeRenderer;
 
-import java.awt.print.Book;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
@@ -239,7 +236,7 @@ public class ConvertDBtoElementTree {
         // System.out.println("ConvertDBtoElementTree:forceUiRendering: method ended");
     }
 
-    public void ClearAndUpdateCellLayer() {
+    public void clearAndUpdateCellLayer() {
         // remove all circles cells from UI
         graph.getCellLayer().getChildren().removeAll(model.getCircleCellsOnUI().values());
         model.getCircleCellsOnUI().clear();
@@ -320,7 +317,6 @@ public class ConvertDBtoElementTree {
         Map<String, CircleCell> mapCircleCellsOnUI = model.getCircleCellsOnUI();
 
         bookmarkMap.forEach((cellId, bookmark) -> {
-            System.out.println("ConvertDBtoElementTree.addBookmarks: bookmark at : " + cellId);
             if (mapCircleCellsOnUI.containsKey(cellId)) {
                 mapCircleCellsOnUI.get(cellId).bookmarkCell(bookmark.getColor());
             }
@@ -420,7 +416,6 @@ public class ConvertDBtoElementTree {
                     // Add parent circle cell if not already added earlier.
                     parentCircleCell = mapCircleCellsOnUI.get(parentId);
                     if (!mapCircleCellsOnUI.containsKey(parentId)) {
-                        System.out.println("now you know this executes ------------------ ");
                         try (ResultSet rsTemp = ElementDAOImpl.selectWhere("id = " + parentId)) {
                             if (rsTemp.next() && rsTemp.getInt("LEVEL_COUNT") > 1) {
                                 float xCoordinateTemp = rsTemp.getFloat("bound_box_x_coordinate");

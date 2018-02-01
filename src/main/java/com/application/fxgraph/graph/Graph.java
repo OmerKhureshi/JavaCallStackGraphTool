@@ -196,16 +196,10 @@ public class Graph {
 //        System.out.println("minY: " + minY + " : minX: " + minX);
 //        System.out.println();
         /*
-
             1 -> contentWidth - viewPortWidth
             ? -> x cord
 
             ? = xCord/contentWidth
-
-
-
-
-
         */
         return new BoundingBox(minX, minY, scaledViewportWidth, scaledViewportHeight);
     }
@@ -227,6 +221,10 @@ public class Graph {
     public void moveScrollPane(double hValue, double vValue){
         getScrollPane().setHvalue(hValue);
         getScrollPane().setVvalue(vValue);
+    }
+
+    public void convertXCoordinateToHValue(double xCoordinate) {
+
     }
 
     private Map<String, XYCoordinate> recentLocationsMap = new HashMap<>();

@@ -91,7 +91,7 @@ public class BookmarksDAOImpl {
             createTable();
 
         Map<String, Bookmark> result = new HashMap<>();
-        String query = "SELECT E.ID as EID, CT.THREAD_ID, CT.MESSAGE, B.COLOR, E.BOUND_BOX_X_COORDINATE, E.BOUND_BOX_Y_COORDINATE " +
+        String query = "SELECT E.ID as EID, CT.THREAD_ID, CT.MESSAGE, B.COLOR, E.BOUND_BOX_X_COORDINATE, E.BOUND_BOX_Y_COORDINATE, E.COLLAPSED " +
                 "FROM " + TableNames.BOOKMARKS + " AS B " +
                 "JOIN " + TableNames.ELEMENT_TABLE + " AS E ON B.ELEMENT_ID = E.ID " +
                 "JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT ON E.ID_ENTER_CALL_TRACE = CT.ID ";
@@ -105,7 +105,8 @@ public class BookmarksDAOImpl {
                                 rs.getString("MESSAGE"),
                                 rs.getString("COLOR"),
                                 rs.getDouble("BOUND_BOX_X_COORDINATE"),
-                                rs.getDouble("BOUND_BOX_Y_COORDINATE")
+                                rs.getDouble("BOUND_BOX_Y_COORDINATE"),
+                                rs.getInt("COLLAPSED")
                         ));
             }
         } catch (SQLException e) {
@@ -131,9 +132,13 @@ public class BookmarksDAOImpl {
     }
 
     public static void deleteBookmark(String cellId) {
-        String query = "DELETE FROM " + TableNames.BOOKMARKS + " WHERE ID = " + cellId;
+        String query = "DELETE FROM " + TableNames.BOOKMARKS + " WHERE ELEMENT_ID = " + cellId;
         DatabaseUtil.executeUpdate(query);
     }
 
+    public static void deleteBookmarks() {
+        String query = "DELETE FROM " + TableNames.BOOKMARKS;
+        DatabaseUtil.executeUpdate(query);
+    }
 
 }

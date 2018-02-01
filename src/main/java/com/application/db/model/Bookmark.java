@@ -9,13 +9,16 @@ public class Bookmark {
     private double xCoordinate;
     private double yCoordinate;
 
-    public Bookmark( String elementId, String threadId, String methodName, String color, double xCoordinate, double yCoordinate) {
+    private int collapsed;
+
+    public Bookmark( String elementId, String threadId, String methodName, String color, double xCoordinate, double yCoordinate, int collapsed) {
         this.elementId = elementId;
         this.threadId = threadId;
         this.methodName = methodName;
         this.color = color;
         this.xCoordinate = xCoordinate;
         this.yCoordinate = yCoordinate;
+        this.collapsed = collapsed;
     }
 
     @Override
@@ -76,5 +79,13 @@ public class Bookmark {
 
     public void setyCoordinate(double yCoordinate) {
         this.yCoordinate = yCoordinate;
+    }
+
+    public int getCollapsed() {
+        return collapsed;
+    }
+
+    public void setCollapsed(int collapsed) {
+        this.collapsed = collapsed;
     }
 }

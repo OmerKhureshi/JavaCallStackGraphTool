@@ -22,12 +22,9 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Arc;
-import javafx.scene.shape.Circle;
-import javafx.scene.shape.Shape;
 import javafx.util.Duration;
 import org.controlsfx.control.PopOver;
 import org.controlsfx.glyphfont.Glyph;
-import sun.java2d.pipe.SpanShapeRenderer;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -60,8 +57,8 @@ public class EventHandlers {
     public void setCustomMouseEventHandlers(final Node node) {
         // *****************
         // Show popup to display element details on mouse hover on an element.
-        // node.setOnMouseEntered(onMouseHoverToShowInfoEventHandler);
-        // node.setOnMousePressed(onMouseHoverToShowInfoEventHandler);
+        // node.setOnMouseEntered(showCellInfoPopup);
+        // node.setOnMousePressed(showCellInfoPopup);
         // node.setOnMousePressed(onMousePressedToCollapseTree);
         // *****************
 
@@ -69,7 +66,7 @@ public class EventHandlers {
 
         ((CircleCell)node).getInfoGroup().setOnMouseEntered(infoEnterEventHandler);
         ((CircleCell)node).getInfoGroup().setOnMouseExited(infoExitEventHandler);
-        ((CircleCell)node).getInfoGroup().setOnMousePressed(onMouseHoverToShowInfoEventHandler);
+        ((CircleCell)node).getInfoGroup().setOnMousePressed(showCellInfoPopup);
 
         ((CircleCell)node).getMinMaxGroup().setOnMouseEntered(minMaxEnterEventHandler);
         ((CircleCell)node).getMinMaxGroup().setOnMouseExited(minMaxExitEventHandler);
@@ -77,7 +74,7 @@ public class EventHandlers {
 
         // *****************
         // For debugging. Prints all mouse events.
-        // node.addEventFilter(MouseEvent.ANY, onMouseHoverToShowInfoEventHandler);
+        // node.addEventFilter(MouseEvent.ANY, showCellInfoPopup);
         // node.addEventFilter(MouseEvent.ANY, event -> System.out.println(event));
         // *****************
 
@@ -106,7 +103,7 @@ public class EventHandlers {
 
     private PopOver popOver;
 
-    private EventHandler<MouseEvent> onMouseHoverToShowInfoEventHandler = new EventHandler<MouseEvent>() {
+    private EventHandler<MouseEvent> showCellInfoPopup = new EventHandler<MouseEvent>() {
 
         @Override
         public void handle(MouseEvent event) {
@@ -118,7 +115,7 @@ public class EventHandlers {
             // CircleCell cell = (CircleCell) node;
             CircleCell cell = (CircleCell) node.getParent();
             String timeStamp;
-            int elementId, methodId, processId, threadId;
+            int elementId, methodId, processId, threadId, collapsed;
             String parameters, packageName = "", methodName = "", parameterTypes = "", eventType, lockObjectId;
             double xCord, yCord;
 
@@ -132,7 +129,7 @@ public class EventHandlers {
 
             // Please. Please do not try to combine the next two queries into one. Unless you want to spend another day tyring to prove it to yourself.
 
-            String sql = "Select E.ID as EID, TIME_INSTANT, METHOD_ID, PROCESS_ID, THREAD_ID, PARAMETERS, " +
+            String sql = "Select E.ID as EID, TIME_INSTANT, METHOD_ID, PROCESS_ID, THREAD_ID, PARAMETERS, COLLAPSED, " +
                     "MESSAGE, LOCKOBJID, BOUND_BOX_X_COORDINATE, BOUND_BOX_Y_COORDINATE from " + TableNames.ELEMENT_TABLE + " AS E " +
                     "JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT ON CT.id = E.ID_ENTER_CALL_TRACE " +
                     "WHERE E.ID = " + cell.getCellId();
@@ -151,6 +148,7 @@ public class EventHandlers {
                     lockObjectId = callTraceRS.getString("lockobjid");
                     xCord = callTraceRS.getFloat("bound_box_x_coordinate");
                     yCord = callTraceRS.getFloat("bound_box_y_coordinate");
+                    collapsed = callTraceRS.getInt("COLLAPSED");
 
 
                     try (ResultSet methodDefRS = MethodDefnDAOImpl.selectWhere("id = " + methodId)) {
@@ -279,7 +277,7 @@ public class EventHandlers {
 
                     } else if (eventType.equalsIgnoreCase("NOTIFYALL-ENTER")) {
                         try (Connection conn = DatabaseUtil.getConnection();
-                             Statement ps = conn.createStatement();) {
+                             Statement ps = conn.createStatement()) {
 
 
                             sql = "SELECT * FROM " + TableNames.CALL_TRACE_TABLE + " AS parent WHERE MESSAGE = 'WAIT-EXIT' " +
@@ -328,15 +326,17 @@ public class EventHandlers {
                                 String targetThreadId = String.valueOf(elementRS.getInt("thread_id"));
                                 float xCoordinate = elementRS.getFloat("bound_box_x_coordinate");
                                 float yCoordinate = elementRS.getFloat("bound_box_y_coordinate");
+
                                 double width = graph.getScrollPane().getContent().getBoundsInLocal().getWidth();
                                 double height = graph.getScrollPane().getContent().getBoundsInLocal().getHeight();
 
                                 // go to location.
-                                Button button = new Button();
-                                button.setOnMouseClicked(event1 -> {
-                                    jumpTo(eId, targetThreadId);
+                                Button jumpToButton = new Button();
+                                jumpToButton.setOnMouseClicked(event1 -> {
+                                    System.out.println("EventHandlers.handle: jumpToButton Clicked. for eleId: " + eId);
+                                    jumpTo(eId, targetThreadId, collapsed);
                                 });
-                                buttonList.add(button);
+                                buttonList.add(jumpToButton);
                             }
                         } catch (SQLException e) {
                             e.printStackTrace();
@@ -398,31 +398,34 @@ public class EventHandlers {
                     Button addBookmarkButton = new Button("Add Bookmark");
                     String finalMethodNameTemp = methodName;
                     addBookmarkButton.setOnMouseClicked(event1 -> {
-                        System.out.println("EventHandlers.handle: adding bookmark to db: id: " + elementId);
-                        Bookmark bookmark = new Bookmark( String.valueOf(elementId),
+                        Bookmark bookmark = new Bookmark(
+                                String.valueOf(elementId),
                                 String.valueOf(threadId),
                                 finalMethodNameTemp,
                                 bookmarkColor[0].toString(),
                                 xCord,
-                                yCord);
+                                yCord,
+                                collapsed);
 
                         BookmarksDAOImpl.insertBookmark(bookmark);
                         graph.getModel().updateBookmarkMap();
-                        convertDBtoElementTree.forceUiRendering();
+                        convertDBtoElementTree.clearAndUpdateCellLayer();
                     });
 
                     gridPane.add(bookmarkColorPicker, 1, rowIndex++);
                     gridPane.add(addBookmarkButton, 1, rowIndex++);
 
                     Button removeBookmarkButton = new Button("Remove bookmark");
-                    removeBookmarkButton.setDisable(!graph.getModel().getBookmarkMap().containsKey(elementId));
+                    removeBookmarkButton.setDisable(!graph.getModel().getBookmarkMap().containsKey(String.valueOf(elementId)));
 
                     removeBookmarkButton.setOnMouseClicked(eve -> {
-                        System.out.println("EventHandlers.handle: deleting bookmark: " + elementId);
+                        System.out.println("EventHandlers.handle: clicked removeBK button: eleId: " + elementId);
                         BookmarksDAOImpl.deleteBookmark(String.valueOf(elementId));
                         graph.getModel().updateBookmarkMap();
-                        convertDBtoElementTree.forceUiRendering();
+                        convertDBtoElementTree.clearAndUpdateCellLayer();
                     });
+
+                    gridPane.add(removeBookmarkButton, 1, rowIndex++);
 
                     popOver = new PopOver(gridPane);
                     popOver.setAnimated(true);
@@ -709,7 +712,7 @@ public class EventHandlers {
     };
 
     private void expandParentTreeChain(int cellId, int threadId) {
-        System.out.println("EventHandlers.expandParentTreeChain: method started");
+        // System.out.println("EventHandlers.expandParentTreeChain: method started");
         Deque<Integer> stack = new LinkedList<>();
 
         String getAllParentIDsQuery = "SELECT MAX(ID) AS IDS " +
@@ -728,21 +731,24 @@ public class EventHandlers {
 
         try (ResultSet rs = DatabaseUtil.select(getAllParentIDsQuery)) {
             while (rs.next()) {
-                System.out.println("EventHandlers.expandParentTreeChain: expandTreeAt: " + String.valueOf(rs.getInt("IDS")));
+                // System.out.println("EventHandlers.expandParentTreeChain: expandTreeAt: " + String.valueOf(rs.getInt("IDS")));
                 expandTreeAt(String.valueOf(rs.getInt("IDS")), threadId);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        System.out.println("EventHandlers.expandParentTreeChain: method ended");
+        // System.out.println("EventHandlers.expandParentTreeChain: method ended");
     }
 
-    public void jumpTo(int cellId, String threadId) {
-        System.out.println("EventHandlers.jumpTo: method started");
+    // jumpTo(int cellId, String threadId)
+
+    public void jumpTo(int cellId, String threadId, int collapsed) {
 
         // make changes in DB if needed
-        expandParentTreeChain(cellId, Integer.parseInt(threadId));
+        if (collapsed != 0) {
+            expandParentTreeChain(cellId, Integer.parseInt(threadId));
+        }
 
         // update UI
         ConvertDBtoElementTree.resetRegions();
@@ -753,13 +759,12 @@ public class EventHandlers {
             if (rs.next()) {
                 double xCord = rs.getDouble("BOUND_BOX_X_COORDINATE");
                 double yCord = rs.getDouble("BOUND_BOX_Y_COORDINATE");
-                graph.moveScrollPane(xCord, yCord);
+                graph.moveScrollPane(graph.getHValue(xCord), graph.getVValue(yCord));
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        System.out.println("EventHandlers.jumpTo: method ended");
     }
 
     private int getLowestCellInThread(int threadId) {
@@ -1026,7 +1031,7 @@ public class EventHandlers {
                     updateParentHighlightsInDB(clickedCellId, isCollapsed, statement, delta, nextCellId, leftX, topY, threadId);
 
                     statement.executeBatch();
-                    Platform.runLater(() -> convertDBtoElementTree.ClearAndUpdateCellLayer());
+                    Platform.runLater(() -> convertDBtoElementTree.clearAndUpdateCellLayer());
                     return null;
                 }
 
@@ -1042,7 +1047,7 @@ public class EventHandlers {
                 updateChildrenHighlightsInDB(clickedCellId, isCollapsed, statement, delta, nextCellId, threadId);
                 statement.executeBatch();
 
-                Platform.runLater(() -> convertDBtoElementTree.ClearAndUpdateCellLayer());
+                Platform.runLater(() -> convertDBtoElementTree.clearAndUpdateCellLayer());
                 return null;
             }
 
