@@ -396,6 +396,8 @@ public class EventHandlers {
                     //                 "-fx-background-radius: 15 15 15 15;");
 
                     Button addBookmarkButton = new Button("Add Bookmark");
+                    Button removeBookmarkButton = new Button("Remove bookmark");
+
                     String finalMethodNameTemp = methodName;
                     addBookmarkButton.setOnMouseClicked(event1 -> {
                         Bookmark bookmark = new Bookmark(
@@ -410,19 +412,20 @@ public class EventHandlers {
                         BookmarksDAOImpl.insertBookmark(bookmark);
                         graph.getModel().updateBookmarkMap();
                         convertDBtoElementTree.clearAndUpdateCellLayer();
+                        removeBookmarkButton.setDisable(false);
+                        addBookmarkButton.setDisable(true);
                     });
 
                     gridPane.add(bookmarkColorPicker, 1, rowIndex++);
                     gridPane.add(addBookmarkButton, 1, rowIndex++);
 
-                    Button removeBookmarkButton = new Button("Remove bookmark");
                     removeBookmarkButton.setDisable(!graph.getModel().getBookmarkMap().containsKey(String.valueOf(elementId)));
 
                     removeBookmarkButton.setOnMouseClicked(eve -> {
-                        System.out.println("EventHandlers.handle: clicked removeBK button: eleId: " + elementId);
                         BookmarksDAOImpl.deleteBookmark(String.valueOf(elementId));
                         graph.getModel().updateBookmarkMap();
                         convertDBtoElementTree.clearAndUpdateCellLayer();
+                        addBookmarkButton.setDisable(false);
                     });
 
                     gridPane.add(removeBookmarkButton, 1, rowIndex++);

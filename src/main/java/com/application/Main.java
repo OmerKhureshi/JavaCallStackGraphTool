@@ -87,7 +87,7 @@ public class Main extends Application {
     private Glyph runAnalysisGlyph;
     private MenuItem resetMenuItem;
     private Glyph resetGlyph;
-    private MenuItem runAnalysisHistoryMenuItem;
+    // private MenuItem runAnalysisHistoryMenuItem;
 
     private Menu saveImgMenu;  // Save Image menu button
     private MenuItem saveImgMenuItem;
@@ -285,10 +285,10 @@ public class Main extends Application {
         // runAnalysisMenuItem.setStyle(SizeProp.PADDING_SUBMENU);
         runAnalysisMenuItem.setDisable(true);
 
-        runAnalysisHistoryMenuItem = new MenuItem("Rerun latest files");
-        runAnalysisHistoryMenuItem.setDisable(firstTimeLoad);
+        // runAnalysisHistoryMenuItem = new MenuItem("Rerun latest files");
+        // runAnalysisHistoryMenuItem.setDisable(firstTimeLoad);
 
-        runMenu.getItems().addAll(runAnalysisMenuItem, resetMenuItem, runAnalysisHistoryMenuItem);
+        runMenu.getItems().addAll(runAnalysisMenuItem, resetMenuItem);
         menuItemsStyling.add(runAnalysisMenuItem);
         menuItemsStyling.add(resetMenuItem);
 
@@ -327,6 +327,7 @@ public class Main extends Application {
         // View Menu
         // *****************
         viewMenu = new Menu("View");
+        viewMenu.setDisable(true);
         refreshGraphWindowGlyph = new Glyph(font, FontAwesome.Glyph.REFRESH);
         refreshGraphWindowGlyph.setColor(ColorProp.ENABLED);
         refreshGraphWindowMenuItem = new MenuItem("Refresh graph widow", refreshGraphWindowGlyph);
@@ -351,9 +352,11 @@ public class Main extends Application {
         // Bookmarks Menu
         // *****************
         bookmarksMenu = new Menu("Bookmarks");
+        bookmarksMenu.setDisable(true);
         bookmarksGlyph = new Glyph(font, FontAwesome.Glyph.BOOKMARK);
         bookmarksGlyph.setColor(ColorProp.ENABLED);
         bookmarksSubMenu = new Menu("Bookmarks", bookmarksGlyph);
+
 
         bookmarksMenu.getItems().add(bookmarksSubMenu);
         // bookmarksMenu.setDisable(true);
@@ -364,6 +367,7 @@ public class Main extends Application {
         // Debug Menu
         // *****************
         debugMenu = new Menu("Debug");
+        debugMenu.setDisable(true);
         printCellsMenuItem = new MenuItem("Print circles on canvas to console");
         printEdgesMenuItem = new MenuItem("Print edges on canvas to console");
         printHighlightsMenuItem = new MenuItem("Print highlights on canvas to console");
@@ -396,11 +400,11 @@ public class Main extends Application {
 
         fileMenu = new Menu("File");
         methodDefnGlyph = new Glyph(font, FontAwesome.Glyph.CHECK);
-        methodDefnGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+        methodDefnGlyph.setColor(ColorProp.ENABLED);
         chooseMethodDefnMenuItem = new MenuItem("Select Method Definition log file", methodDefnGlyph);
 
         callTraceGlyph = new Glyph(font, FontAwesome.Glyph.CHECK);
-        callTraceGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+        callTraceGlyph.setColor(ColorProp.ENABLED);
         chooseCallTraceMenuItem = new MenuItem("Select Call Trace log file", callTraceGlyph);
 
         fileMenu.getItems().addAll(chooseMethodDefnMenuItem, chooseCallTraceMenuItem);
@@ -414,17 +418,17 @@ public class Main extends Application {
         runMenu = new Menu("Run");
 
         runAnalysisGlyph = new Glyph(font, FontAwesome.Glyph.PLAY);
-        runAnalysisGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+        runAnalysisGlyph.setColor(ColorProp.ENABLED);
         runAnalysisMenuItem = new MenuItem("Run", runAnalysisGlyph);
 
         resetGlyph = new Glyph(font, FontAwesome.Glyph.RETWEET);
         resetGlyph.setColor(ColorProp.ENABLED);
         resetMenuItem = new MenuItem("Reset", resetGlyph);
 
-        runAnalysisHistoryMenuItem = new MenuItem("Rerun latest files");
-        runAnalysisHistoryMenuItem.setDisable(firstTimeLoad);
+        // runAnalysisHistoryMenuItem = new MenuItem("Rerun latest files");
+        // runAnalysisHistoryMenuItem.setDisable(firstTimeLoad);
 
-        runMenu.getItems().addAll(runAnalysisMenuItem, resetMenuItem, runAnalysisHistoryMenuItem);
+        runMenu.getItems().addAll(runAnalysisMenuItem, resetMenuItem);
 
         // runMenu.getItems().addAll(runAnalysisMenuItem, resetMenuItem);
         menuItems.add(runAnalysisMenuItem);
@@ -436,7 +440,7 @@ public class Main extends Application {
         // *****************
         saveImgMenu = new Menu("Save Image");
         saveImgGlyph = new Glyph(font, FontAwesome.Glyph.PICTURE_ALT);
-        saveImgGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+        saveImgGlyph.setColor(ColorProp.ENABLED);
         saveImgMenuItem = new MenuItem("Save Image", saveImgGlyph);
 
         saveImgMenu.getItems().add(saveImgMenuItem);
@@ -448,12 +452,12 @@ public class Main extends Application {
         // *****************
         goToMenu = new Menu("Go To");
         recentsGlyph = new Glyph(font, FontAwesome.Glyph.HISTORY);
-        recentsGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+        recentsGlyph.setColor(ColorProp.ENABLED);
         recentMenu = new Menu("Recent nodes", recentsGlyph);
         recentMenu.setStyle(SizeProp.PADDING_SUBMENU);
 
         clearHistoryGlyph = new Glyph(font, FontAwesome.Glyph.TRASH);
-        clearHistoryGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+        clearHistoryGlyph.setColor(ColorProp.ENABLED);
         clearHistoryMenuItem = new MenuItem("Clear history", clearHistoryGlyph);
 
         goToMenu.getItems().addAll(recentMenu, clearHistoryMenuItem);
@@ -464,7 +468,7 @@ public class Main extends Application {
         // *****************
         highlightMenu = new Menu("Highlights");
         highlightItemsGlyph = new Glyph(font, FontAwesome.Glyph.FLAG);
-        highlightItemsGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+        highlightItemsGlyph.setColor(ColorProp.ENABLED);
         highlightMenuItem = new MenuItem("Highlight method invocations", highlightItemsGlyph);
 
         highlightMenu.getItems().add(highlightMenuItem);
@@ -486,6 +490,7 @@ public class Main extends Application {
         // View Menu
         // *****************
         viewMenu = new Menu("View");
+        viewMenu.setDisable(false);
         refreshGraphWindowGlyph = new Glyph(font, FontAwesome.Glyph.REFRESH);
         refreshGraphWindowGlyph.setColor(ColorProp.ENABLED);
         refreshGraphWindowMenuItem = new MenuItem("Refresh graph widow", refreshGraphWindowGlyph);
@@ -529,8 +534,8 @@ public class Main extends Application {
                     methodDefnInfoLabel.setText(methodDefnInfoString + "  File selected : " + methodDefnFile.getName());
 
                     methodDefnInfoGlyph.setIcon(FontAwesome.Glyph.CHECK);
-                    methodDefnInfoGlyph.setColor(ColorProp.ENABLED_COLORFUL);
-                    callTraceInfoGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+                    methodDefnInfoGlyph.setColor(ColorProp.ENABLED);
+                    callTraceInfoGlyph.setColor(ColorProp.ENABLED);
                 }
 
                 changeBool("methodDefnFileSet", true);
@@ -546,11 +551,11 @@ public class Main extends Application {
 
                 if (firstTimeLoad) {
                     // Change icons and colors in instructions panel
-                    methodDefnInfoGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+                    methodDefnInfoGlyph.setColor(ColorProp.ENABLED);
 
                     callTraceInfoLabel.setText(callTraceInfoString + "  File selected : " + callTraceFile.getName());
                     callTraceInfoGlyph.setIcon(FontAwesome.Glyph.CHECK);
-                    callTraceInfoGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+                    callTraceInfoGlyph.setColor(ColorProp.ENABLED);
                 }
 
                 changeBool("callTraceFileSet", true);
@@ -564,11 +569,16 @@ public class Main extends Application {
             if (firstTimeLoad) {
                 // Change icons and colors in instructions panel
                 runInfoGlyph.setIcon(FontAwesome.Glyph.CHECK);
-                runInfoGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+                runInfoGlyph.setColor(ColorProp.ENABLED);
 
+                System.out.println("Main.setUpMenuActions");
+                runAnalysisMenuItem.setDisable(true);
                 saveImgMenu.setDisable(false);
                 goToMenu.setDisable(false);
                 highlightMenu.setDisable(false);
+                bookmarksMenu.setDisable(false);
+                debugMenu.setDisable(false);
+                viewMenu.setDisable(false);
             }
 
         });
@@ -579,10 +589,10 @@ public class Main extends Application {
             callTraceGlyph.setIcon(FontAwesome.Glyph.PLUS);
         });
 
-        runAnalysisHistoryMenuItem.setOnAction(event -> {
-            methodDefnFileSet = callTraceFileSet = true;
-            reload();
-        });
+        // runAnalysisHistoryMenuItem.setOnAction(event -> {
+        //     methodDefnFileSet = callTraceFileSet = true;
+        //     reload();
+        // });
 
         // Capture and save the currently loaded UI tree.
         saveImgMenuItem.setOnAction(event -> saveUIImage());
@@ -730,6 +740,9 @@ public class Main extends Application {
         runAnalysisMenuItem.setDisable(true);
         goToMenu.setDisable(true);
         saveImgMenu.setDisable(true);
+        bookmarksMenu.setDisable(true);
+        debugMenu.setDisable(true);
+        viewMenu.setDisable(true);
 
         resetInstructionsPanel();
         resetHighlights();
@@ -1005,7 +1018,13 @@ public class Main extends Application {
             title.textProperty().bind(task.titleProperty());
             progressText.textProperty().bind(task.messageProperty());
 
-            new Thread(task).start();
+            try {
+
+                new Thread(task).start();
+            } catch (Exception e) {
+                System.out.println("caught the damn exceptions.... <<<<-----------------");
+            }
+
         } else {
             postDatabaseLoad();
         }
@@ -1245,7 +1264,7 @@ public class Main extends Application {
 
             // Change icons and colors in instructions panel
             runInfoGlyph.setIcon(FontAwesome.Glyph.ARROW_RIGHT);
-            runInfoGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+            runInfoGlyph.setColor(ColorProp.ENABLED);
         }
     }
 
@@ -1265,7 +1284,7 @@ public class Main extends Application {
         root.setCenter(instructionsNode);
 
         methodDefnInfoGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.ARROW_RIGHT);
-        methodDefnInfoGlyph.setColor(ColorProp.ENABLED_COLORFUL);
+        methodDefnInfoGlyph.setColor(ColorProp.ENABLED);
         methodDefnInfoLabel = new Label(methodDefnInfoString, methodDefnInfoGlyph);
 
         callTraceInfoGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.ARROW_RIGHT);

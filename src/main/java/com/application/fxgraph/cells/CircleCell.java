@@ -24,6 +24,8 @@ public class CircleCell extends Cell {
     private Group minMaxGroup;
     private Group infoGroup;
 
+    private double bookmarkStrokeWidth = 5;
+
     public CircleCell(String id) {
         super(id);
 
@@ -53,7 +55,7 @@ public class CircleCell extends Cell {
         // Min-Max button
         Arc minMaxArc = new Arc();
         minMaxArc.setCenterX(20);
-        minMaxArc.setCenterY(20);
+        minMaxArc.setCenterY(22);
         minMaxArc.setRadiusX(20);
         minMaxArc.setRadiusY(20);
         minMaxArc.setStartAngle(270);
@@ -131,7 +133,7 @@ public class CircleCell extends Cell {
 
     public void bookmarkCell(String color) {
         circle.setStroke(Paint.valueOf(color));
-        circle.setStrokeWidth(5);
+        circle.setStrokeWidth(bookmarkStrokeWidth);
     }
 
 
