@@ -414,6 +414,8 @@ public class EventHandlers {
                         convertDBtoElementTree.clearAndUpdateCellLayer();
                         removeBookmarkButton.setDisable(false);
                         addBookmarkButton.setDisable(true);
+
+                        // graph.addMarkToBarPane(bookmark);
                     });
 
                     gridPane.add(bookmarkColorPicker, 1, rowIndex++);
@@ -426,6 +428,8 @@ public class EventHandlers {
                         graph.getModel().updateBookmarkMap();
                         convertDBtoElementTree.clearAndUpdateCellLayer();
                         addBookmarkButton.setDisable(false);
+
+                        // graph.removeMarkFromBarPane(String.valueOf(elementId));
                     });
 
                     gridPane.add(removeBookmarkButton, 1, rowIndex++);

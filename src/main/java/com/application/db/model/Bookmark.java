@@ -1,5 +1,9 @@
 package com.application.db.model;
 
+
+import javafx.scene.paint.Paint;
+import javafx.scene.shape.Rectangle;
+
 public class Bookmark {
 
     private String elementId;
@@ -8,8 +12,11 @@ public class Bookmark {
     private String color;
     private double xCoordinate;
     private double yCoordinate;
-
     private int collapsed;
+
+    public static int barWidth = 20, barHeight = 2;
+
+    private Rectangle barMark = new Rectangle(20, 1);
 
     public Bookmark( String elementId, String threadId, String methodName, String color, double xCoordinate, double yCoordinate, int collapsed) {
         this.elementId = elementId;
@@ -19,6 +26,8 @@ public class Bookmark {
         this.xCoordinate = xCoordinate;
         this.yCoordinate = yCoordinate;
         this.collapsed = collapsed;
+
+        barMark.setFill(Paint.valueOf(color));
     }
 
     @Override

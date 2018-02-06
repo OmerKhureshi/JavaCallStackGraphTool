@@ -8,8 +8,11 @@ import com.application.fxgraph.cells.CircleCell;
 import com.application.fxgraph.cells.RectangleCell;
 import com.application.fxgraph.cells.TriangleCell;
 import javafx.scene.Node;
+import javafx.scene.paint.Paint;
+import javafx.scene.shape.Rectangle;
 
 import java.util.*;
+import java.util.List;
 
 public class Model {
 
@@ -37,6 +40,7 @@ public class Model {
     private Map<String, SimplifiedElement> simplifiedElementMap = new HashMap<>();
 
     private Map<String, Bookmark> bookmarkMap = new HashMap<>();
+    private Map<String, Rectangle> barMarkMap = new HashMap<>();
 
     public Map<String, Bookmark> getBookmarkMap() {
         return bookmarkMap;
@@ -52,7 +56,6 @@ public class Model {
      * new/modified methods start
      */
 
-
     public Map<String, Bookmark> updateAndGetBookmarkMap() {
         bookmarkMap = BookmarksDAOImpl.getBookmarks();
         return bookmarkMap;
@@ -60,6 +63,15 @@ public class Model {
 
     public void updateBookmarkMap() {
         bookmarkMap = BookmarksDAOImpl.getBookmarks();
+        bookmarkMap.keySet().forEach(id -> {
+            Rectangle rect = new Rectangle(bookmarkMap.get(id).getxCoordinate(), bookmarkMap.get(id).getyCoordinate(), 10, 2);
+            rect.setFill(Paint.valueOf(bookmarkMap.get(id).getColor()));
+            barMarkMap.put(id, rect);
+        });
+    }
+
+    public Map<String, Rectangle> getBarMarkMap() {
+        return barMarkMap;
     }
 
     public boolean uiUpdateRequired = true;

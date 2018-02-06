@@ -9,6 +9,7 @@ import com.application.fxgraph.graph.*;
 import javafx.application.Platform;
 import javafx.geometry.BoundingBox;
 import javafx.scene.shape.Line;
+import javafx.scene.shape.Rectangle;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -309,6 +310,11 @@ public class ConvertDBtoElementTree {
         }
 
         // System.out.println("ConvertDBtoElementTree::addHighlights: method ended");
+    }
+
+    private void addBarMarks() {
+        graph.getModel().updateBookmarkMap();
+        Map<String, Rectangle> barMarkMap = graph.getModel().getBarMarkMap();
 
     }
 

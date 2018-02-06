@@ -54,8 +54,8 @@ public class CircleCell extends Cell {
 
         // Min-Max button
         Arc minMaxArc = new Arc();
-        minMaxArc.setCenterX(20);
-        minMaxArc.setCenterY(22);
+        minMaxArc.setCenterX(20.5);
+        minMaxArc.setCenterY(20.5);
         minMaxArc.setRadiusX(20);
         minMaxArc.setRadiusY(20);
         minMaxArc.setStartAngle(270);
@@ -71,8 +71,8 @@ public class CircleCell extends Cell {
 
         // info button
         Arc infoArc = new Arc();
-        infoArc.setCenterX(20);
-        infoArc.setCenterY(20);
+        infoArc.setCenterX(20.5);
+        infoArc.setCenterY(20.5);
         infoArc.setRadiusX(20);
         infoArc.setRadiusY(20);
         infoArc.setStartAngle(90);

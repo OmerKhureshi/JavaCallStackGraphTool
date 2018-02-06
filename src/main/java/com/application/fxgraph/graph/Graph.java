@@ -1,13 +1,22 @@
 package com.application.fxgraph.graph;
 
+import com.application.db.DAOImplementation.BookmarksDAOImpl;
+import com.application.db.model.Bookmark;
 import com.application.fxgraph.ElementHelpers.ConvertDBtoElementTree;
 import com.application.fxgraph.ElementHelpers.Element;
+import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
 import javafx.application.Platform;
 import javafx.geometry.BoundingBox;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import javafx.scene.shape.Line;
+import javafx.scene.shape.Rectangle;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,13 +27,15 @@ public class Graph {
     private Group canvas;
     private ZoomableScrollPane scrollPane;
 
+    // private Pane barPane;
+
     public EventHandlers getEventHandlers() {
         return eventHandlers;
     }
 
     //    private ScrollPane scrollPane;
-    EventHandlers eventHandlers;
 
+    EventHandlers eventHandlers;
     /**
      * the pane wrapper is necessary or else the scrollpane would always align
      * the top-most and left-most child to the top and left eg when you drag the
@@ -43,6 +54,67 @@ public class Graph {
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(true);
     }
+
+/*
+    public void setUpBarPane() {
+        newbarPane = new Pane();
+        StackPane.setAlignment(barPane, Pos.CENTER_RIGHT);
+        StackPane.setMargin(barPane, new Insets(12,15,28,0));
+        barPane.setStyle("-fx-background-color: rgba(0, 0, 0, 0.1); -fx-background-radius: 0;");
+        barPane.setMaxWidth(15);
+        getModel().updateBookmarkMap();
+        addMarksToBarPane();
+        // System.out.println(">>>>>>: " + barPane.heightProperty().get());
+        // System.out.println(">>>>>>: " + barPane.heightProperty().getValue());
+        // System.out.println(">>>>>>: " + barPane.getHeight());
+        // System.out.println(">>>>>>: " + barPane.getMaxHeight());
+        // System.out.println(">>>>>>: " + barPane.getMinHeight());
+        // System.out.println(">>>>>>: " + barPane.getPrefHeight());
+        // System.out.println(">>>>>>: " + barPane.getLayoutBounds().getHeight());
+        // System.out.println(" --------------- ");
+        //
+        // barPane.heightProperty().addListener(eve -> {
+        //     System.out.println(barPane.getHeight());
+        // });
+    }
+*/
+
+/*
+    public void addMarksToBarPane() {
+        getModel().getBookmarkMap().values().forEach(bookmark -> {
+            System.out.println("Graph.addMarksToBarPane: bookmark: " + bookmark);
+            addMarkToBarPane(bookmark);
+        });
+        System.out.println("2. barPane.getHeight() = " + barPane.getHeight());
+
+    }
+*/
+
+
+   /* public void addMarkToBarPane(Bookmark bookmark) {
+        Rectangle rect = new Rectangle(0, 0, 40, 4);
+        rect.setLayoutY(getVValue(bookmark.getyCoordinate()) * barPane.getHeight() * 0.9);
+        // rect.setLayoutX(getHValue(bookmark.getxCoordinate()) * barPane.getWidth() * 0.9);
+        // rect.setFill(Paint.valueOf(bookmark.getColor()));
+        rect.setFill(Color.RED);
+        model.getBarMarkMap().put(bookmark.getElementId(), rect);
+        barPane.getChildren().add(rect);
+        // System.out.println("Graph.addMarkToBarPane: added rect: layoutY:" + rect.getLayoutY());
+        // System.out.println("Graph.addMarkToBarPane: " + (getVValue(bookmark.getyCoordinate()) * barPane.getHeight() * 0.9));
+        //
+        // System.out.println("1. barPane.getHeight() = " + barPane.getHeight());
+        // System.out.println("bookmark.getyCoordinate() = " + bookmark.getyCoordinate());
+        // System.out.println("getVValue(bookmark.getyCoordinate()) = " + getVValue(bookmark.getyCoordinate()));
+    }*/
+
+/*
+    public void removeMarkFromBarPane(String elementId) {
+        Rectangle rect = model.getBarMarkMap().get(elementId);
+        model.getBarMarkMap().remove(elementId);
+        barPane.getChildren().remove(rect);
+    }
+*/
+
 
     public void clearCellLayer() {
         // System.out.println("Graph::clearCellLayer:");
@@ -223,10 +295,6 @@ public class Graph {
         getScrollPane().setVvalue(vValue);
     }
 
-    public void convertXCoordinateToHValue(double xCoordinate) {
-
-    }
-
     private Map<String, XYCoordinate> recentLocationsMap = new HashMap<>();
 
     public Map<String, XYCoordinate> getRecentLocationsMap() {
@@ -242,14 +310,24 @@ public class Graph {
     }
 
     public static class XYCoordinate {
+
         public double x;
         public double y;
         public int threadId;
-
         XYCoordinate(double x, double y, int threadId) {
             this.x = x;
             this.y = y;
             this.threadId = threadId;
         }
     }
+
+    /*public Pane getBarPane() {
+        return barPane;
+    }*/
+
+/*
+    public void setBarPane(Pane barPane) {
+        this.barPane = barPane;
+    }
+*/
 }

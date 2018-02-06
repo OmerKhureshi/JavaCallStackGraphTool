@@ -54,6 +54,7 @@ public class Main extends Application {
     // Main UI screen
     private Graph graph;
     private BorderPane root;
+    private StackPane rootStack;
     private ConvertDBtoElementTree convertDBtoElementTree;
     private Stage primaryStage;
 
@@ -106,6 +107,7 @@ public class Main extends Application {
     private Menu debugMenu;  // Debug menu button
     private MenuItem printCellsMenuItem;
     private MenuItem printEdgesMenuItem;
+    private MenuItem printBarMarksItem;
     private MenuItem printHighlightsMenuItem;
 
     private Menu viewMenu;  // View menu button
@@ -133,6 +135,7 @@ public class Main extends Application {
     Label title;
     Label progressText;
     private static final int PROGRESS_BAR_WIDTH = 676;
+
 
     // Background tasks
     Task task;
@@ -173,6 +176,7 @@ public class Main extends Application {
             protected void succeeded() {
                 super.succeeded();
                 chooseReloadOrReset(firstTimeLoad);
+
             }
 
             @Override
@@ -237,6 +241,7 @@ public class Main extends Application {
             setUpMenuForReloads();
             setUpMenuActions();
             reload();
+
         }
     }
 
@@ -370,9 +375,10 @@ public class Main extends Application {
         debugMenu.setDisable(true);
         printCellsMenuItem = new MenuItem("Print circles on canvas to console");
         printEdgesMenuItem = new MenuItem("Print edges on canvas to console");
+        printBarMarksItem = new MenuItem("Print bookmark marks to console");
         printHighlightsMenuItem = new MenuItem("Print highlights on canvas to console");
 
-        debugMenu.getItems().addAll(printCellsMenuItem, printEdgesMenuItem, printHighlightsMenuItem);
+        debugMenu.getItems().addAll(printCellsMenuItem, printEdgesMenuItem, printHighlightsMenuItem, printBarMarksItem);
 
         // *****************
         // Main Menu
@@ -506,7 +512,8 @@ public class Main extends Application {
         printCellsMenuItem = new MenuItem("Print circles on canvas to console");
         printEdgesMenuItem = new MenuItem("Print edges on canvas to console");
         printHighlightsMenuItem = new MenuItem("Print highlights on canvas to console");
-        debugMenu.getItems().addAll(printCellsMenuItem, printEdgesMenuItem, printHighlightsMenuItem);
+        printBarMarksItem = new MenuItem("Print bookmark marks to console");
+        debugMenu.getItems().addAll(printCellsMenuItem, printEdgesMenuItem, printHighlightsMenuItem, printBarMarksItem);
 
         // Main menu
         menuBar.getMenus().addAll(fileMenu, runMenu, viewMenu, saveImgMenu, goToMenu, bookmarksMenu, highlightMenu, debugMenu);
@@ -519,7 +526,7 @@ public class Main extends Application {
     }
 
     private void setUpMenuActions() {
-        System.out.println("Main::setUpMenuActions: method started");
+        // System.out.println("Main::setUpMenuActions: method started");
 
         chooseMethodDefnMenuItem.setOnAction(event -> {
             File methodDefnFile = chooseLogFile("MethodDefinition");
@@ -571,7 +578,6 @@ public class Main extends Application {
                 runInfoGlyph.setIcon(FontAwesome.Glyph.CHECK);
                 runInfoGlyph.setColor(ColorProp.ENABLED);
 
-                System.out.println("Main.setUpMenuActions");
                 runAnalysisMenuItem.setDisable(true);
                 saveImgMenu.setDisable(false);
                 goToMenu.setDisable(false);
@@ -580,6 +586,7 @@ public class Main extends Application {
                 debugMenu.setDisable(false);
                 viewMenu.setDisable(false);
             }
+
 
         });
 
@@ -667,11 +674,103 @@ public class Main extends Application {
             System.out.println("---------------------------------------------------");
         });
 
+        printBarMarksItem.setOnAction(event -> {
+            System.out.println("-----------Bookmarks marks on bar --------------------");
+            graph.getModel().getBarMarkMap().forEach((id, rect) -> {
+                System.out.print(id + ", ");
+                System.out.println("rect.getLayoutY() = " + rect.getLayoutY());
+            });
+
+            System.out.println("graph.getScrollPane().getHvalue() = " + graph.getScrollPane().getHvalue());
+            System.out.println("graph.getScrollPane().getVvalue() = " + graph.getScrollPane().getVvalue());
+
+            System.out.println();
+            System.out.println("---------------------------------------------------");
+
+
+
+            Set<Node> nodeSet = graph.getScrollPane().lookupAll(".scroll-bar");
+            System.out.println(" ------------");
+            graph.getScrollPane().getCssMetaData().forEach(p -> {
+                System.out.println(p);
+            });
+            System.out.println(" ------------");
+
+            graph.getScrollPane().getStyleClass().forEach(c -> {
+                System.out.println(c);
+            });
+
+            System.out.println(" ------------");
+            graph.getScrollPane().getChildrenUnmodifiable().forEach(c -> {
+                c.getStyleClass().forEach(c1 -> {
+                    System.out.println(c);
+                });
+            });
+
+            System.out.println(" ------------");
+            // if (node instanceof ScrollBar) {
+            nodeSet.forEach(node -> {
+                if (node instanceof ScrollBar) {
+                    ScrollBar scrollBar = ((ScrollBar) node);
+                    if (scrollBar.getOrientation().equals(Orientation.VERTICAL)) {
+                        System.out.println("vertical orientation");
+                        System.out.println("scrollBar.getWidth() = " + scrollBar.getWidth());
+                        System.out.println("scrollBar.getHeight() = " + scrollBar.getHeight());
+                    }
+
+                    if (scrollBar.getOrientation().equals(Orientation.HORIZONTAL)) {
+                        System.out.println("horizontal orientation");
+                        System.out.println("scrollBar.getWidth() = " + scrollBar.getWidth());
+                        System.out.println("scrollBar.getHeight() = " + scrollBar.getHeight());
+                    }
+                }
+
+                System.out.println("node = " + node);
+            });
+
+            System.out.println("nodeSet.size() = " + nodeSet.size());
+            System.out.println(" ------------");
+
+            System.out.println("graph.getScrollPane().getViewportBounds().getHeight() = "
+                    + graph.getScrollPane().getViewportBounds().getHeight());
+            System.out.println("graph.getScrollPane().getHeight() = " + graph.getScrollPane().getHeight());
+            System.out.println("graph.getScrollPane().getContent().getLayoutBounds().getHeight() = "
+                    + graph.getScrollPane().getContent().getLayoutBounds().getHeight());
+            System.out.println(" ------------");
+
+
+            System.out.println("graph.getScrollPane().getViewportBounds().getWidth() = "
+                    + graph.getScrollPane().getViewportBounds().getWidth());
+            System.out.println("graph.getScrollPane().getWidth() = " + graph.getScrollPane().getWidth());
+            System.out.println("graph.getScrollPane().getContent().getLayoutBounds().getWidth() = "
+                    + graph.getScrollPane().getContent().getLayoutBounds().getWidth());
+        });
+
         refreshGraphWindowMenuItem.setOnAction(event -> {
             refreshGraphWindow();
         });
 
         // System.out.println("Main::setUpMenuActions: method ended");
+    }
+
+    public void onScrollBarListener() {
+        ScrollPane scrollPane = graph.getScrollPane();
+        System.out.println("height property changed.");
+
+        scrollPane.heightProperty().addListener(e -> {
+            if (scrollPane.getViewportBounds().getHeight() >
+                    scrollPane.getContent().getLayoutBounds().getHeight()) {
+                System.out.println("Vertical scroll bar appears");
+            }
+        });
+
+        scrollPane.widthProperty().addListener(e -> {
+            System.out.println("width property changed.");
+            if (scrollPane.getViewportBounds().getWidth() >
+                    scrollPane.getContent().getLayoutBounds().getWidth()) {
+                System.out.println("Horizontal scroll bar appears");
+            }
+        });
     }
 
     private void showBookmarks() {
@@ -758,6 +857,8 @@ public class Main extends Application {
             return;
         }
         addGraphCellComponents();
+        System.out.println("Main.reload");
+
     }
 
     private void dbOnReload() {
@@ -783,6 +884,40 @@ public class Main extends Application {
         ((ZoomableScrollPane) graph.getScrollPane()).saveRef(this);
     }
 
+/*
+    public void setUpBarPane() {
+        rootStack = new StackPane();
+        graph.setUpBarPane();
+        rootStack.getChildren().addAll(
+                graph.getScrollPane(),
+                graph.getBarPane());
+
+
+        // System.out.println("determineVerticalSBVisible() = " + determineVerticalSBVisible(graph.getScrollPane()));
+
+        rootStack.setStyle("-fx-bakground-color: silver; -fx-padding: 10;");
+
+        root.setCenter(rootStack);
+        // System.out.println("4. barPane.getHeight() = " + graph.getBarPane().getHeight());
+
+        onScrollBarListener();
+
+    }
+*/
+
+    // private boolean determineVerticalSBVisible(final ScrollPane scrollPane) {
+    //     try {
+    //         final ScrollPaneSkin skin = (ScrollPaneSkin) scrollPane.getSkin();
+    //         final Field field = skin.getClass().getDeclaredField("vsb");
+    //         field.setAccessible(true);
+    //         final ScrollBar scrollBar = (ScrollBar) field.get(skin);
+    //         field.setAccessible(false);
+    //         return scrollBar.isVisible();
+    //     } catch (final Exception e) {
+    //         e.printStackTrace();
+    //     }
+    //     return false;
+    // }
     public void setUpNavigationBar() {
         HBox hBox = new HBox();
         Button goToParent = new Button("Parent");
@@ -879,9 +1014,7 @@ public class Main extends Application {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-
         } else {
-
             ConvertDBtoElementTree.greatGrandParent.getChildren().forEach(element -> {
                 Element child = element.getChildren().get(0);
                 int callTraceId = -1;
@@ -898,7 +1031,6 @@ public class Main extends Application {
         }
 
         root.setLeft(threadListView);
-
     }
 
     private void saveUIImage() {
@@ -999,6 +1131,8 @@ public class Main extends Application {
 
                 // Insert lines and properties into database.
                 convertDBtoElementTree.recursivelyInsertEdgeElementsIntoDB(ConvertDBtoElementTree.greatGrandParent);
+
+
                 return null;
             }
 
@@ -1009,7 +1143,8 @@ public class Main extends Application {
                 pStage.close();
 
                 // Load UI.
-                postDatabaseLoad();
+                loadUI();
+
             }
         };
 
@@ -1021,12 +1156,14 @@ public class Main extends Application {
             try {
 
                 new Thread(task).start();
+
             } catch (Exception e) {
                 System.out.println("caught the damn exceptions.... <<<<-----------------");
             }
 
         } else {
-            postDatabaseLoad();
+            loadUI();
+
         }
     }
 
@@ -1055,7 +1192,7 @@ public class Main extends Application {
     private void updateProgress(BytesRead bytesRead) {
     }
 
-    private void postDatabaseLoad() {
+    private void loadUI() {
         resetCenterLayout();
         setUpThreadsView();
 
@@ -1066,6 +1203,8 @@ public class Main extends Application {
         String firstThreadID = currentSelectedThread = threadsObsList.get(0).split(" ")[1];
         showThread(firstThreadID);
         threadListView.getSelectionModel().select(0);
+        // setUpBarPane();
+
     }
 
     // private void createCircleCellsRecursively(Element root, Model model) {
@@ -1120,10 +1259,8 @@ public class Main extends Application {
 
 
     private void refreshGraphWindow() {
-        System.out.println("Main.refreshGraphWindow: method started. ");
         graph.getModel().uiUpdateRequired = true;
         showThread(currentSelectedThread);
-        System.out.println("Main.refreshGraphWindow: method ended. ");
     }
 
     public void showThread(String threadId) {
@@ -1166,9 +1303,9 @@ public class Main extends Application {
         }
     }
 
+
     public void updateUi() {
         if (convertDBtoElementTree != null && graph != null) {
-            // System.out.println("Main::updateUi: called by " + caller + " thread " + Thread.currentThread().getName());
             BoundingBox viewPortDims = graph.getViewPortDims();
             if (!convertDBtoElementTree.isUIDrawingRequired(viewPortDims)) {
                 // System.out.println("ConvertDBtoElementTree:loadUIComponentsInsideVisibleViewPort: UI redrawing not required.");
