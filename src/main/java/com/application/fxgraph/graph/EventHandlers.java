@@ -40,8 +40,6 @@ public class EventHandlers {
     final DragContext dragContext = new DragContext();
     // static Map<String, Double> deltaCache = new HashMap<>();
     private boolean clickable = true;
-    private boolean subtreeExpanded = true;
-    private boolean posUpdated = true;
 
     Graph graph;
     static Main main;
@@ -57,31 +55,31 @@ public class EventHandlers {
     public void setCustomMouseEventHandlers(final Node node) {
         // *****************
         // Show popup to display element details on mouse hover on an element.
-        // node.setOnMouseEntered(showCellInfoPopup);
-        // node.setOnMousePressed(showCellInfoPopup);
-        // node.setOnMousePressed(onMousePressedToCollapseTree);
+        // node.setOnMouseEntered(infoButtonOnClickEventHandler);
+        // node.setOnMousePressed(infoButtonOnClickEventHandler);
+        // node.setOnMousePressed(minMaxButtonOnClickEventHandler);
         // *****************
 
         node.setOnMouseEntered(onMouseEnterToShowNav);
 
-        ((CircleCell)node).getInfoGroup().setOnMouseEntered(infoEnterEventHandler);
-        ((CircleCell)node).getInfoGroup().setOnMouseExited(infoExitEventHandler);
-        ((CircleCell)node).getInfoGroup().setOnMousePressed(showCellInfoPopup);
+        ((CircleCell)node).getInfoGroup().setOnMouseEntered(showInfoButtonEventHandeler);
+        ((CircleCell)node).getInfoGroup().setOnMouseExited(hideInfoButtonEventHandler);
+        ((CircleCell)node).getInfoGroup().setOnMousePressed(infoButtonOnClickEventHandler);
 
-        ((CircleCell)node).getMinMaxGroup().setOnMouseEntered(minMaxEnterEventHandler);
-        ((CircleCell)node).getMinMaxGroup().setOnMouseExited(minMaxExitEventHandler);
-        ((CircleCell)node).getMinMaxGroup().setOnMousePressed(onMousePressedToCollapseTree);
+        ((CircleCell)node).getMinMaxGroup().setOnMouseEntered(showMinMaxEventHandler);
+        ((CircleCell)node).getMinMaxGroup().setOnMouseExited(hideMinMaxEventHandler);
+        ((CircleCell)node).getMinMaxGroup().setOnMousePressed(minMaxButtonOnClickEventHandler);
 
         // *****************
         // For debugging. Prints all mouse events.
-        // node.addEventFilter(MouseEvent.ANY, showCellInfoPopup);
+        // node.addEventFilter(MouseEvent.ANY, infoButtonOnClickEventHandler);
         // node.addEventFilter(MouseEvent.ANY, event -> System.out.println(event));
         // *****************
 
 
         // *****************
         // Click on an element to collapse the subtree rooted at that element.
-        // node.setOnMousePressed(onMousePressedToCollapseTree);
+        // node.setOnMousePressed(minMaxButtonOnClickEventHandler);
         // *****************
 
 
@@ -103,7 +101,7 @@ public class EventHandlers {
 
     private PopOver popOver;
 
-    private EventHandler<MouseEvent> showCellInfoPopup = new EventHandler<MouseEvent>() {
+    private EventHandler<MouseEvent> infoButtonOnClickEventHandler = new EventHandler<MouseEvent>() {
 
         @Override
         public void handle(MouseEvent event) {
@@ -375,7 +373,7 @@ public class EventHandlers {
                     // Collapse and Expand subtree button
                     Button minMaxButton = new Button("min / max");
                     minMaxButton.setOnMouseClicked(event1 -> {
-                                invokeOnMousePressedEventHandler(cell, threadId);
+                                minMaxButtonOnClick(cell, threadId);
                             }
                     );
 
@@ -474,7 +472,7 @@ public class EventHandlers {
         }
     };
 
-    EventHandler<MouseEvent> infoEnterEventHandler = new EventHandler<MouseEvent>() {
+    EventHandler<MouseEvent> showInfoButtonEventHandeler = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {
             Group node = (Group) event.getSource();
@@ -492,7 +490,7 @@ public class EventHandlers {
         }
     };
 
-    EventHandler<MouseEvent> infoExitEventHandler = new EventHandler<MouseEvent>() {
+    EventHandler<MouseEvent> hideInfoButtonEventHandler = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {
             Group node = (Group) event.getSource();
@@ -508,7 +506,7 @@ public class EventHandlers {
     };
 
 
-    EventHandler<MouseEvent> minMaxEnterEventHandler = new EventHandler<MouseEvent>() {
+    EventHandler<MouseEvent> showMinMaxEventHandler = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {
             Group node = (Group) event.getSource();
@@ -520,7 +518,7 @@ public class EventHandlers {
         }
     };
 
-    EventHandler<MouseEvent> minMaxExitEventHandler = new EventHandler<MouseEvent>() {
+    EventHandler<MouseEvent> hideMinMaxEventHandler = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {
             Group node = (Group) event.getSource();
@@ -533,7 +531,7 @@ public class EventHandlers {
     };
 
 
-    private void invokeOnMousePressedEventHandler(CircleCell cell, int threadId) {
+    private void minMaxButtonOnClick(CircleCell clickedCell, int threadId) {
         {
             if (popOver != null) {
                 popOver.hide();
@@ -544,24 +542,12 @@ public class EventHandlers {
                 return;
             }
 
-            // posUpdated = false;
-            // System.out.println("on click: set posUpdated: " + posUpdated);
-            // subtreeExpanded = false;
-            // System.out.println("on click: set subtreeExpanded: " + subtreeExpanded);
             clickable = false;
-            // System.out.println("on click: set clickable: " + clickable);
 
-            CellLayer cellLayer = (CellLayer) graph.getCellLayer();
-            CircleCell clickedCell = cell;
             String clickedCellID = clickedCell.getCellId();
-            int collapsed = 0;
-            double clickedCellTopLeftY = 0;
-            double clickedCellTopLeftX = 0;
-            double clickedCellTopRightX = 0;
-            double clickedCellBoundBottomLeftY = 0;
-            double newDelta = 0;
-            double newDeltaX = 0;
-            int parentId = 0;
+
+            int collapsed = 0, parentId = 0;
+            double clickedCellTopLeftY = 0, clickedCellTopLeftX = 0, clickedCellTopRightX = 0, clickedCellBoundBottomLeftY = 0, newDelta = 0, newDeltaX = 0;
 
             try (ResultSet cellRS = ElementDAOImpl.selectWhere("id = " + clickedCellID)) {
                 if (cellRS.next()) {
@@ -583,17 +569,15 @@ public class EventHandlers {
              *     0     - Cell visible on UI. Starting value for all cells.
              *     1     - parent of this cell was minimized. Don't show on UI
              *     2     - this cell was minimized. Show on UI. Don't show children on UI.
-             *     3     - parent of this cell was minimized. This cell was also minimized. Don't expand this cell's children. Don't show on UI.
+             *    >= 3   - parent of this cell was minimized. This cell was also minimized. Don't expand this cell's children. Don't show on UI.
              */
             if (collapsed == 1 || collapsed >= 3) {
                 // expand sub tree.
-                System.out.println("onMousePressedToCollapseTree: cell: " + clickedCellID + " ; collapsed: " + collapsed);
+                System.out.println("minMaxButtonOnClickEventHandler: cell: " + clickedCellID + " ; collapsed: " + collapsed);
             } else if (collapsed == 0) {
                 // MINIMIZE SUBTREE
 
-                // System.out.println(">>>> clicked on a collapsed = 0  cell.");
                 // ((Circle) clickedCell.getChildren().get(0)).setFill(Color.BLUE);
-
                 // ((Circle) ( (Group)cell.getView() )
                 //             .getChildren().get(0))
                 //             .setFill(Color.BLUE);
@@ -601,7 +585,6 @@ public class EventHandlers {
                 // cell.setStyle("-fx-background-color: blue");
                 main.setStatus("Please wait ......");
 
-                subtreeExpanded = true;
                 System.out.println("====== Minimize cellId: " + clickedCellID + " ------ ");
 
                 // ElementDAOImpl.updateWhere("collapsed", "2", "id = " + clickedCellID);
@@ -622,7 +605,7 @@ public class EventHandlers {
                 try (ResultSet rs = DatabaseUtil.select(getDeltaXQuery)){
                     if (rs.next()) {
                         newDeltaX = rs.getFloat("MAX_X") - clickedCellTopRightX;
-                        System.out.println("EventHandler::onMousePressedToCollapseTree on collapse: newDeltaX: " + newDeltaX);
+                        System.out.println("EventHandler::minMaxButtonOnClickEventHandler on collapse: newDeltaX: " + newDeltaX);
                     }
                 } catch (SQLException e) {
                     e.printStackTrace();
@@ -710,11 +693,11 @@ public class EventHandlers {
     }
 
 
-    private EventHandler<MouseEvent> onMousePressedToCollapseTree = new EventHandler<MouseEvent>() {
+    private EventHandler<MouseEvent> minMaxButtonOnClickEventHandler = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {
             CircleCell cell = ((CircleCell) ((Node) event.getSource()).getParent());
-            invokeOnMousePressedEventHandler(cell, Integer.valueOf(main.getCurrentSelectedThread()));
+            minMaxButtonOnClick(cell, Integer.valueOf(main.getCurrentSelectedThread()));
         }
     };
 
@@ -794,6 +777,7 @@ public class EventHandlers {
     }
 
     private int getNextLowerSiblingOrAncestorNode(int clickedCellId, double x, double y, int threadId) {
+        System.out.println("EventHandlers.getNextLowerSiblingOrAncestorNode: started");
         int lastCellId = getLowestCellInThread(threadId) + 1;
 
         String getNextQuery = "SELECT " +
@@ -819,14 +803,13 @@ public class EventHandlers {
         }
 
         // System.out.println("EventHandler::getNextLowerSiblingOrAncestorNode: we dont hav res" + Integer.MAX_VALUE);
+        System.out.println("EventHandlers.getNextLowerSiblingOrAncestorNode: ended");
         return Integer.MAX_VALUE;
     }
 
     private void setClickable() {
-        // if (posUpdated && subtreeExpanded) {
         clickable = true;
         main.setStatus("Done");
-        // }
     }
 
 
