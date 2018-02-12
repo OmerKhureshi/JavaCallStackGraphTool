@@ -3,7 +3,7 @@ package com.application.fxgraph.graph;
 import com.application.db.DAOImplementation.BookmarksDAOImpl;
 import com.application.db.model.Bookmark;
 import com.application.fxgraph.ElementHelpers.Element;
-import com.application.fxgraph.ElementHelpers.SimplifiedElement;
+// import com.application.fxgraph.ElementHelpers.SimplifiedElement;
 import com.application.fxgraph.cells.CircleCell;
 import com.application.fxgraph.cells.RectangleCell;
 import com.application.fxgraph.cells.TriangleCell;
@@ -37,7 +37,7 @@ public class Model {
 
     private Map<Integer, com.application.fxgraph.graph.RectangleCell> highlightsOnUI = new HashMap<>();
 
-    private Map<String, SimplifiedElement> simplifiedElementMap = new HashMap<>();
+    // private Map<String, SimplifiedElement> simplifiedElementMap = new HashMap<>();
 
     private Map<String, Bookmark> bookmarkMap = new HashMap<>();
     private Map<String, Rectangle> barMarkMap = new HashMap<>();
@@ -95,19 +95,19 @@ public class Model {
         // System.out.println("fronting end ======================================================================");
     }
 
-    public void addSimplifiedElementToMap(SimplifiedElement element) {
-            simplifiedElementMap.put(element.getElementId(), element);
-    }
-
-    public void removeSimplifiedElementFromMap(String elementId) {
-        if (simplifiedElementMap.get(elementId) != null) {
-            simplifiedElementMap.remove(elementId);
-        }
-    }
-
-    public Map<String, SimplifiedElement> getSimplifiedElementMap() {
-        return simplifiedElementMap;
-    }
+    // public void addSimplifiedElementToMap(SimplifiedElement element) {
+    //         simplifiedElementMap.put(element.getElementId(), element);
+    // }
+    //
+    // public void removeSimplifiedElementFromMap(String elementId) {
+    //     if (simplifiedElementMap.get(elementId) != null) {
+    //         simplifiedElementMap.remove(elementId);
+    //     }
+    // }
+    //
+    // public Map<String, SimplifiedElement> getSimplifiedElementMap() {
+    //     return simplifiedElementMap;
+    // }
 
     public void addCell(CircleCell circleCell) {
         // circleCell.toFront();

@@ -401,8 +401,8 @@ public class ConvertDBtoElementTree {
                     curCircleCell = new CircleCell(id, xCoordinate, yCoordinate);
                     curCircleCell.setMethodName(methodName);
                     model.addCell(curCircleCell);
-                    SimplifiedElement ele = new SimplifiedElement(id, methodName);
-                    model.addSimplifiedElementToMap(ele);
+                    // SimplifiedElement ele = new SimplifiedElement(id, methodName);
+                    // model.addSimplifiedElementToMap(ele);
 
                     String label = "";
                     switch (eventType.toUpperCase()) {
@@ -434,29 +434,29 @@ public class ConvertDBtoElementTree {
                     }
 
 
-                    // 1 -> 2 -> 3
-                    String pId = String.valueOf(rs.getInt("PARENT_ID"));
-                    SimplifiedElement childSE = ele, parentSE;
-                    try {
-                        while (Integer.valueOf(pId) != -1) {
-                            String q = "SELECT * FROM " + TableNames.ELEMENT_TABLE + " AS E " +
-                                    "JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT " +
-                                    "ON E.ID_ENTER_CALL_TRACE = CT.ID " +
-                                    "WHERE E.ID = " + pId;
-                            ResultSet pRS = DatabaseUtil.select(q);
-                            if (pRS.next()) {
-                                String mName = pRS.getString("MESSAGE");
-                                parentSE = new SimplifiedElement(pId, mName);
-                                childSE.setParentElement(parentSE);
-                                pId = String.valueOf(pRS.getInt("PARENT_ID"));
-                                childSE = parentSE;
-                            } else {
-                                pId = "-1";
-                            }
-                        }
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
+                    // // 1 -> 2 -> 3
+                    // String pId = String.valueOf(rs.getInt("PARENT_ID"));
+                    // SimplifiedElement childSE = ele, parentSE;
+                    // try {
+                    //     while (Integer.valueOf(pId) != -1) {
+                    //         String q = "SELECT * FROM " + TableNames.ELEMENT_TABLE + " AS E " +
+                    //                 "JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT " +
+                    //                 "ON E.ID_ENTER_CALL_TRACE = CT.ID " +
+                    //                 "WHERE E.ID = " + pId;
+                    //         ResultSet pRS = DatabaseUtil.select(q);
+                    //         if (pRS.next()) {
+                    //             String mName = pRS.getString("MESSAGE");
+                    //             parentSE = new SimplifiedElement(pId, mName);
+                    //             childSE.setParentElement(parentSE);
+                    //             pId = String.valueOf(pRS.getInt("PARENT_ID"));
+                    //             childSE = parentSE;
+                    //         } else {
+                    //             pId = "-1";
+                    //         }
+                    //     }
+                    // } catch (SQLException e) {
+                    //     e.printStackTrace();
+                    // }
                 }
                 // else {
                 //     curCircleCell = mapCircleCellsOnUI.get(id);
@@ -541,7 +541,7 @@ public class ConvertDBtoElementTree {
             if (!preloadBox.contains(cell.getLayoutX(), cell.getLayoutY())) {
                 removeCircleCells.add(cell.getCellId());
 
-                model.removeSimplifiedElementFromMap(cell.getCellId());
+                // model.removeSimplifiedElementFromMap(cell.getCellId());
             }
         }
 

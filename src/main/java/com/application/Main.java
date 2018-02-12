@@ -30,8 +30,11 @@ import javafx.scene.control.*;
 import javafx.scene.image.WritableImage;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
+import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -780,7 +783,7 @@ public class Main extends Application {
                 MenuItem bookmarkMenuItem = new MenuItem(
                         "Id:" + bookmark.getElementId() +
                                 " method:" + bookmark.getMethodName() +
-                                " thread:" + bookmark.getThreadId());
+                                " thread:" + bookmark.getThreadId(), new Circle(3, Paint.valueOf(bookmark.getColor())));
 
                 bookmarksSubMenu.getItems().add(bookmarkMenuItem);
 
@@ -789,6 +792,9 @@ public class Main extends Application {
                 });
             });
         }
+
+        SeparatorMenuItem separatorMenuItem = new SeparatorMenuItem();
+        bookmarksSubMenu.getItems().add(separatorMenuItem);
 
         // clear bookmarks button and logic
         Glyph clearBookmarksGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.TRASH);
@@ -1030,6 +1036,11 @@ public class Main extends Application {
             });
         }
 
+        String maxLenThreadName = threadsObsList.stream().max(Comparator.comparingInt(String::length)).get();
+        Text text = new Text(maxLenThreadName);
+        double widhtMax = text.getLayoutBounds().getWidth();
+        System.out.println(">>>>>>>>>>> " + maxLenThreadName + " len in pixesl: " + widhtMax);
+        threadListView.setMaxWidth(widhtMax+ 30);
         root.setLeft(threadListView);
     }
 

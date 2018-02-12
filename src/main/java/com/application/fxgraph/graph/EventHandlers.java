@@ -6,7 +6,7 @@ import com.application.Main;
 import com.application.db.DAOImplementation.*;
 import com.application.db.DatabaseUtil;
 import com.application.db.TableNames;
-import com.application.fxgraph.ElementHelpers.SimplifiedElement;
+// import com.application.fxgraph.ElementHelpers.SimplifiedElement;
 import com.application.fxgraph.cells.CircleCell;
 import javafx.animation.FillTransition;
 import javafx.application.Platform;
@@ -60,7 +60,7 @@ public class EventHandlers {
         // node.setOnMousePressed(minMaxButtonOnClickEventHandler);
         // *****************
 
-        node.setOnMouseEntered(onMouseEnterToShowNav);
+        // node.setOnMouseEntered(onMouseEnterToShowNav);
 
         ((CircleCell)node).getInfoGroup().setOnMouseEntered(showInfoButtonEventHandeler);
         ((CircleCell)node).getInfoGroup().setOnMouseExited(hideInfoButtonEventHandler);
@@ -447,22 +447,22 @@ public class EventHandlers {
         }
     };
 
-    EventHandler<MouseEvent> onMouseEnterToShowNav = new EventHandler<MouseEvent>() {
-        @Override
-        public void handle(MouseEvent event) {
-            CircleCell cell = ((CircleCell) event.getSource());
-            SimplifiedElement ele = graph.getModel().getSimplifiedElementMap().get(cell.getCellId());
-
-            ArrayList<String> methodNames = new ArrayList<>();
-            while (ele.getParentElement() != null) {
-                methodNames.add("Id: " + ele.getElementId() + "   Method: " + ele.getMethodName());
-                ele = ele.getParentElement();
-            }
-
-            Collections.reverse(methodNames);
-            String navString = String.join(" > ", methodNames);
-        }
-    };
+    // EventHandler<MouseEvent> onMouseReleasedEventHandlereEnterToShowNav = new EventHandler<MouseEvent>() {
+    //     @Override
+    //     public void handle(MouseEvent event) {
+    //         CircleCell cell = ((CircleCell) event.getSource());
+    //         SimplifiedElement ele = graph.getModel().getSimplifiedElementMap().get(cell.getCellId());
+    //
+    //         ArrayList<String> methodNames = new ArrayList<>();
+    //         while (ele.getParentElement() != null) {
+    //             methodNames.add("Id: " + ele.getElementId() + "   Method: " + ele.getMethodName());
+    //             ele = ele.getParentElement();
+    //         }
+    //
+    //         Collections.reverse(methodNames);
+    //         String navString = String.join(" > ", methodNames);
+    //     }
+    // };
 
     EventHandler<MouseEvent> onMouseExitToDismissPopover = new EventHandler<MouseEvent>() {
         @Override
