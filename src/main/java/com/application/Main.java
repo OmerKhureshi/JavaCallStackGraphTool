@@ -780,10 +780,16 @@ public class Main extends Application {
         bookmarksSubMenu.getItems().clear();
         if (graph.getModel() != null) {
             graph.getModel().getBookmarkMap().forEach((id, bookmark) -> {
+
+                Circle colorCircle = new Circle(6);
+                colorCircle.setFill(Color.web("#6699CC"));
+                colorCircle.setStrokeWidth(3);
+                colorCircle.setStroke(Paint.valueOf(bookmark.getColor()));
+
                 MenuItem bookmarkMenuItem = new MenuItem(
                         "Id:" + bookmark.getElementId() +
                                 " method:" + bookmark.getMethodName() +
-                                " thread:" + bookmark.getThreadId(), new Circle(3, Paint.valueOf(bookmark.getColor())));
+                                " thread:" + bookmark.getThreadId(), colorCircle);
 
                 bookmarksSubMenu.getItems().add(bookmarkMenuItem);
 

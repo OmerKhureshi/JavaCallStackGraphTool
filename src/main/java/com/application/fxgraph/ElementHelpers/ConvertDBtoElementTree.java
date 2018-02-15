@@ -7,6 +7,7 @@ import com.application.db.model.Bookmark;
 import com.application.fxgraph.cells.CircleCell;
 import com.application.fxgraph.graph.*;
 import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.geometry.BoundingBox;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
@@ -40,7 +41,6 @@ public class ConvertDBtoElementTree {
 
     /**
      * This method converts the string to an element tree.
-     *
      */
     public void StringToElementList(List<String> line, int fkCallTrace) {
         String msg = line.get(3);  // ToDo replace hardcoded indices with universal indices.
@@ -141,7 +141,7 @@ public class ConvertDBtoElementTree {
             return;
         ElementDAOImpl.insert(root);
         ElementToChildDAOImpl.insert(
-                root.getParent() == null? -1 : root.getParent().getElementId(),
+                root.getParent() == null ? -1 : root.getParent().getElementId(),
                 root.getElementId());
         // // Create and insert Edges.
         // Edge edge = new Edge(root.getParent(), root);
@@ -168,7 +168,6 @@ public class ConvertDBtoElementTree {
 
     /**
      * Loads circle on UI if they are not present when they should be.
-     *
      */
     public void loadUIComponentsInsideVisibleViewPort(Graph graph) {
         // System.out.println("ConvertDBtoElementTree:loadUIComponentsInsideVisibleViewPort: Method started");
@@ -199,21 +198,8 @@ public class ConvertDBtoElementTree {
         //     System.out.print(rect.getElementId()+ ", ");
         // });
 
-        // Add circle cells
-        addCircleCells();
-
-        // Add bookmarks to bookmarked cells
-        addBookmarks();
-
-        // Add edges
-        addEdges();
-
-        // Add highlights
-        addHighlights();
-
-        graph.updateCellLayer();
-
-
+        addUIComponents();
+        // inBackground(true);
         // System.out.println("ConvertDBtoElementTree::loadUIComponentsInsideVisibleViewPort: after drawing, contents of cellLayer: ");
         // System.out.println("mapCircleCellsOnUI: size: " + graph.getModel().getCircleCellsOnUI().size());
         // graph.getModel().getCircleCellsOnUI().keySet().stream().sorted().forEach(id -> {
@@ -221,9 +207,7 @@ public class ConvertDBtoElementTree {
         // });
     }
 
-    public void forceUiRendering() {
-        // System.out.println("ConvertDBtoElementTree:forceUiRendering: method started");
-
+    public void addUIComponents() {
         // Add circle cells
         addCircleCells();
         // Add bookmarks to bookmarked cells
@@ -233,9 +217,66 @@ public class ConvertDBtoElementTree {
         // Add highlights
         addHighlights();
         graph.updateCellLayer();
-
-        // System.out.println("ConvertDBtoElementTree:forceUiRendering: method ended");
     }
+
+    public void forceUiRendering() {
+        addUIComponents();
+        // inBackground(false);
+    }
+
+    public void inBackground(boolean removeUIComponents) {
+        System.out.println("ConvertDBtoElementTree.inBackground: started");
+        Task<Void> task = new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                // Add circle cells
+                addCircleCells();
+                // Add bookmarks to bookmarked cells
+                addBookmarks();
+                // Add edges
+                addEdges();
+                // Add highlights
+                addHighlights();
+                return null;
+            }
+
+            @Override
+            protected void succeeded() {
+                super.succeeded();
+                // graph.updateCellLayer();
+                if (removeUIComponents) {
+                    inBackgroundRemoveUIComponents();
+                }
+                System.out.println("ConvertDBtoElementTree.succeeded:");
+            }
+        };
+
+        new Thread(task).start();
+
+        System.out.println("ConvertDBtoElementTree.inBackground: ended");
+    }
+
+    public void inBackgroundRemoveUIComponents() {
+        System.out.println("ConvertDBtoElementTree.inBackgroundRemoveUIComponents: started task method");
+        Task<Void> task = new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                removeUIComponentsFromInvisibleViewPort(graph);
+                return null;
+            }
+
+            @Override
+            protected void succeeded() {
+                super.succeeded();
+                graph.updateCellLayer();
+                System.out.println("ConvertDBtoElementTree.succeeded");
+            }
+        };
+        System.out.println("ConvertDBtoElementTree.inBackgroundRemoveUIComponents: ended task method");
+
+        new Thread(task).start();
+    }
+
 
     public void clearAndUpdateCellLayer() {
         // remove all circles cells from UI
@@ -265,13 +306,13 @@ public class ConvertDBtoElementTree {
         double viewPortMinY = viewPortDims.getMinY();
         double viewPortMaxY = viewPortDims.getMaxY();
         double widthOffset = viewPortDims.getWidth() * multiplierForVisibleViewPort;
-        double heightOffset = viewPortDims.getHeight() * multiplierForVisibleViewPort ;
+        double heightOffset = viewPortDims.getHeight() * multiplierForVisibleViewPort;
 
         // Query to fetches highlight boxes that are contained within the bounds of outermost preload box.
 
         String sql = (viewPortMinX - widthOffset) + " <= (start_x + width) " + " " +
                 "AND " + (viewPortMaxX + widthOffset) + " >= start_x " +
-                "AND " +(viewPortMinY - heightOffset) + " <= (start_y + height) " + " " +
+                "AND " + (viewPortMinY - heightOffset) + " <= (start_y + height) " + " " +
                 "AND " + (viewPortMaxY + heightOffset) + " >= start_Y " +
                 "AND thread_id = " + currentThreadId + " " +
                 "AND COLLAPSED = 0";
@@ -341,7 +382,7 @@ public class ConvertDBtoElementTree {
         double viewPortMinY = viewPortDims.getMinY();
         double viewPortMaxY = viewPortDims.getMaxY();
         double widthOffset = viewPortDims.getWidth() * multiplierForVisibleViewPort;
-        double heightOffset = viewPortDims.getHeight() * multiplierForVisibleViewPort ;
+        double heightOffset = viewPortDims.getHeight() * multiplierForVisibleViewPort;
 
 
         // Get element properties for those elements that are inside the expanded region calculated above.
@@ -380,7 +421,7 @@ public class ConvertDBtoElementTree {
                         while (rsMethod.next()) {
                             methodName = rsMethod.getString("method_name");
                         }
-                    }catch (Exception e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
@@ -388,12 +429,12 @@ public class ConvertDBtoElementTree {
                 eventType = rs.getString("message");
 
                 /*
-                * collapsed - actions
-                *     0     - Show cell on UI
-                *     1     - parent of this cell was minimized. Don't show on UI
-                *     2     - this cell was minimized. Show on UI.
-                *     3     - parent of this cell was minimized. this cell was minimized. Don't expand this cell's children. Don't show on UI.
-                */
+                 * collapsed - actions
+                 *     0     - Show cell on UI
+                 *     1     - parent of this cell was minimized. Don't show on UI
+                 *     2     - this cell was minimized. Show on UI.
+                 *     3     - parent of this cell was minimized. this cell was minimized. Don't expand this cell's children. Don't show on UI.
+                 */
 
                 // Add circle cell to model and UI only if they are not already present on UI and if collapsed value is 0 or 2
                 if (!mapCircleCellsOnUI.containsKey(id) && (collapsed == 0 || collapsed == 2)) {
@@ -479,7 +520,7 @@ public class ConvertDBtoElementTree {
         double viewPortMinY = viewPortDims.getMinY();
         double viewPortMaxY = viewPortDims.getMaxY();
         double widthOffset = viewPortDims.getWidth() * multiplierForVisibleViewPort;
-        double heightOffset = viewPortDims.getHeight() * multiplierForVisibleViewPort ;
+        double heightOffset = viewPortDims.getHeight() * multiplierForVisibleViewPort;
 
         String sql = "SELECT * FROM EDGE_ELEMENT " +
                 "INNER JOIN ELEMENT ON FK_SOURCE_ELEMENT_ID = ELEMENT.ID " +
@@ -487,8 +528,8 @@ public class ConvertDBtoElementTree {
                 "WHERE CALL_TRACE.THREAD_ID = " + currentThreadId + " ";
 
         String commonWhereClausForEdges = "AND EDGE_ELEMENT.collapsed = " + CollapseType.EDGE_VISIBLE + " AND " + "end_x >= " + (viewPortMinX - widthOffset) + " AND start_x <= " + (viewPortMaxX + widthOffset);
-        String whereClauseForUpwardEdges = " AND end_Y >= " + (viewPortMinY - heightOffset )+ " AND start_y <= " + (viewPortMaxY + heightOffset);
-        String whereClauseForDownwardEdges = " AND start_y >= " + (viewPortMinY - heightOffset)+ " AND end_Y <= " + (viewPortMaxY + heightOffset);
+        String whereClauseForUpwardEdges = " AND end_Y >= " + (viewPortMinY - heightOffset) + " AND start_y <= " + (viewPortMaxY + heightOffset);
+        String whereClauseForDownwardEdges = " AND start_y >= " + (viewPortMinY - heightOffset) + " AND end_Y <= " + (viewPortMaxY + heightOffset);
 
         // System.out.println("ConvertDBtoElementTree::loadUIComponentsInsideVisibleViewPort: sql: " + sql + commonWhereClausForEdges + whereClauseForUpwardEdges);
         try (ResultSet rsUpEdges = DatabaseUtil.select(sql + commonWhereClausForEdges + whereClauseForUpwardEdges)) {
@@ -502,7 +543,7 @@ public class ConvertDBtoElementTree {
             getEdgesFromResultSet(rsDownEdges);
         } catch (SQLException e) {
             e.printStackTrace();
-       }
+        }
     }
 
 
@@ -531,7 +572,6 @@ public class ConvertDBtoElementTree {
         Map<String, CircleCell> mapCircleCellsOnUI = model.getCircleCellsOnUI();
         List<String> removeCircleCells = new ArrayList<>();
         List<CircleCell> listCircleCellsOnUI = model.getListCircleCellsOnUI();
-
 
 
         Iterator i = mapCircleCellsOnUI.entrySet().iterator();
@@ -595,7 +635,7 @@ public class ConvertDBtoElementTree {
         CellLayer cellLayer = (CellLayer) graph.getCellLayer();
 
         // This is the global HashMap that stores rectangle highlights currently on the UI.
-        Map<Integer, RectangleCell > highlightsOnUI = model.getHighlightsOnUI();
+        Map<Integer, RectangleCell> highlightsOnUI = model.getHighlightsOnUI();
 
         // Temporary list to aid in removal of HashMap elements.
         List<Integer> removeHighlights = new ArrayList<>();
@@ -684,8 +724,8 @@ public class ConvertDBtoElementTree {
         BoundingBox preloadBox = new BoundingBox(
                 minX - widthOffset,
                 minY - heightOffset,
-                width + widthOffset*6,
-                height + heightOffset*6);
+                width + widthOffset * 6,
+                height + heightOffset * 6);
 //        BoundingBox preloadBox = new BoundingBox(minX , minY, width, height);
 
         removeCircleCells(preloadBox);
@@ -702,7 +742,7 @@ public class ConvertDBtoElementTree {
         // cellLayer.getChildren().clear();
         // synchronized (Main.getLock()) {
 
-        if (graph == null){
+        if (graph == null) {
             System.out.println("------> graph is null.");
 
         }
