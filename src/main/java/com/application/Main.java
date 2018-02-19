@@ -32,6 +32,7 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
@@ -781,15 +782,17 @@ public class Main extends Application {
         if (graph.getModel() != null) {
             graph.getModel().getBookmarkMap().forEach((id, bookmark) -> {
 
-                Circle colorCircle = new Circle(6);
-                colorCircle.setFill(Color.web("#6699CC"));
-                colorCircle.setStrokeWidth(3);
-                colorCircle.setStroke(Paint.valueOf(bookmark.getColor()));
+                Rectangle icon = new Rectangle(15, 15);
+                icon.setFill(Color.web("#6699CC"));
+                icon.setStrokeWidth(3);
+                icon.setStroke(Paint.valueOf(bookmark.getColor()));
+                icon.setArcWidth(3);
+                icon.setArcHeight(3);
 
                 MenuItem bookmarkMenuItem = new MenuItem(
-                        "Id:" + bookmark.getElementId() +
-                                " method:" + bookmark.getMethodName() +
-                                " thread:" + bookmark.getThreadId(), colorCircle);
+                        " Id:" + bookmark.getElementId() +
+                                "  |  Method:" + bookmark.getMethodName() +
+                                "  |  Thread:" + bookmark.getThreadId(), icon);
 
                 bookmarksSubMenu.getItems().add(bookmarkMenuItem);
 

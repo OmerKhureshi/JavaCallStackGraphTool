@@ -273,13 +273,14 @@ public class Model {
                 throw new UnsupportedOperationException("Unsupported type: " + type);
         }
     }
-
+/*
+    // used?
     public CircleCell addCircleCell(String id, Element element) {
         CircleCell circleCell = new CircleCell(id, element);
         element.setCircleCell(circleCell);
         addCell(circleCell);
         return circleCell;
-    }
+    }*/
 
     public void addCell(Cell cell) {
         addedCells.add(cell);

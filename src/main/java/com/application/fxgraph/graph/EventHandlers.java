@@ -20,6 +20,7 @@ import javafx.scene.control.ColorPicker;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Arc;
 import javafx.util.Duration;
@@ -62,13 +63,13 @@ public class EventHandlers {
 
         // node.setOnMouseEntered(onMouseEnterToShowNav);
 
-        ((CircleCell)node).getInfoGroup().setOnMouseEntered(showInfoButtonEventHandeler);
-        ((CircleCell)node).getInfoGroup().setOnMouseExited(hideInfoButtonEventHandler);
-        ((CircleCell)node).getInfoGroup().setOnMousePressed(infoButtonOnClickEventHandler);
+        // ((CircleCell)node).getInfoStackPane().setOnMouseEntered(showInfoButtonEventHandeler);
+        // ((CircleCell)node).getInfoStackPane().setOnMouseExited(hideInfoButtonEventHandler);
+        ((CircleCell)node).getInfoStackPane().setOnMousePressed(infoButtonOnClickEventHandler);
 
-        ((CircleCell)node).getMinMaxGroup().setOnMouseEntered(showMinMaxEventHandler);
-        ((CircleCell)node).getMinMaxGroup().setOnMouseExited(hideMinMaxEventHandler);
-        ((CircleCell)node).getMinMaxGroup().setOnMousePressed(minMaxButtonOnClickEventHandler);
+        // ((CircleCell)node).getMinMaxStackPane().setOnMouseEntered(showMinMaxEventHandler);
+        // ((CircleCell)node).getMinMaxStackPane().setOnMouseExited(hideMinMaxEventHandler);
+        ((CircleCell)node).getMinMaxStackPane().setOnMousePressed(minMaxButtonOnClickEventHandler);
 
         // *****************
         // For debugging. Prints all mouse events.
@@ -371,13 +372,13 @@ public class EventHandlers {
                     }
 
                     // Collapse and Expand subtree button
-                    Button minMaxButton = new Button("min / max");
+                   /* Button minMaxButton = new Button("min / max");
                     minMaxButton.setOnMouseClicked(event1 -> {
                                 minMaxButtonOnClick(cell, threadId);
                             }
                     );
 
-                    gridPane.add(minMaxButton, 1, rowIndex++);
+                    gridPane.add(minMaxButton, 1, rowIndex++);*/
 
                     // Add Bookmark button
                     // Group bookmarkGroup = new Group();
@@ -385,6 +386,10 @@ public class EventHandlers {
                     bookmarkColor[0] = Color.INDIANRED;
 
                     ColorPicker bookmarkColorPicker = new ColorPicker(Color.INDIANRED);
+                    bookmarkColorPicker.getStyleClass().add("button");
+                    bookmarkColorPicker.setStyle(
+                            "-fx-color-label-visible: false; " +
+                                    "-fx-background-radius: 15 15 15 15;");
                     bookmarkColorPicker.setOnAction(e -> {
                         bookmarkColor[0] = bookmarkColorPicker.getValue();
                     });
@@ -415,10 +420,7 @@ public class EventHandlers {
 
                         // graph.addMarkToBarPane(bookmark);
                     });
-
-                    gridPane.add(bookmarkColorPicker, 1, rowIndex++);
-                    gridPane.add(addBookmarkButton, 1, rowIndex++);
-
+                    addBookmarkButton.setDisable(graph.getModel().getBookmarkMap().containsKey(String.valueOf(elementId)));
                     removeBookmarkButton.setDisable(!graph.getModel().getBookmarkMap().containsKey(String.valueOf(elementId)));
 
                     removeBookmarkButton.setOnMouseClicked(eve -> {
@@ -430,7 +432,13 @@ public class EventHandlers {
                         // graph.removeMarkFromBarPane(String.valueOf(elementId));
                     });
 
-                    gridPane.add(removeBookmarkButton, 1, rowIndex++);
+                    HBox hBox = new HBox();
+                    hBox.getChildren().addAll(bookmarkColorPicker, addBookmarkButton, removeBookmarkButton);
+
+                    gridPane.add(hBox, 1, rowIndex++);
+                    // gridPane.add(bookmarkColorPicker, 1, rowIndex++);
+                    // gridPane.add(addBookmarkButton, 1, rowIndex++);
+                    // gridPane.add(removeBookmarkButton, 1, rowIndex++);
 
                     popOver = new PopOver(gridPane);
                     popOver.setAnimated(true);
