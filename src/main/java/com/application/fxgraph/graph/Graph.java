@@ -1,22 +1,13 @@
 package com.application.fxgraph.graph;
 
-import com.application.db.DAOImplementation.BookmarksDAOImpl;
-import com.application.db.model.Bookmark;
-import com.application.fxgraph.ElementHelpers.ConvertDBtoElementTree;
+import com.application.service.modules.ElementTreeModule;
 import com.application.fxgraph.ElementHelpers.Element;
-import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
 import javafx.application.Platform;
 import javafx.geometry.BoundingBox;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
 import javafx.scene.shape.Line;
-import javafx.scene.shape.Rectangle;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -95,7 +86,7 @@ public class Graph {
         Rectangle rect = new Rectangle(0, 0, 40, 4);
         rect.setLayoutY(getVValue(bookmark.getyCoordinate()) * barPane.getHeight() * 0.9);
         // rect.setLayoutX(getHValue(bookmark.getxCoordinate()) * barPane.getWidth() * 0.9);
-        // rect.setFill(Paint.valueOf(bookmark.getColor()));
+        // rect.setFill(Paint.valueOf(bookmark.getPaint()));
         rect.setFill(Color.RED);
         model.getBarMarkMap().put(bookmark.getElementId(), rect);
         barPane.getChildren().add(rect);
@@ -128,7 +119,7 @@ public class Graph {
         hPlaceHolderLine.setStrokeWidth(0.001);
         cellLayer.getChildren().add(hPlaceHolderLine);
 
-        Line vPlaceHolderLine = new Line(0, 0, 0, ConvertDBtoElementTree.greatGrandParent.getLeafCount() * BoundBox.unitHeightFactor);
+        Line vPlaceHolderLine = new Line(0, 0, 0, ElementTreeModule.greatGrandParent.getLeafCount() * BoundBox.unitHeightFactor);
         vPlaceHolderLine.setStrokeWidth(0.001);
         cellLayer.getChildren().add(vPlaceHolderLine);
         // System.out.println("Lines have been drawn: level: " + Element.getMaxLevelCount() * BoundBox.unitWidthFactor + "; leaf: " + Element.getMaxLeafCount() * BoundBox.unitHeightFactor );

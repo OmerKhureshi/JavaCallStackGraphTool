@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuItem?>
+
+<?import javafx.scene.control.SeparatorMenuItem?>
+<MenuBar xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.application.controller.MenuController">
+    <menus>
+        <Menu fx:id="fileMenu" mnemonicParsing="false" text="File">
+            <items>
+                <MenuItem fx:id="chooseMethodDefMenuItem" mnemonicParsing="false" text="Select Method Definition log file" />
+                <MenuItem fx:id="chooseCallTraceMenuItem" mnemonicParsing="false" text="Select Call Trace log file" />
+                <SeparatorMenuItem mnemonicParsing="false" />
+                <MenuItem fx:id="openDBMenuItem" mnemonicParsing="false" text="Load existing database" />
+            </items>
+        </Menu>
+        <Menu fx:id="runMenu" mnemonicParsing="false" text="Run">
+            <items>
+                <MenuItem fx:id="runAnalysisMenuItem" mnemonicParsing="false" text="Run" />
+                <MenuItem fx:id="resetMenuItem" mnemonicParsing="false" text="Reset" />
+            </items>
+        </Menu>
+        <Menu mnemonicParsing="false" text="View">
+            <items>
+                <MenuItem mnemonicParsing="false" text="Save Image" />
+            </items>
+        </Menu>
+        <Menu mnemonicParsing="false" text="Go To">
+            <items>
+                <MenuItem mnemonicParsing="false" text="About MyHelloApp" />
+            </items>
+        </Menu>
+        <Menu mnemonicParsing="false" text="Highlights">
+            <items>
+                <MenuItem mnemonicParsing="false" text="About MyHelloApp" />
+            </items>
+        </Menu>
+        <Menu mnemonicParsing="false" text="Debug">
+            <items>
+                <MenuItem mnemonicParsing="false" text="About MyHelloApp" />
+            </items>
+        </Menu>
+    </menus>
+</MenuBar>

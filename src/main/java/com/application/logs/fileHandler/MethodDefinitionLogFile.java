@@ -1,7 +1,6 @@
 package com.application.logs.fileHandler;
 
-import com.application.db.DAOImplementation.FilesDAOImpl;
-import com.application.db.DatabaseUtil;
+import com.application.db.DAO.DAOImplementation.FilesDAOImpl;
 
 import java.io.File;
 import java.sql.ResultSet;

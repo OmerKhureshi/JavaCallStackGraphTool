@@ -1,22 +1,22 @@
 package com.application.db;
 
-import com.application.db.DAOImplementation.*;
-import javafx.application.Platform;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
+import com.application.db.DAO.DAOImplementation.*;
 
+import java.io.File;
 import java.sql.*;
+import java.text.SimpleDateFormat;
 import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
 
 public class DatabaseUtil {
 
+    private static File dataSourceDir;
     private static final String METHOD_DEFINITION_TABLE = "Method_Defn";
     private static final String CALL_TRACE_TABLE = "Call_Trace";
 
     private static boolean methodDefnTableCreated = false;
     private static boolean callTraceTableCreated = false;
+
+    private static String prefix = "Databases" + File.separator + "DB_";
 
       //Todo  Use apache connection pool to get database connection instance link: http://stackoverflow.com/a/6507820/3690248
 
@@ -38,28 +38,36 @@ public class DatabaseUtil {
         }
     }
 
-
     private static Connection createDatabaseConnection() {
-
+        System.out.println("DatabaseUtil.createDatabaseConnection: method started.");
         String driver = "org.apache.derby.jdbc.EmbeddedDriver";
-        Connection c = null;
+        Connection conn = null;
         try {
             Class.forName(driver).newInstance();
-            String url = "jdbc:derby:DB;create=true";
-            c = DriverManager.getConnection(url);
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (SQLException e) {
+            String url;
+            if (dataSourceDir == null) {
+                // this is a fresh start, create a new DB.
+                java.util.Date date = new java.util.Date();
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmm");
+                String sDate = dateFormat.format(date);
+
+                url = "jdbc:derby:" + prefix + sDate + ";create=true";
+                // url = "jdbc:derby:DB;create=true";
+                dataSourceDir = new File(prefix + sDate);
+                System.out.println("DatabaseUtil.createDatabaseConnection dataSourceDir == null: new url: " + url);
+            } else {
+                url = "jdbc:derby:" + dataSourceDir.getPath() + ";create=true";
+                System.out.println("DatabaseUtil.createDatabaseConnection dpPath not null: " + url);
+            }
+            conn = DriverManager.getConnection(url);
+        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException | SQLException e) {
             e.printStackTrace();
         }
-        return c;
+        System.out.println("DatabaseUtil.createDatabaseConnection: method ended");
+        return conn;
     }
 
-    public static void shutdownDatabse() {
+    public static void shutdownDatabase() {
 
         String driver = "org.apache.derby.jdbc.EmbeddedDriver";
         Connection c = null;
@@ -67,18 +75,18 @@ public class DatabaseUtil {
             Class.forName(driver).newInstance();
             String url = "jdbc:derby:;shutdown=true";
             c = DriverManager.getConnection(url);
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
+        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
             e.printStackTrace();
         } catch (SQLException e) {
             String sqlError = e.getSQLState();
             if (sqlError.equals("XJ015")) {
-                // System.out.println("Derby database shutdown successful.");
+                System.out.println("Derby database shutdown successful.");
             }
         }
+    }
+
+    public static void setDBDir(File dir) {
+        dataSourceDir = dir;
     }
 
     public static Connection getConnection() {
@@ -364,7 +372,7 @@ public class DatabaseUtil {
     }
 
     public static void resetDB() {
-        shutdownDatabse();
+        shutdownDatabase();
         CallTraceDAOImpl.dropTable();
         MethodDefnDAOImpl.dropTable();
         ElementDAOImpl.dropTable();
@@ -391,6 +399,34 @@ public class DatabaseUtil {
         return statement;
     }
 
+    public static void saveDBPath() {
+        if (dataSourceDir == null) {
+            createDatabaseConnection();  // to set the current dataSourceDir
+        }
+
+        FilesDAOImpl.insert("DB", dataSourceDir.getPath());
+    }
+
+    public static void setDbPath() {
+        ResultSet rs = FilesDAOImpl.selectWhere("FILE_TYPE = 'DB'");
+        try {
+            if (rs.next()) {
+                String sPath = rs.getString("FILE_PATH");
+                dataSourceDir = new File(sPath);
+                System.out.println("DatabaseUtil.setDbPath: new path: " + dataSourceDir);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public static ResultSet executeQuery(Connection conn, String query) throws SQLException {
+        Statement statement = conn.createStatement();
+        ResultSet rs = statement.executeQuery(query);
+        return rs;
+    }
 }
 
 

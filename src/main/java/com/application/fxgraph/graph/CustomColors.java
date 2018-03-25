@@ -20,8 +20,12 @@ public enum CustomColors {
     TRANSPARENT(Color.TRANSPARENT),;
 
 
-    public Paint getColor() {
+    public Paint getPaint() {
         return this.colorVal;
+    }
+
+    public Color getColor() {
+        return Color.valueOf(colorVal.toString());
     }
 
     private Paint colorVal;

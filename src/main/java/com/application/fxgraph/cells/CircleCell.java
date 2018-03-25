@@ -3,7 +3,6 @@ package com.application.fxgraph.cells;
 import com.application.fxgraph.graph.Cell;
 import com.application.fxgraph.graph.CustomColors;
 import javafx.geometry.Pos;
-import javafx.scene.Group;
 import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
@@ -63,15 +62,15 @@ public class CircleCell extends Cell {
         double x = 0, y = 0;
         Label idLabel = new Label(id);
         idLabel.setFont(Font.font(10));
-        idLabel.setTextFill(CustomColors.DARK_BLUE.getColor());
+        idLabel.setTextFill(CustomColors.DARK_BLUE.getPaint());
 
         Shape background = new Rectangle();
         ((Rectangle) background).setWidth(idLabel.getText().length() * 6 + 6);
         ((Rectangle) background).setHeight(15);
         ((Rectangle) background).setArcHeight(10);
         ((Rectangle) background).setArcWidth(10);
-        background.setFill(CustomColors.LIGHT_TURQUOISE.getColor());
-        background.setStroke(CustomColors.DARK_GREY.getColor());
+        background.setFill(CustomColors.LIGHT_TURQUOISE.getPaint());
+        background.setStroke(CustomColors.DARK_GREY.getPaint());
 
         idBubble = new StackPane();
         idBubble.getChildren().addAll(background, idLabel);
@@ -100,14 +99,14 @@ public class CircleCell extends Cell {
         minMaxButton.setHeight(((Rectangle) nodeShape).getHeight() * secondPortion);
         minMaxButton.setArcHeight(10);
         minMaxButton.setArcWidth(10);
-        minMaxButton.setFill(CustomColors.TRANSPARENT.getColor());
-        // minMaxButton.setStroke(CustomColors.DARK_GREY.getColor());
+        minMaxButton.setFill(CustomColors.TRANSPARENT.getPaint());
+        // minMaxButton.setStroke(CustomColors.DARK_GREY.getPaint());
 
         Glyph minMaxGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.EXPAND);
-        minMaxGlyph.setColor(Color.WHITESMOKE);
+        minMaxGlyph.setColor(CustomColors.LIGHTEST_BLUE.getColor());
 
         minMaxStackPane = new StackPane(minMaxButton, minMaxGlyph);
-        minMaxStackPane.relocate(((Rectangle) nodeShape).getWidth() * 0.5, ((Rectangle) nodeShape).getHeight() * firstPortion);
+        minMaxStackPane.relocate(((Rectangle) nodeShape).getWidth() * 0.5 - 3, ((Rectangle) nodeShape).getHeight() * firstPortion);
 
     }
 
@@ -128,14 +127,14 @@ public class CircleCell extends Cell {
         infoButton.setHeight(((Rectangle) nodeShape).getHeight() * secondPortion);
         infoButton.setArcHeight(10);
         infoButton.setArcWidth(10);
-        infoButton.setFill(CustomColors.TRANSPARENT.getColor());
-        // infoButton.setStroke(CustomColors.DARK_GREY.getColor());
+        infoButton.setFill(CustomColors.TRANSPARENT.getPaint());
+        // infoButton.setStroke(CustomColors.DARK_GREY.getPaint());
 
         Glyph infoGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.INFO_CIRCLE);
-        infoGlyph.setColor(Color.WHITESMOKE);
+        infoGlyph.setColor(CustomColors.LIGHTEST_BLUE.getColor());
 
         infoStackPane = new StackPane(infoButton, infoGlyph);
-        infoStackPane.relocate(((Rectangle) nodeShape).getWidth() * 0, ((Rectangle) nodeShape).getHeight() * firstPortion);
+        infoStackPane.relocate(((Rectangle) nodeShape).getWidth() * 0 + 3, ((Rectangle) nodeShape).getHeight() * firstPortion );
     }
 /*
     // Used?
@@ -162,7 +161,7 @@ public class CircleCell extends Cell {
         methodName = new Label("");
         methodName.setPrefWidth(85);
         methodName.setWrapText(true);
-        methodName.setTextFill(CustomColors.LIGHTEST_BLUE.getColor());
+        methodName.setTextFill(CustomColors.LIGHT_TURQUOISE.getPaint());
         // methodName.setStyle("-fx-background-color: papayawhip; -fx-background-radius: 7; -fx-border-color: burlywood; -fx-border-radius: 7; -fx-border-width: 2");
         methodName.setAlignment(Pos.CENTER);
         methodName.setTextAlignment(TextAlignment.CENTER);
@@ -210,8 +209,8 @@ public class CircleCell extends Cell {
     private Shape createCircle() {
         Shape circle = new Circle();
         circle = new Circle(20);
-        circle.setStroke(CustomColors.DARK_BLUE.getColor());
-        circle.setFill(CustomColors.DARK_GREY.getColor());
+        circle.setStroke(CustomColors.DARK_BLUE.getPaint());
+        circle.setFill(CustomColors.DARK_GREY.getPaint());
         circle.relocate(0,0);
 
         return circle;
@@ -219,8 +218,8 @@ public class CircleCell extends Cell {
 
     private Shape createRectangle() {
         Shape rect = new Rectangle(70, 70);
-        rect.setStroke(CustomColors.LIGHT_TURQUOISE.getColor());
-        rect.setFill(CustomColors.DARK_GREY.getColor());
+        rect.setStroke(CustomColors.LIGHT_TURQUOISE.getPaint());
+        rect.setFill(CustomColors.DARK_GREY.getPaint());
         ((Rectangle) rect).setArcWidth(20);
         ((Rectangle) rect).setArcHeight(20);
         rect.relocate(0,0);

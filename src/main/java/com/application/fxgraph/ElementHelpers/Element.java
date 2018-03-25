@@ -12,8 +12,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Element class represent each method invocation on the UI. To avoid confusion, it has not been named as Node, which is
- * used by JavaFX or Cell, which is used for a different purpose here.
+ * Element class represent each method invocation on the UI.
  */
 public class Element {
     private static AtomicInteger count = new AtomicInteger(0);
@@ -38,7 +37,7 @@ public class Element {
     private BoundBox boundBox = new BoundBox();
 
     private int coordMultiplier = 1;
-;
+
     public Element(Element parent) {
 
         elementId = count.incrementAndGet();

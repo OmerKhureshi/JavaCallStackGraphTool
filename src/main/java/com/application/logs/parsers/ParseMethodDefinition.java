@@ -25,7 +25,7 @@ public class ParseMethodDefinition implements FileParser {
     //         while((line = br.readLine()) != null) {
     //             List<String> brokenLineList = parse(line);
     //             DatabaseUtil.insertMDStmt(brokenLineList);
-    //             ConvertDBtoElementTree convertDBtoElementTree = new ConvertDBtoElementTree();
+    //             ElementTreeModule convertDBtoElementTree = new ElementTreeModule();
     //             convertDBtoElementTree.StringToElementList(brokenLineList);
     //             convertDBtoElementTree.calculateElementProperties();
     //         }

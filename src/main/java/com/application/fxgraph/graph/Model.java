@@ -1,8 +1,7 @@
 package com.application.fxgraph.graph;
 
-import com.application.db.DAOImplementation.BookmarksDAOImpl;
+import com.application.db.DAO.DAOImplementation.BookmarksDAOImpl;
 import com.application.db.model.Bookmark;
-import com.application.fxgraph.ElementHelpers.Element;
 // import com.application.fxgraph.ElementHelpers.SimplifiedElement;
 import com.application.fxgraph.cells.CircleCell;
 import com.application.fxgraph.cells.RectangleCell;

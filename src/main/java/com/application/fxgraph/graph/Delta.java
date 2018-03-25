@@ -1,8 +1,8 @@
 /*
 package com.application.fxgraph.graph;
 
-import com.application.db.DAOImplementation.ElementDAOImpl;
-import com.application.db.DAOImplementation.TraceDAOImpl;
+import com.application.db.DAO.DAOImplementation.ElementDAOImpl;
+import com.application.db.DAO.DAOImplementation.TraceDAOImpl;
 import javafx.concurrent.Task;
 
 import java.sql.ResultSet;

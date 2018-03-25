@@ -1,10 +1,9 @@
 package com.application.logs.fileIntegrity;
 
 import com.application.Main;
+import com.application.service.tasks.ParseFileTask;
 import javafx.application.Platform;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.layout.Region;
 
@@ -15,51 +14,57 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 public class CheckFileIntegrity {
-
+    public static void checkFile(File file, ParseFileTask.BytesRead bytesRead) {
+        bytesRead.readSoFar = checkFile(file);
+    }
 
     public static void checkFile (File file, Main.BytesRead bytesRead) {
+        bytesRead.readSoFar = checkFile(file);
+    }
+
+    private static long checkFile(File file) {
         String line = null;
         Deque<Integer> stack;
         int linesRead = 0;
+        long workDone = 0;
 
         stack = new LinkedList<>();
         try {
             BufferedReader br = new BufferedReader(new FileReader(file));
             while((line = br.readLine()) != null) {
-                bytesRead.readSoFar += line.length();
+                workDone += line.length();
                 String msg = line.split("\\|")[3];
-                    switch (msg.toUpperCase()) {
-                        case "WAIT-ENTER":
-                        case "NOTIFY-ENTER":
-                        case "NOTIFYALL-ENTER":
-                        case "ENTER":
-                            stack.push(1);
-                            break;
+                switch (msg.toUpperCase()) {
+                    case "WAIT-ENTER":
+                    case "NOTIFY-ENTER":
+                    case "NOTIFYALL-ENTER":
+                    case "ENTER":
+                        stack.push(1);
+                        break;
 
-                        case "WAIT-EXIT":
-                        case "NOTIFY-EXIT":
-                        case "NOTIFYALL-EXIT":
-                        case "EXIT":
-                            stack.pop();
-                            break;
+                    case "WAIT-EXIT":
+                    case "NOTIFY-EXIT":
+                    case "NOTIFYALL-EXIT":
+                    case "EXIT":
+                        stack.pop();
+                        break;
 
-                        default:
-                            IllegalStateException up = new IllegalStateException("Error occurred in line: " + line);
-                            throw up;  // Yuck! Not having any of that :(
-                    }
-                    ++linesRead;
+                    default:
+                        IllegalStateException up = new IllegalStateException("Error occurred in line: " + line);
+                        throw up;  // Yuck! Not having any of that :(
+                }
+                ++linesRead;
             }
+
             if (!(stack.isEmpty())) {
                 IllegalStateException up = new IllegalStateException("Stack should have been empty, it is not. Error at line " + linesRead + 1);
-                throw up;  // Yuck! Not having any of that :(
+                throw up;  // Yuck! Not having any of that either :(
             }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
+            e.printStackTrace();
         } catch (NoSuchElementException e) {
             int finalLinesRead = linesRead;
             String finalLine = line;
-
 
             Platform.runLater(() -> {
 
@@ -93,6 +98,7 @@ public class CheckFileIntegrity {
             System.out.println("Log file integrity check completed. If no exceptions were thrown, then log file format is valid.");
         }
 
+        return workDone;
     }
 
     static Main main;

@@ -1,6 +1,7 @@
 package com.application.logs.parsers;
 
 import com.application.Main;
+import com.application.service.tasks.ParseFileTask;
 
 import java.io.*;
 import java.util.Arrays;
@@ -9,24 +10,38 @@ import java.util.function.Consumer;
 
 public class ParseCallTrace implements FileParser {
     private BufferedReader br;
-    String line;
+    private String line;
 
-    @Override
     public void readFile(File logFile, Main.BytesRead bytesRead, Consumer<List<String>> cmd) {
+        bytesRead.readSoFar = readFile(logFile, cmd);
+    }
+
+    public void readFile(File logFile, ParseFileTask.BytesRead bytesRead, Consumer<List<String>> cmd) {
+        bytesRead.readSoFar = readFile(logFile, cmd);
+    }
+
+
+    private long readFile(File logFile,  Consumer<List<String>> cmd) {
+        long workDone = 0;
         try {
             br = new BufferedReader(new FileReader(logFile));
-            // ToDo Use streams to perform buffered read and insert.
             while ((line = br.readLine()) != null) {
-                bytesRead.readSoFar += line.length(); // not accurate. But we don't need accuracy here.
+                workDone += line.length(); // not accurate. But we don't need accuracy here.
                 List<String> brokenLineList = parse(line);
                 cmd.accept(brokenLineList);
             }
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            br = null;
+            try {
+                br.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             line = null;
         }
+
+        return workDone;
     }
 
     public List<String> parse(String line) {

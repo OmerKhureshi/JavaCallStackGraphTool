@@ -1,9 +1,9 @@
 package com.application.fxgraph.graph;
 
 import com.application.db.model.Bookmark;
-import com.application.fxgraph.ElementHelpers.ConvertDBtoElementTree;
+import com.application.service.modules.ElementTreeModule;
 import com.application.Main;
-import com.application.db.DAOImplementation.*;
+import com.application.db.DAO.DAOImplementation.*;
 import com.application.db.DatabaseUtil;
 import com.application.db.TableNames;
 // import com.application.fxgraph.ElementHelpers.SimplifiedElement;
@@ -37,7 +37,7 @@ import static com.application.fxgraph.graph.Graph.cellLayer;
 
 public class EventHandlers {
 
-    private static ConvertDBtoElementTree convertDBtoElementTree;
+    private static ElementTreeModule elementTreeModule;
     final DragContext dragContext = new DragContext();
     // static Map<String, Double> deltaCache = new HashMap<>();
     private boolean clickable = true;
@@ -134,7 +134,7 @@ public class EventHandlers {
                     "WHERE E.ID = " + cell.getCellId();
 
             try (ResultSet callTraceRS = DatabaseUtil.select(sql)) {
-                // try (ResultSet callTraceRS = CallTraceDAOImpl.selectWhere("id = (Select id_enter_call_trace FROM " + TableNames.ELEMENT_TABLE +
+                // try (ResultSet callTraceRS = CallTraceDAOImpl.getWhere("id = (Select id_enter_call_trace FROM " + TableNames.ELEMENT_TABLE +
                 //         " WHERE id = " + cell.getCellId() + ")")) {
                 if (callTraceRS.next()) {
                     elementId = callTraceRS.getInt("EID");
@@ -226,12 +226,18 @@ public class EventHandlers {
                                 " AND (message = 'NOTIFY-ENTER' OR message = 'NOTIFYALL-ENTER')" +
                                 " AND time_instant >= " + "'" + timeStamp + "'";
 
-                        try (ResultSet rs = CallTraceDAOImpl.selectWhere(sql)) {
+                        CallTraceDAOImpl.getThreadIdsWhere(sql).stream().forEach(id -> {
+                            ctIdList.add(id);
+                        });
+
+                        /*
+                        can remove.
+                        try (ResultSet rs = CallTraceDAOImpl.getWhere(sql)) {
                             if (rs.next()) {
                                 ctId = rs.getInt("id");
                                 ctIdList.add(ctId);
                             }
-                        }
+                        }*/
 
                         try (ResultSet elementRS = ElementDAOImpl.selectWhere("id_enter_call_trace = " + ctId)) {
                             // Expecting to see a single row.
@@ -319,7 +325,7 @@ public class EventHandlers {
                                 "JOIN ELEMENT AS E ON CT.ID = E.ID_ENTER_CALL_TRACE " +
                                 "WHERE E.ID = " + eId;
                         try (ResultSet elementRS = DatabaseUtil.select(query)) {
-                            // try (ResultSet elementRS = ElementDAOImpl.selectWhere("id = " + eId)){
+                            // try (ResultSet elementRS = ElementDAOImpl.getWhere("id = " + eId)){
                             if (elementRS.next()) {
                                 int id = elementRS.getInt("EID");
                                 String targetThreadId = String.valueOf(elementRS.getInt("thread_id"));
@@ -414,7 +420,7 @@ public class EventHandlers {
 
                         BookmarksDAOImpl.insertBookmark(bookmark);
                         graph.getModel().updateBookmarkMap();
-                        convertDBtoElementTree.clearAndUpdateCellLayer();
+                        elementTreeModule.clearAndUpdateCellLayer();
                         removeBookmarkButton.setDisable(false);
                         addBookmarkButton.setDisable(true);
 
@@ -426,7 +432,7 @@ public class EventHandlers {
                     removeBookmarkButton.setOnMouseClicked(eve -> {
                         BookmarksDAOImpl.deleteBookmark(String.valueOf(elementId));
                         graph.getModel().updateBookmarkMap();
-                        convertDBtoElementTree.clearAndUpdateCellLayer();
+                        elementTreeModule.clearAndUpdateCellLayer();
                         addBookmarkButton.setDisable(false);
 
                         // graph.removeMarkFromBarPane(String.valueOf(elementId));
@@ -749,7 +755,7 @@ public class EventHandlers {
         }
 
         // update UI
-        ConvertDBtoElementTree.resetRegions();
+        ElementTreeModule.resetRegions();
         main.showThread(threadId);
         Main.makeSelection(threadId);
 
@@ -884,7 +890,7 @@ public class EventHandlers {
         // System.out.println("EventHandler::removeChildrenFromUI: method ended.");
 
         // System.out.println("EventHandler::removeChildrenFromUI: clicked on cell id: " + cellId);
-        // try (ResultSet rs = ElementDAOImpl.selectWhere("id = " + cellId)) {
+        // try (ResultSet rs = ElementDAOImpl.getWhere("id = " + cellId)) {
         //     if (rs.next()) {
         //         float clickedCellTopRightX = rs.getFloat("bound_box_x_top_right");
         //         float clickedCellTopY = rs.getFloat("bound_box_y_top_left");
@@ -1029,7 +1035,7 @@ public class EventHandlers {
                     updateParentHighlightsInDB(clickedCellId, isCollapsed, statement, delta, nextCellId, leftX, topY, threadId);
 
                     statement.executeBatch();
-                    Platform.runLater(() -> convertDBtoElementTree.clearAndUpdateCellLayer());
+                    Platform.runLater(() -> elementTreeModule.clearAndUpdateCellLayer());
                     return null;
                 }
 
@@ -1045,7 +1051,7 @@ public class EventHandlers {
                 updateChildrenHighlightsInDB(clickedCellId, isCollapsed, statement, delta, nextCellId, threadId);
                 statement.executeBatch();
 
-                Platform.runLater(() -> convertDBtoElementTree.clearAndUpdateCellLayer());
+                Platform.runLater(() -> elementTreeModule.clearAndUpdateCellLayer());
                 return null;
             }
 
@@ -1410,7 +1416,7 @@ public class EventHandlers {
         // int threadId = 0;
         // double startX = 0, startY = 0, width = 0, height = 0;
         //
-        // try (ResultSet rs = HighlightDAOImpl.selectWhere("ELEMENT_ID = " + cellId)) {
+        // try (ResultSet rs = HighlightDAOImpl.getWhere("ELEMENT_ID = " + cellId)) {
         //     if (rs.next()) {
         //         startX = rs.getDouble("START_X");
         //         startY = rs.getDouble("START_Y");
@@ -1545,8 +1551,8 @@ public class EventHandlers {
         main = m;
     }
 
-    public static void saveRef(ConvertDBtoElementTree c) {
-        convertDBtoElementTree = c;
+    public static void saveRef(ElementTreeModule c) {
+        elementTreeModule = c;
     }
 
 }
