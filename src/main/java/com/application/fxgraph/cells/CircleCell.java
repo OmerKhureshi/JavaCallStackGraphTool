@@ -153,6 +153,11 @@ public class CircleCell extends Cell {
         this.toFront();
     }
 
+    public CircleCell(String id, float xCoordinate, float yCoordinate, Label methodName) {
+        this(id, xCoordinate, yCoordinate);
+        this.methodName = methodName;
+    }
+
     public void setLabel(String text) {
         this.label.setText(text);
     }

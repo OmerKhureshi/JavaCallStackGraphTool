@@ -90,8 +90,9 @@ public class GraphLoaderModule {
     }
 
     private void addCircleCellsNew(BoundingBox viewPort) {
-        List<ElementDTO> elementDTOListToLoad = ElementDAOImpl.getElemetDTOs(viewPort);
+        List<ElementDTO> elementDTOListToLoad = ElementDAOImpl.getElementDTOs(viewPort);
         List<CircleCell> circleCells = ControllerUtil.convertElementDTOTOCell(elementDTOListToLoad);
+        // drawOnUI();
 
         /*
             C 1. get view port with buffer region
@@ -162,6 +163,12 @@ public class GraphLoaderModule {
                 }
                 String eventType = "";
                 eventType = rs.getString("message");
+
+                // Collapsed value -> description
+                // 0               -> visible     AND  uncollapsed
+                // 2               -> visible     AND  collapsed
+                // >2              -> not visible AND  collapsed
+                // <0              -> not visible AND  collapsed
 
                 /*
                  * collapsed - actions

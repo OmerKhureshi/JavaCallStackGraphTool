@@ -25,6 +25,8 @@ public class ElementDTO extends BaseDTO {
 
     private int methodId;
 
+    private String methodName;
+
     public ElementDTO() {
     }
 
@@ -194,5 +196,13 @@ public class ElementDTO extends BaseDTO {
 
     public void setMethodId(int methodId) {
         this.methodId = methodId;
+    }
+
+    public String getMethodName() {
+        return methodName;
+    }
+
+    public void setMethodName(String methodName) {
+        this.methodName = methodName;
     }
 }

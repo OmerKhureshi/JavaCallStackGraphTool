@@ -162,14 +162,22 @@ public class ElementDAOImpl {
         throw new IllegalStateException("Table does not exist. Hence cannot fetch any rows from it.");
     }
 
-    public static List<ElementDTO> getElemetDTOs(BoundingBox viewPort) {
+    /**
+     * This method fetches the rows for elements that should be drawn next on the UI.
+     */
+    public static List<ElementDTO> getElementDTOs(BoundingBox viewPort) {
         List<ElementDTO> elementDTOList = new ArrayList<>();
         // Get element properties for those elements that are inside the expanded region calculated above.
         String sql = "SELECT E.ID AS EID, parent_id, collapsed, " +
                 "bound_box_x_coordinate, bound_box_y_coordinate, " +
-                "message, id_enter_call_trace, method_id " +
-                "FROM " + TableNames.CALL_TRACE_TABLE + " AS CT JOIN " + TableNames.ELEMENT_TABLE +
-                " AS E ON CT.ID = E.ID_ENTER_CALL_TRACE " +
+                "message, id_enter_call_trace, method_id, " +
+                "(CASE " +
+                "   WHEN M.METHOD_NAME IS null THEN MESSAGE " +
+                "   ELSE M.METHOD_NAME " +
+                "END) AS method_name " +
+                "FROM " + TableNames.CALL_TRACE_TABLE + " AS CT " +
+                "JOIN " + TableNames.ELEMENT_TABLE + "AS E ON CT.ID = E.ID_ENTER_CALL_TRACE " +
+                "INNER JOIN " + TableNames.METHOD_DEFINITION_TABLE + " AS M ON CT.METHOD_ID = M.ID " +
                 "WHERE CT.THREAD_ID = " + CallTraceDAOImpl.getCurrentSelectedThread() +
                 " AND E.bound_box_x_coordinate > " + (viewPort.getMinX()) +
                 " AND E.bound_box_x_coordinate < " + (viewPort.getMaxX()) +
@@ -189,6 +197,7 @@ public class ElementDAOImpl {
                 elementDTO.setBoundBoxYCoordinate(rs.getFloat("bound_box_y_coordinate"));
                 elementDTO.setIdEnterCallTrace(rs.getInt("id_enter_call_trace"));
                 elementDTO.setMethodId(rs.getInt("method_id"));
+                elementDTO.setMethodName(rs.getString("method_name"));
 
                 elementDTOList.add(elementDTO);
             }
