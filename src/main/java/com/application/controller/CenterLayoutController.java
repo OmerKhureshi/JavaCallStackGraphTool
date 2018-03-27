@@ -165,11 +165,11 @@ public class CenterLayoutController {
         return new BoundingBox(minX, minY, scaledViewportWidth, scaledViewportHeight);
     }
 
+
     // Region where UI components are loaded.
-
     private static BoundingBox activeRegion;
-    // Trigger UI components to be reloaded when visible viewport is outside this region. triggerRegion < activeRegion
 
+    // Trigger UI components to be reloaded when visible viewport is outside this region. triggerRegion < activeRegion
     private static BoundingBox triggerRegion;
     private static boolean firstLoad = true;
 
@@ -214,6 +214,10 @@ public class CenterLayoutController {
         // System.out.println("activeRegion: " + activeRegion);
         // System.out.println("triggerRegion: " + triggerRegion);
         // System.out.println("------------------");
+    }
+
+    public static BoundingBox getActiveRegion() {
+        return activeRegion;
     }
 
     private void setTriggerRegion(BoundingBox viewPort) {

@@ -1,10 +1,12 @@
 package com.application.service.modules;
 
 import com.application.controller.CenterLayoutController;
+import com.application.controller.ControllerUtil;
 import com.application.db.DAO.DAOImplementation.CallTraceDAOImpl;
 import com.application.db.DAO.DAOImplementation.ElementDAOImpl;
 import com.application.db.DAO.DAOImplementation.HighlightDAOImpl;
 import com.application.db.DAO.DAOImplementation.MethodDefnDAOImpl;
+import com.application.db.DTO.ElementDTO;
 import com.application.db.DatabaseUtil;
 import com.application.db.TableNames;
 import com.application.db.model.Bookmark;
@@ -87,6 +89,20 @@ public class GraphLoaderModule {
         graph.updateCellLayer();
     }
 
+    private void addCircleCellsNew(BoundingBox viewPort) {
+        List<ElementDTO> elementDTOListToLoad = ElementDAOImpl.getElemetDTOs(viewPort);
+        List<CircleCell> circleCells = ControllerUtil.convertElementDTOTOCell(elementDTOListToLoad);
+
+        /*
+            C 1. get view port with buffer region
+            D 2. get element rows that go in the view port
+            C 3. create circle cells from element rows
+            C 4. resolve label for cell.
+            C 4. populate circle cells on ui
+        */
+
+    }
+
     private void addCircleCells() {
         Map<String, CircleCell> mapCircleCellsOnUI = centerLayoutController.getCircleCellsOnUI();
 
@@ -130,9 +146,12 @@ public class GraphLoaderModule {
                 int methodId = rs.getInt("method_id");
                 String methodName = "";
 
+                // If method is wait, notify or notify all, get the message (wait-enter, wait-exit etc).
                 if (methodId == 0) {
                     methodName = rs.getString("message");
-                } else {
+                }
+                // else get method name from Method def table.
+                else {
                     try (ResultSet rsMethod = MethodDefnDAOImpl.selectWhere("id = " + methodId)) {
                         while (rsMethod.next()) {
                             methodName = rsMethod.getString("method_name");

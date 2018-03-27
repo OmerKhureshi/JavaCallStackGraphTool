@@ -1,10 +1,16 @@
 package com.application.controller;
 
+import com.application.db.DTO.BaseDTO;
+import com.application.db.DTO.ElementDTO;
+import com.application.fxgraph.cells.CircleCell;
+import com.application.fxgraph.graph.Cell;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ControllerUtil {
 
@@ -40,4 +46,17 @@ public class ControllerUtil {
     public void setPrimaryStage(Stage primaryStage) {
         this.primaryStage = primaryStage;
     }
+
+    public static List<CircleCell> convertElementDTOTOCell(List<ElementDTO> elementDTOList) {
+        List<CircleCell> circleCellList = new ArrayList<>();
+
+        elementDTOList.forEach(elementDTO -> {
+            CircleCell circleCell = new CircleCell(elementDTO.getId(),
+                    elementDTO.getBoundBoxXCoordinate(), elementDTO.getBoundBoxYCoordinate());
+            circleCellList.add(circleCell);
+        });
+
+        return circleCellList;
+    }
+
 }

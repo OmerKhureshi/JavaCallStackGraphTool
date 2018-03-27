@@ -1,13 +1,18 @@
 package com.application.db.DAO.DAOImplementation;
 
+import com.application.db.DTO.ElementDTO;
 import com.application.db.DatabaseUtil;
 import com.application.db.TableNames;
 import com.application.fxgraph.ElementHelpers.Element;
+import javafx.geometry.BoundingBox;
 
+import javax.xml.crypto.Data;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.application.db.TableNames.ELEMENT_TABLE;
 
@@ -17,9 +22,9 @@ public class ElementDAOImpl {
     public static boolean isTableCreated() {
         //        System.out.println("starting isTableCreated");
         // if (!isTableCreated) {// No need to call DatabaseUtil method every time. Save time this way.
-            //            System.out.println("ElementDAOImpl:isTableCreated: " + isTableCreated);
-            // isTableCreated = DatabaseUtil.isTableCreated(ELEMENT_TABLE);
-            //            System.out.println("ElementDAOImpl:isTableCreated: " + isTableCreated);
+        //            System.out.println("ElementDAOImpl:isTableCreated: " + isTableCreated);
+        // isTableCreated = DatabaseUtil.isTableCreated(ELEMENT_TABLE);
+        //            System.out.println("ElementDAOImpl:isTableCreated: " + isTableCreated);
         // }
         //        System.out.println("ending isTableCreated");
         // return isTableCreated;
@@ -155,6 +160,44 @@ public class ElementDAOImpl {
             }
         }
         throw new IllegalStateException("Table does not exist. Hence cannot fetch any rows from it.");
+    }
 
+    public static List<ElementDTO> getElemetDTOs(BoundingBox viewPort) {
+        List<ElementDTO> elementDTOList = new ArrayList<>();
+        // Get element properties for those elements that are inside the expanded region calculated above.
+        String sql = "SELECT E.ID AS EID, parent_id, collapsed, " +
+                "bound_box_x_coordinate, bound_box_y_coordinate, " +
+                "message, id_enter_call_trace, method_id " +
+                "FROM " + TableNames.CALL_TRACE_TABLE + " AS CT JOIN " + TableNames.ELEMENT_TABLE +
+                " AS E ON CT.ID = E.ID_ENTER_CALL_TRACE " +
+                "WHERE CT.THREAD_ID = " + CallTraceDAOImpl.getCurrentSelectedThread() +
+                " AND E.bound_box_x_coordinate > " + (viewPort.getMinX()) +
+                " AND E.bound_box_x_coordinate < " + (viewPort.getMaxX()) +
+                " AND E.bound_box_y_coordinate > " + (viewPort.getMinY()) +
+                " AND E.bound_box_y_coordinate < " + (viewPort.getMaxY()) +
+                " AND E.LEVEL_COUNT > 1" +
+                " AND (E.COLLAPSED = 0" +
+                " OR E.COLLAPSED = 2)";
+
+        try (ResultSet rs = DatabaseUtil.select(sql)) {
+            while (rs.next()) {
+                ElementDTO elementDTO = new ElementDTO();
+                elementDTO.setId(String.valueOf(rs.getInt("EID")));
+                elementDTO.setParentId(rs.getInt("parent_id "));
+                elementDTO.setCollapsed(rs.getInt("collapsed"));
+                elementDTO.setBoundBoxXCoordinate(rs.getFloat("bound_box_x_coordinate"));
+                elementDTO.setBoundBoxYCoordinate(rs.getFloat("bound_box_y_coordinate"));
+                elementDTO.setIdEnterCallTrace(rs.getInt("id_enter_call_trace"));
+                elementDTO.setMethodId(rs.getInt("method_id"));
+
+                elementDTOList.add(elementDTO);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            DatabaseUtil.close();
+        }
+
+        return elementDTOList;
     }
 }
