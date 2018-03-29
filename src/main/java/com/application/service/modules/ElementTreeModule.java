@@ -442,7 +442,7 @@ public class ElementTreeModule {
                 if (!mapCircleCellsOnUI.containsKey(id) && (collapsed == 0 || collapsed == 2)) {
                     // System.out.println("ElementTreeModule::addCircleCells: adding new cells to UI: cell id: " + id);
                     curCircleCell = new CircleCell(id, xCoordinate, yCoordinate);
-                    curCircleCell.setMethodName(methodName);
+                    curCircleCell.setMethodNameLabel(methodName);
                     model.addCell(curCircleCell);
                     // SimplifiedElement ele = new SimplifiedElement(id, methodName);
                     // model.addSimplifiedElementToMap(ele);

@@ -1,7 +1,6 @@
 package com.application.service.modules;
 
 import com.application.controller.CenterLayoutController;
-import com.application.controller.ControllerUtil;
 import com.application.db.DAO.DAOImplementation.CallTraceDAOImpl;
 import com.application.db.DAO.DAOImplementation.ElementDAOImpl;
 import com.application.db.DAO.DAOImplementation.HighlightDAOImpl;
@@ -89,11 +88,8 @@ public class GraphLoaderModule {
         graph.updateCellLayer();
     }
 
-    private void addCircleCellsNew(BoundingBox viewPort) {
-        List<ElementDTO> elementDTOListToLoad = ElementDAOImpl.getElementDTOs(viewPort);
-        List<CircleCell> circleCells = ControllerUtil.convertElementDTOTOCell(elementDTOListToLoad);
-        // drawOnUI();
-
+    public List<ElementDTO> addCircleCellsNew(BoundingBox viewPort) {
+        return ElementDAOImpl.getElementDTOs(viewPort);
         /*
             C 1. get view port with buffer region
             D 2. get element rows that go in the view port
@@ -182,7 +178,7 @@ public class GraphLoaderModule {
                 if (!mapCircleCellsOnUI.containsKey(id) && (collapsed == 0 || collapsed == 2)) {
                     // System.out.println("ElementTreeModule::addCircleCells: adding new cells to UI: cell id: " + id);
                     curCircleCell = new CircleCell(id, xCoordinate, yCoordinate);
-                    curCircleCell.setMethodName(methodName);
+                    curCircleCell.setMethodNameLabel(methodName);
                     model.addCell(curCircleCell);
                     // SimplifiedElement ele = new SimplifiedElement(id, methodName);
                     // model.addSimplifiedElementToMap(ele);

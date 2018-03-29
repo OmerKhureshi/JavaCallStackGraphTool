@@ -17,7 +17,7 @@ public class CircleCell extends Cell {
 
     private Label label;
     private StackPane idBubble;
-    private Label methodName;
+    private Label methodNameLabel;
     private Shape nodeShape;
 
     private StackPane minMaxStackPane;
@@ -49,10 +49,10 @@ public class CircleCell extends Cell {
         // setup info and min/max buttons
         setUpButtons();
 
-        // rootStackPane = new StackPane(nodeShape, methodName, idBubble, minMaxStackPane, infoStackPane);
+        // rootStackPane = new StackPane(nodeShape, methodNameLabel, idBubble, minMaxStackPane, infoStackPane);
         // getChildren().addAll(rootStackPane);
 
-        getChildren().addAll(nodeShape, methodName, idBubble, minMaxStackPane, infoStackPane);
+        getChildren().addAll(nodeShape, methodNameLabel, idBubble, minMaxStackPane, infoStackPane);
 
         // setView(group);
         this.toFront();
@@ -153,9 +153,9 @@ public class CircleCell extends Cell {
         this.toFront();
     }
 
-    public CircleCell(String id, float xCoordinate, float yCoordinate, Label methodName) {
+    public CircleCell(String id, float xCoordinate, float yCoordinate, String methodName) {
         this(id, xCoordinate, yCoordinate);
-        this.methodName = methodName;
+        this.methodNameLabel.setText(methodName);
     }
 
     public void setLabel(String text) {
@@ -163,29 +163,29 @@ public class CircleCell extends Cell {
     }
 
     private void setUpMethodName() {
-        methodName = new Label("");
-        methodName.setPrefWidth(85);
-        methodName.setWrapText(true);
-        methodName.setTextFill(CustomColors.LIGHT_TURQUOISE.getPaint());
-        // methodName.setStyle("-fx-background-color: papayawhip; -fx-background-radius: 7; -fx-border-color: burlywood; -fx-border-radius: 7; -fx-border-width: 2");
-        methodName.setAlignment(Pos.CENTER);
-        methodName.setTextAlignment(TextAlignment.CENTER);
-        methodName.setFont(Font.font(12));
-        methodName.setMaxWidth(((Rectangle) nodeShape).getWidth() - 5);
-        methodName.setMinWidth(((Rectangle) nodeShape).getWidth() - 5);
-        methodName.setMaxHeight(((Rectangle) nodeShape).getHeight() * firstPortion);
-        methodName.setMinHeight(((Rectangle) nodeShape).getHeight() * firstPortion);
+        methodNameLabel = new Label("");
+        methodNameLabel.setPrefWidth(85);
+        methodNameLabel.setWrapText(true);
+        methodNameLabel.setTextFill(CustomColors.LIGHT_TURQUOISE.getPaint());
+        // methodNameLabel.setStyle("-fx-background-color: papayawhip; -fx-background-radius: 7; -fx-border-color: burlywood; -fx-border-radius: 7; -fx-border-width: 2");
+        methodNameLabel.setAlignment(Pos.CENTER);
+        methodNameLabel.setTextAlignment(TextAlignment.CENTER);
+        methodNameLabel.setFont(Font.font(12));
+        methodNameLabel.setMaxWidth(((Rectangle) nodeShape).getWidth() - 5);
+        methodNameLabel.setMinWidth(((Rectangle) nodeShape).getWidth() - 5);
+        methodNameLabel.setMaxHeight(((Rectangle) nodeShape).getHeight() * firstPortion);
+        methodNameLabel.setMinHeight(((Rectangle) nodeShape).getHeight() * firstPortion);
 
         // align the method name to top of the square.
-        methodName.relocate(2.5, 0);//-this.methodName.getMinHeight()/2);
+        methodNameLabel.relocate(2.5, 0);//-this.methodNameLabel.getMinHeight()/2);
         // Center the method name label below the circle.
-        // this.methodName.setMinWidth(this.methodName.getText().length()*2);
-        // this.methodName.relocate(-this.methodName.getPrefWidth() * .25, 45);//-this.methodName.getMinHeight()/2);
+        // this.methodNameLabel.setMinWidth(this.methodNameLabel.getText().length()*2);
+        // this.methodNameLabel.relocate(-this.methodNameLabel.getPrefWidth() * .25, 45);//-this.methodNameLabel.getMinHeight()/2);
 
     }
 
-    public void setMethodName(String methodName) {
-        this.methodName.setText(methodName);
+    public void setMethodNameLabel(String methodName) {
+        this.methodNameLabel.setText(methodName);
     }
 /*
     // Used?

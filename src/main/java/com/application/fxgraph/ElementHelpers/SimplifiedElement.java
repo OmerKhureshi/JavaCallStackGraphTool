@@ -34,7 +34,7 @@ package com.application.fxgraph.ElementHelpers;
 //         return methodName;
 //     }
 //
-//     public void setMethodName(String methodName) {
+//     public void setMethodNameLabel(String methodName) {
 //         this.methodName = methodName;
 //     }
 // }

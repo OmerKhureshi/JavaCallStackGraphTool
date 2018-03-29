@@ -51,8 +51,7 @@ public class ControllerUtil {
         List<CircleCell> circleCellList = new ArrayList<>();
 
         elementDTOList.forEach(elementDTO -> {
-            CircleCell circleCell = new CircleCell(elementDTO.getId(),
-                    elementDTO.getBoundBoxXCoordinate(), elementDTO.getBoundBoxYCoordinate());
+            CircleCell circleCell = new CircleCell(elementDTO.getId(), elementDTO.getBoundBoxXCoordinate(), elementDTO.getBoundBoxYCoordinate(), elementDTO.getMethodName());
             circleCellList.add(circleCell);
         });
 
