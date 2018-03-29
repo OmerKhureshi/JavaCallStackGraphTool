@@ -29,11 +29,9 @@ public class ConstructTreeTask extends Task<Void> {
 
     Consumer<Void> onSuccess;
 
-    public ConstructTreeTask(Consumer onSuccess) {
+    public ConstructTreeTask() {
         this.methodDefinitionLogFile = LoadedFiles.getFile("methodDefLogFile");
         this.callTraceLogFile = LoadedFiles.getFile("callTraceLogFile");
-
-        this.onSuccess = onSuccess;
     }
 
     @Override

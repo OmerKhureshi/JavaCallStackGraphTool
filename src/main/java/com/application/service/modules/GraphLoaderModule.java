@@ -38,14 +38,13 @@ public class GraphLoaderModule {
     }
 
 
+/*
     public void update() {
         loadUIComponentsInsideVisibleViewPort();
         removeUIComponentsFromInvisibleViewPort();
     }
 
-    /**
-     * Loads circle on UI if they are not present when they should be.
-     */
+
     public void loadUIComponentsInsideVisibleViewPort(Graph graph) {
         // System.out.println("ElementTreeModule:loadUIComponentsInsideVisibleViewPort: Method started");
 
@@ -80,13 +79,13 @@ public class GraphLoaderModule {
         // });
     }
 
-    public void addComponents() {
+ public void addComponents() {
         addCircleCells();
         addBookmarks();
         addEdges();
         addHighlights();
         graph.updateCellLayer();
-    }
+    }*/
 
     public List<ElementDTO> addCircleCellsNew(BoundingBox viewPort) {
         return ElementDAOImpl.getElementDTOs(viewPort);
@@ -99,6 +98,7 @@ public class GraphLoaderModule {
         */
 
     }
+/*
 
     private void addCircleCells() {
         Map<String, CircleCell> mapCircleCellsOnUI = centerLayoutController.getCircleCellsOnUI();
@@ -166,13 +166,15 @@ public class GraphLoaderModule {
                 // >2              -> not visible AND  collapsed
                 // <0              -> not visible AND  collapsed
 
-                /*
+                */
+/*
                  * collapsed - actions
                  *     0     - Show cell on UI
                  *     1     - parent of this cell was minimized. Don't show on UI
                  *     2     - this cell was minimized. Show on UI.
                  *     3     - parent of this cell was minimized. this cell was minimized. Don't expand this cell's children. Don't show on UI.
-                 */
+                 *//*
+
 
                 // Add circle cell to model and UI only if they are not already present on UI and if collapsed value is 0 or 2
                 if (!mapCircleCellsOnUI.containsKey(id) && (collapsed == 0 || collapsed == 2)) {
@@ -550,6 +552,7 @@ public class GraphLoaderModule {
         graph.updateCellLayer();
 
     }
+*/
 
     public void inject(CenterLayoutController centerLayoutController) {
         this.centerLayoutController = centerLayoutController;

@@ -42,7 +42,6 @@ public class CenterLayoutController {
     @FXML private SplitPane horizontalSplitPane;
 
     @FXML private ListView<String> threadListView;
-    @FXML private AnchorPane centerAnchorPane;
 
     private DoubleProperty verticalSplitPanePosProperty;
     private DoubleProperty horizontalSplitPanePosProperty;
@@ -104,7 +103,7 @@ public class CenterLayoutController {
             String threadId = threadListView.getSelectionModel().getSelectedItem().split(" ")[1];
             ElementTreeModule.resetRegions();
             if (!String.valueOf(graphLoaderModule.getCurrentSelectedThread()).equalsIgnoreCase(threadId)) {
-                showThread(threadId);
+                // showThread(threadId);
             }
         });
 

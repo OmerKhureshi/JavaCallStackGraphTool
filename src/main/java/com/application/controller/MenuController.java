@@ -99,7 +99,7 @@ public class MenuController {
         });
     }
 
-    public void setParentController(MainController mainController) {
+    void setParentController(MainController mainController) {
         this.mainController = mainController;
     }
 
