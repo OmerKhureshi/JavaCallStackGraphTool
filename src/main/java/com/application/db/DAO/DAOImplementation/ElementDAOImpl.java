@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.application.db.TableNames.ELEMENT_TABLE;
 
@@ -102,6 +103,45 @@ public class ElementDAOImpl {
             e.printStackTrace();
         }
         //        System.out.println("ending insert");
+    }
+
+    public static void insert(List<ElementDTO> elementDTOList) {
+        System.out.println("ElementDAOImpl.insert");
+        if (!isTableCreated())
+            createTable();
+
+        List<String> queryList = getQueryList(elementDTOList);
+        DatabaseUtil.addAndExecuteBatch(queryList);
+        System.out.println("ElementDAOImpl.insert ended");
+    }
+
+    private static List<String> getQueryList(List<ElementDTO> elementDTOList) {
+        return elementDTOList
+                .stream()
+                .map(elementDTO -> {
+                    return  "INSERT INTO " + TableNames.ELEMENT_TABLE + " VALUES (" +
+                            elementDTO.getId() + ", " +
+                            elementDTO.getParentId() + ", " +
+                            elementDTO.getIdEnterCallTrace() + ", " +
+                            elementDTO.getIdExitCallTrace() + ", " +
+                            elementDTO.getBoundBoxXTopLeft() + ", " +
+                            elementDTO.getBoundBoxYTopLeft() + ", " +
+                            elementDTO.getBoundBoxXTopRight() + ", " +
+                            elementDTO.getBoundBoxYTopRight() + ", " +
+                            elementDTO.getBoundBoxXBottomRight() + ", " +
+                            elementDTO.getBoundBoxYBottomRight() + ", " +
+                            elementDTO.getBoundBoxXBottomLeft() + ", " +
+                            elementDTO.getBoundBoxYBottomLeft() + ", " +
+                            elementDTO.getBoundBoxXCoordinate() + ", " +
+                            elementDTO.getBoundBoxYCoordinate() + ", " +
+                            elementDTO.getIndexInParent() + ", " +
+                            elementDTO.getLeafCount() + ", " +
+                            elementDTO.getLevelCount() + ", " +
+                            elementDTO.getCollapsed() + ", " +
+                            elementDTO.getDelta() + ", " +
+                            elementDTO.getDeltaX() +
+                            ")"; })
+                .collect(Collectors.toList());
     }
 
     public static void dropTable() {

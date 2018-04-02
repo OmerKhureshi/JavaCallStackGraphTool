@@ -1,5 +1,6 @@
 package com.application.db.DAO.DAOImplementation;
 
+import com.application.db.DTO.ElementToChildDTO;
 import com.application.db.DatabaseUtil;
 import com.application.db.TableNames;
 
@@ -7,6 +8,8 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.application.db.TableNames.ELEMENT_TO_CHILD_TABLE;
 
@@ -49,6 +52,26 @@ public class ElementToChildDAOImpl {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+
+    public static void insert(List<ElementToChildDTO> elementToChildDTOs) {
+        System.out.println("ElementToChildDAOImpl.insert");
+        if (!isTableCreated())
+            createTable();
+
+        DatabaseUtil.addAndExecuteBatch(getQueryList(elementToChildDTOs));
+
+        System.out.println("ElementToChildDAOImpl.insert ended");
+    }
+
+    private static List<String> getQueryList(List<ElementToChildDTO> elementToChildDTOS) {
+        return elementToChildDTOS.stream().map(elementToChildDTO -> {
+            return "INSERT INTO " + ELEMENT_TO_CHILD_TABLE + " VALUES( " +
+                    elementToChildDTO.getParentId() + ", " +
+                    elementToChildDTO.getChildId() +
+                    ")";
+        }).collect(Collectors.toList());
     }
 
     public static void dropTable() {

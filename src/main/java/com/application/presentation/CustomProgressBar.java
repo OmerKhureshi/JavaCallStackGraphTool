@@ -31,11 +31,11 @@ public class CustomProgressBar {
         titleLabel = new Label(titleText);
         progressLabel = new Label(progressText);
 
-        taskList.stream().forEach(task -> {
-            progressBar.progressProperty().bind(task.progressProperty());
-            titleLabel.textProperty().bind(task.titleProperty());
-            progressLabel.textProperty().bind(task.messageProperty());
-        });
+        // taskList.forEach(task -> {
+        //     progressBar.progressProperty().bind(task.progressProperty());
+        //     titleLabel.textProperty().bind(task.titleProperty());
+        //     progressLabel.textProperty().bind(task.messageProperty());
+        // });
 
         vBox = new VBox();
         vBox.getChildren().addAll(titleLabel, progressLabel, progressBar);
@@ -51,11 +51,13 @@ public class CustomProgressBar {
         stage.show();
     }
 
-    public CustomProgressBar(String titleText, String progressText, Task<Void> task) {
-        this( titleText,  progressText, Arrays.asList(task));
-    }
-
     public void close() {
         stage.close();
+    }
+
+    public void bind(Task task) {
+        progressBar.progressProperty().bind(task.progressProperty());
+        titleLabel.textProperty().bind(task.titleProperty());
+        progressLabel.textProperty().bind(task.messageProperty());
     }
 }

@@ -1,6 +1,7 @@
 package com.application.logs.fileIntegrity;
 
 import com.application.Main;
+import com.application.logs.parsers.Command;
 import com.application.service.tasks.ParseFileTask;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
@@ -8,21 +9,20 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.layout.Region;
 
 import java.io.*;
-import java.util.Deque;
-import java.util.LinkedList;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class CheckFileIntegrity {
-    public static void checkFile(File file, ParseFileTask.BytesRead bytesRead) {
-        bytesRead.readSoFar = checkFile(file);
-    }
-
     public static void checkFile (File file, Main.BytesRead bytesRead) {
-        bytesRead.readSoFar = checkFile(file);
+        try {
+            throw new Exception("Dont invoked this methdod.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    private static long checkFile(File file) {
+    public static void checkFile(File file, ParseFileTask.BytesRead bytesRead, Consumer<Void> cmd) {
         String line = null;
         Deque<Integer> stack;
         int linesRead = 0;
@@ -32,7 +32,10 @@ public class CheckFileIntegrity {
         try {
             BufferedReader br = new BufferedReader(new FileReader(file));
             while((line = br.readLine()) != null) {
-                workDone += line.length();
+
+                bytesRead.readSoFar += line.length();
+                cmd.accept(null);
+
                 String msg = line.split("\\|")[3];
                 switch (msg.toUpperCase()) {
                     case "WAIT-ENTER":
@@ -98,7 +101,6 @@ public class CheckFileIntegrity {
             System.out.println("Log file integrity check completed. If no exceptions were thrown, then log file format is valid.");
         }
 
-        return workDone;
     }
 
     static Main main;

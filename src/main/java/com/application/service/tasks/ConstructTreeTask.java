@@ -1,65 +1,103 @@
 package com.application.service.tasks;
 
-import com.application.db.DAO.DAOImplementation.CallTraceDAOImpl;
+import com.application.controller.ControllerUtil;
+import com.application.db.DAO.DAOImplementation.EdgeDAOImpl;
 import com.application.db.DAO.DAOImplementation.ElementDAOImpl;
 import com.application.db.DAO.DAOImplementation.ElementToChildDAOImpl;
-import com.application.db.DAO.DAOImplementation.MethodDefnDAOImpl;
-import com.application.db.DatabaseUtil;
+import com.application.db.DTO.EdgeDTO;
+import com.application.db.DTO.ElementDTO;
+import com.application.db.DTO.ElementToChildDTO;
+import com.application.fxgraph.ElementHelpers.EdgeElement;
 import com.application.fxgraph.ElementHelpers.Element;
-import com.application.logs.fileHandler.CallTraceLogFile;
-import com.application.logs.fileHandler.MethodDefinitionLogFile;
-import com.application.logs.fileIntegrity.CheckFileIntegrity;
 import com.application.logs.parsers.ParseCallTrace;
+import com.application.service.files.FileNames;
 import com.application.service.files.LoadedFiles;
 import com.application.service.modules.ElementTreeModule;
 import com.application.service.modules.ModuleLocator;
 import javafx.concurrent.Task;
-import javafx.stage.Stage;
 
 import java.io.File;
-import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.function.Consumer;
 
 public class ConstructTreeTask extends Task<Void> {
 
-    private File methodDefinitionLogFile;
     private File callTraceLogFile;
+    ElementTreeModule elementTreeModule;
 
     Consumer<Void> onSuccess;
 
     public ConstructTreeTask() {
-        this.methodDefinitionLogFile = LoadedFiles.getFile("methodDefLogFile");
-        this.callTraceLogFile = LoadedFiles.getFile("callTraceLogFile");
+        this.callTraceLogFile = LoadedFiles.getFile(FileNames.Call_Trace.getFileName());
+        elementTreeModule = ModuleLocator.getElementTreeModule();
     }
 
     @Override
     protected Void call() throws Exception {
-        // Inserting log files into Database.
+        computeAndInsertElements();
+        computeAndInsertEdges();
+
+        return null;
+    }
+
+    @Override
+    protected void succeeded() {
+        super.succeeded();
+    }
+
+    private void computeAndInsertEdges() {
+        System.out.println("ConstructTreeTask.computeAndInsertEdges");
+        List<EdgeElement> edgeElementList = new ArrayList<>();
+        ModuleLocator.getElementTreeModule().recursivelyInsertEdgeElementsIntoDB(
+                ElementTreeModule.greatGrandParent,
+                edgeElementList
+        );
+
+        List<EdgeDTO> edgeDTOList = ControllerUtil.convertEdgeElementsToEdgeDTO(edgeElementList);
+        EdgeDAOImpl.insert(edgeDTOList);
+        System.out.println("ConstructTreeTask.computeAndInsertEdges ended");
+    }
+
+    private void computeAndInsertElements() {
+        System.out.println("ConstructTreeTask.computeAndInsertElements");
         LinesInserted linesInserted = new LinesInserted(
                 0,
-                2 * ParseCallTrace.countNumberOfLines(CallTraceLogFile.getFile())
+                2 * ParseCallTrace.countNumberOfLines(callTraceLogFile)
         );
 
         updateTitle("Writing to DB.");
         updateMessage("Please wait... total records: " + linesInserted.total + " records processed: " + linesInserted.insertedSoFar);
         updateProgress(linesInserted.insertedSoFar, linesInserted.total);
-        ModuleLocator.getElementTreeModule().calculateElementProperties();
 
+        elementTreeModule.calculateElementProperties();
         Element root = ElementTreeModule.greatGrandParent;
+
         if (root == null)
-            return null;
+            return;
 
         Queue<Element> queue = new LinkedList<>();
         queue.add(root);
 
+        List<Element> elementList = new ArrayList<>();
+        List<ElementToChildDTO> elementToChildDTOList = new ArrayList<>();
+
         Element element;
         while ((element = queue.poll()) != null) {
-            ElementDAOImpl.insert(element);
-            ElementToChildDAOImpl.insert(
-                    element.getParent() == null ? -1 : element.getParent().getElementId(),
-                    element.getElementId());
+            elementList.add(element);
+
+            ElementToChildDTO elementToChildDTO = new ElementToChildDTO();
+            elementToChildDTO.setParentId(String.valueOf(element.getParent() == null ? -1 : element.getParent().getElementId()));
+            elementToChildDTO.setChildId(String.valueOf(element.getElementId()));
+
+            elementToChildDTOList.add(elementToChildDTO);
+
+            // ElementDAOImpl.insert(element);
+            // ElementToChildDAOImpl.insert(
+            //         element.getParent() == null ? -1 : element.getParent().getElementId(),
+            //         element.getElementId());
 
             if (element.getChildren() != null) {
                 element.getChildren().forEach(queue::add);
@@ -70,24 +108,23 @@ public class ConstructTreeTask extends Task<Void> {
             updateProgress(linesInserted.insertedSoFar, linesInserted.total);
         }
 
-        // Insert lines and properties into database.
-        ModuleLocator.getElementTreeModule().recursivelyInsertEdgeElementsIntoDB(ElementTreeModule.greatGrandParent);
-
-        return null;
+        System.out.println("ConstructTreeTask.computeAndInsertElements 0 : " + elementList.size());
+        List<ElementDTO> elementDTOList = ControllerUtil.convertElementToElementDTO(elementList);
+        System.out.println("ConstructTreeTask.computeAndInsertElements 1");
+        ElementDAOImpl.insert(elementDTOList);
+        System.out.println("ConstructTreeTask.computeAndInsertElements 2");
+        ElementToChildDAOImpl.insert(elementToChildDTOList);
+        System.out.println("ConstructTreeTask.computeAndInsertElements ended");
     }
 
-    @Override
-    protected void succeeded() {
-        super.succeeded();
-    }
 
-    public class LinesInserted {
-        long insertedSoFar = 0;
-        long total = 0;
+        public class LinesInserted {
+            long insertedSoFar = 0;
+            long total = 0;
 
-        LinesInserted(long insertedSoFar, long totalBytes) {
-            this.insertedSoFar = insertedSoFar;
-            this.total = totalBytes;
+            LinesInserted(long insertedSoFar, long totalBytes) {
+                this.insertedSoFar = insertedSoFar;
+                this.total = totalBytes;
+            }
         }
     }
-}

@@ -35,6 +35,7 @@ public class ZoomableScrollPane extends ScrollPane {
         zoomGroup.getTransforms().add(scaleTransform);
         zoomGroup.setOnScroll(new ZoomHandler());
 
+/*
         hValProperty = hvalueProperty();
         hValListener = (observable, oldValue, newValue) -> main.updateUi();
 
@@ -52,6 +53,7 @@ public class ZoomableScrollPane extends ScrollPane {
                 main.updateUi();
             }
         });
+*/
 
         setStyle("-fx-background-color: transparent;");
 

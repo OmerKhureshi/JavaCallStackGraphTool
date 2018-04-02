@@ -7,39 +7,35 @@ public class LoadedFiles {
     private static File callTraceLogFile;
     private static File dbFile;
 
+    private static boolean isFreshLoad = true;
+
     public static void setFile(String name, File file) {
-        switch (name) {
-            case "methodDef":
-                methodDefLogFile = file;
-                break;
-
-            case "callTrace":
-                callTraceLogFile = file;
-                break;
-
-            case "db":
-                dbFile = file;
-                break;
+        if (name.equalsIgnoreCase(FileNames.METHOD_DEF.getFileName())) {
+            methodDefLogFile = file;
+        } else if (name.equalsIgnoreCase(FileNames.Call_Trace.getFileName())) {
+            callTraceLogFile = file;
+        } else if (name.equalsIgnoreCase(FileNames.DB.getFileName())) {
+            dbFile = file;
         }
     }
 
     public static File getFile(String name) {
-        File file = null;
-        switch (name) {
-            case "methodDef":
-                file = methodDefLogFile;
-                break;
-
-            case "callTrace":
-                file = callTraceLogFile;
-                break;
-
-            case "db":
-                file = dbFile;
-                break;
+        if (name.equalsIgnoreCase(FileNames.METHOD_DEF.getFileName())) {
+            return methodDefLogFile;
+        } else if (name.equalsIgnoreCase(FileNames.Call_Trace.getFileName())) {
+            return callTraceLogFile;
+        } else if (name.equalsIgnoreCase(FileNames.DB.getFileName())) {
+            return dbFile;
         }
 
-        return file;
+        return null;
     }
 
+    public static boolean IsFreshLoad() {
+        return isFreshLoad;
+    }
+
+    public static void setFreshLoad(boolean isFreshLoad) {
+        LoadedFiles.isFreshLoad = isFreshLoad;
+    }
 }

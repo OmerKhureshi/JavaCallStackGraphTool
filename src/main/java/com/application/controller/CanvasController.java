@@ -40,8 +40,11 @@ public class CanvasController {
     private static boolean firstLoad = true;
 
 
+    @FXML
     private void initialize() {
+        System.out.println("CanvasController.initialize");
         graphLoaderModule = ModuleLocator.getGraphLoaderModule();
+        setUpCenterLayout();
     }
 
     private void setUpCenterLayout() {
@@ -52,19 +55,25 @@ public class CanvasController {
         scrollPane.setFitToHeight(true);
 
         centerAnchorPane.getChildren().add(scrollPane);
+
+        setListeners();
+        update();
     }
 
 
+    /**
+     * This method is invoked to check and draws any UI components on the graph if needed.
+     */
     public void update() {
         if (isUIDrawingRequired()) {
-            graphLoaderModule.update();
+            loadCircles();
         }
     }
 
     /**
      * This methods creates and draws circle cells on the active region of the viewport.
      */
-    public void loadCircles() {
+    private void loadCircles() {
         List<ElementDTO> elementDTOList = graphLoaderModule.addCircleCellsNew(getViewPortDims());
         List<CircleCell> circleCells = ControllerUtil.convertElementDTOTOCell(elementDTOList);
         drawCircles(circleCells);
@@ -74,7 +83,7 @@ public class CanvasController {
         circleCells.forEach(circleCell -> circleCellsOnUI.put(circleCell.getCellId(), circleCell));
     }
 
-    public BoundingBox getViewPortDims() {
+    private BoundingBox getViewPortDims() {
         double scale = ZoomableScrollPane.getScaleValue();
 
         double hValue = scrollPane.getHvalue();
@@ -92,22 +101,22 @@ public class CanvasController {
     }
 
 
-    public boolean isUIDrawingRequired() {
-        BoundingBox viewPort = getViewPortDims();
-        if (firstLoad) {
-            firstLoad = false;
-            return true;
-        }
-
+    private boolean isUIDrawingRequired() {
+        // if (firstLoad) {
+        //     firstLoad = false;
+        //     return true;
+        // }
+        System.out.println("CanvasController.isUIDrawingRequired");
         if (activeRegion == null)
-            setActiveRegion(viewPort);
+            setActiveRegion();
 
         if (triggerRegion == null)
-            setTriggerRegion(viewPort);
+            setTriggerRegion();
 
-        if (!triggerRegion.contains(viewPort)) {
-            setActiveRegion(viewPort);
-            setTriggerRegion(viewPort);
+        if (!triggerRegion.contains(getViewPortDims())) {
+            setActiveRegion();
+            setTriggerRegion();
+            System.out.println("CanvasController.isUIDrawingRequired return true");
             return true;
         }
 
@@ -116,10 +125,13 @@ public class CanvasController {
         //     return true;
         // }
 
+        System.out.println("CanvasController.isUIDrawingRequired return false");
         return false;
     }
 
-    private void setActiveRegion(BoundingBox viewPort) {
+    private void setActiveRegion() {
+        BoundingBox viewPort = getViewPortDims();
+
         activeRegion = new BoundingBox(
                 viewPort.getMinX() - viewPort.getWidth() * 3,
                 viewPort.getMinY() - viewPort.getHeight() * 3,
@@ -139,7 +151,9 @@ public class CanvasController {
         return activeRegion;
     }
 
-    private void setTriggerRegion(BoundingBox viewPort) {
+    private void setTriggerRegion() {
+        BoundingBox viewPort = getViewPortDims();
+
         triggerRegion = new BoundingBox(
                 activeRegion.getMinX() + viewPort.getWidth(),
                 activeRegion.getMinY() + viewPort.getHeight(),
@@ -176,4 +190,11 @@ public class CanvasController {
     public Map<String, Bookmark> getBookmarkMap() {
         return bookmarkMap;
     }
+
+    private void setListeners() {
+        scrollPane.vvalueProperty().addListener((observable, oldValue, newValue) -> update());
+        scrollPane.hvalueProperty().addListener((observable, oldValue, newValue) -> update());
+        scrollPane.viewportBoundsProperty().addListener((observable, oldValue, newValue) -> update());
+    }
+
 }

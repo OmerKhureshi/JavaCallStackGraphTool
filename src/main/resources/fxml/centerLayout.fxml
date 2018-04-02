@@ -11,8 +11,6 @@
 <?import javafx.scene.paint.Color?>
 <?import javafx.scene.text.Font?>
 
-<?import javafx.scene.Group?>
-<?import javafx.scene.layout.Pane?>
 <BorderPane fx:id="centerBorderPane" prefHeight="200.0" prefWidth="200.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.application.controller.CenterLayoutController">
     <left>
         <BorderPane fx:id="paneControlButtonPane" minWidth="14.0" prefHeight="902.0" prefWidth="30.0" BorderPane.alignment="CENTER">
@@ -32,6 +30,7 @@
             </bottom>
         </BorderPane>
     </left>
+
     <center>
         <SplitPane fx:id="verticalSplitPane" dividerPositions="0.23372781065088757" focusTraversable="true" minHeight="0.0" minWidth="0.0" BorderPane.alignment="CENTER">
             <items>

@@ -8,40 +8,25 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class ParseCallTrace implements FileParser {
-    private BufferedReader br;
+public class ParseCallTrace  {
     private String line;
 
     public void readFile(File logFile, Main.BytesRead bytesRead, Consumer<List<String>> cmd) {
-        bytesRead.readSoFar = readFile(logFile, cmd);
+        // bytesRead.readSoFar = readFile(logFile, cmd);
     }
 
     public void readFile(File logFile, ParseFileTask.BytesRead bytesRead, Consumer<List<String>> cmd) {
-        bytesRead.readSoFar = readFile(logFile, cmd);
-    }
-
-
-    private long readFile(File logFile,  Consumer<List<String>> cmd) {
-        long workDone = 0;
-        try {
-            br = new BufferedReader(new FileReader(logFile));
+        try (BufferedReader br = new BufferedReader(new FileReader(logFile))){
             while ((line = br.readLine()) != null) {
-                workDone += line.length(); // not accurate. But we don't need accuracy here.
+                bytesRead.readSoFar += line.length(); // not accurate. But we don't need accuracy here.
                 List<String> brokenLineList = parse(line);
                 cmd.accept(brokenLineList);
             }
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            try {
-                br.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
             line = null;
         }
-
-        return workDone;
     }
 
     public List<String> parse(String line) {

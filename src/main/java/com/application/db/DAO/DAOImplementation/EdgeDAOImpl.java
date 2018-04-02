@@ -1,13 +1,18 @@
 package com.application.db.DAO.DAOImplementation;
 
+import com.application.db.DTO.EdgeDTO;
+import com.application.db.DTO.ElementDTO;
 import com.application.db.DatabaseUtil;
 import com.application.db.TableNames;
 import com.application.fxgraph.ElementHelpers.EdgeElement;
 
+import javax.xml.crypto.Data;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.application.db.TableNames.EDGE_TABLE;
 
@@ -78,6 +83,39 @@ public class EdgeDAOImpl {
             System.out.println(" Exception caused by: " + sql);
             e.printStackTrace();
         }
+    }
+
+    public static void insert(List<EdgeDTO> edgeDTOList) {
+        System.out.println("EdgeDAOImpl.insert");
+        if (!isTableCreated())
+            createTable();
+
+        DatabaseUtil.addAndExecuteBatch(getQueryList(edgeDTOList));
+        System.out.println("EdgeDAOImpl.insert ended");
+    }
+
+
+    static List<String> getQueryList(List<EdgeDTO> edgeDTOList) {
+        return edgeDTOList.stream()
+                .map(edgeDTO -> {
+                    return "INSERT INTO " + EDGE_TABLE + " (" +
+                            "fk_source_element_id, " +
+                            "fk_target_element_id, " +
+                            "start_x, " +
+                            "start_y, " +
+                            "end_x, " +
+                            "end_y, " +
+                            "collapsed) " +
+                            " VALUES (" +
+                            edgeDTO.getSourceElementId() + ", " +
+                            edgeDTO.getTargetElementId() + ", " +
+                            edgeDTO.getStartX() + ", " +
+                            edgeDTO.getStartY() + ", " +
+                            edgeDTO.getEndX() + ", " +
+                            edgeDTO.getEndY() + ", " +
+                            edgeDTO.getCollapsed() + ")";
+                })
+                .collect(Collectors.toList());
     }
 
     public static void dropTable() {

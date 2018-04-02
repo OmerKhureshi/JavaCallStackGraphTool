@@ -19,7 +19,7 @@ public class MainController {
         menuBarController.setParentController(this);
     }
 
-    public void showInstructionsPane() {
+    void showInstructionsPane() {
         System.out.println("MainController.showInstructionsPane");
         try {
             FXMLLoader fxmlLoader = new FXMLLoader();
@@ -33,11 +33,11 @@ public class MainController {
         }
     }
 
-    public void showGraphPane() {
+    void showGraphPane() {
+        System.out.println("MainController.showGraphPane");
         try {
             FXMLLoader fxmlLoader = new FXMLLoader();
-            System.out.println("MainController.showInstructionsPane: ");
-            System.out.println("setting fxmlLoader locations: " + getClass().getResource("fxml/centerLayout.fxml"));
+            System.out.println("setting fxmlLoader locations: " + getClass().getResource("/fxml/centerLayout.fxml"));
             fxmlLoader.setLocation(getClass().getResource("/fxml/centerLayout.fxml"));
             Node content = fxmlLoader.load();
             borderPane.setCenter(content);

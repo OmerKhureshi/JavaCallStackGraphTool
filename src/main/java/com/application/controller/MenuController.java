@@ -1,6 +1,7 @@
 package com.application.controller;
 
 import com.application.presentation.CustomProgressBar;
+import com.application.service.files.FileNames;
 import com.application.service.files.LoadedFiles;
 import com.application.service.tasks.ConstructTreeTask;
 import com.application.service.tasks.ParseFileTask;
@@ -47,7 +48,7 @@ public class MenuController {
         chooseMethodDefMenuItem.setOnAction(event -> {
             try {
                 File methodDefLogFile = ControllerUtil.fileChooser("Choose method definition log fileMenu.", "Text Files", "*.txt");
-                LoadedFiles.setFile("methodDefLogFile", methodDefLogFile);
+                LoadedFiles.setFile(FileNames.METHOD_DEF.getFileName(), methodDefLogFile);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -56,7 +57,7 @@ public class MenuController {
         chooseCallTraceMenuItem.setOnAction(event -> {
             try {
                 File callTraceLogFile = ControllerUtil.fileChooser("Choose call trace log fileMenu.", "Text Files", "*.txt");
-                LoadedFiles.setFile("callTraceLogFile", callTraceLogFile );
+                LoadedFiles.setFile(FileNames.Call_Trace.getFileName(), callTraceLogFile );
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -67,6 +68,7 @@ public class MenuController {
             try {
                 File dbFile = ControllerUtil.directoryChooser("Choose an existing database.");
                 LoadedFiles.setFile("db", dbFile);
+                LoadedFiles.setFreshLoad(false);
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -76,7 +78,13 @@ public class MenuController {
 
     private void setUpRunMenu() {
         runAnalysisMenuItem.setOnAction(event -> {
+            System.out.println("MenuController.setUpRunMenu");
             this.mainController.showGraphPane();
+
+            // No need to parse log file and compute graph if loading from DB.
+            if (!LoadedFiles.IsFreshLoad()) {
+                return;
+            }
 
             Task<Void> parseTask = new ParseFileTask();
             Task<Void> constructTreeTask = new ConstructTreeTask();
@@ -89,8 +97,16 @@ public class MenuController {
             es.submit(constructTreeTask);
             es.shutdown();
 
-            constructTreeTask.setOnSucceeded((e) -> customProgressBar.close());
+            customProgressBar.bind(parseTask);
 
+            parseTask.setOnSucceeded((e) -> {
+                customProgressBar.bind(constructTreeTask);
+            });
+
+            constructTreeTask.setOnSucceeded((e) -> {
+                customProgressBar.close();
+                System.out.println("MenuController.setUpRunMenu constructTreeTask completed successfully.");
+            });
         });
 
         resetMenuItem.setOnAction(event -> {

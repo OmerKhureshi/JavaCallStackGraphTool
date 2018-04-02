@@ -1,6 +1,7 @@
 package com.application.service.modules;
 
 import com.application.db.DAO.DAOImplementation.*;
+import com.application.db.DTO.EdgeDTO;
 import com.application.db.DatabaseUtil;
 import com.application.db.TableNames;
 import com.application.db.model.Bookmark;
@@ -162,6 +163,22 @@ public class ElementTreeModule {
                 EdgeElement edgeElement = new EdgeElement(root, targetElement);
                 edgeElement.calculateEndPoints();
                 EdgeDAOImpl.insert(edgeElement);
+
+                recursivelyInsertEdgeElementsIntoDB(targetElement);
+            });
+    }
+
+    public void recursivelyInsertEdgeElementsIntoDB(Element root, List<EdgeElement> edgeElementList) {
+        if (root == null)
+            return;
+
+        if (root.getChildren() != null)
+            root.getChildren().stream().forEachOrdered(targetElement -> {
+                EdgeElement edgeElement = new EdgeElement(root, targetElement);
+                edgeElement.calculateEndPoints();
+                // EdgeDAOImpl.insert(edgeElement);
+
+                edgeElementList.add(edgeElement);
 
                 recursivelyInsertEdgeElementsIntoDB(targetElement);
             });

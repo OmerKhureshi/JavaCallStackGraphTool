@@ -18,10 +18,10 @@ public class MethodDefnDAOImpl {
     public static boolean isTableCreated() {
         //        System.out.println("starting isTableCreated");
         // if (!isTableCreated) {// No need to call DatabaseUtil method every time. Save time this way.
-            //            System.out.println("MethodDefnDAOImpl:isTableCreated: " + isTableCreated);
-            // isTableCreated = DatabaseUtil.isTableCreated(METHOD_DEFINITION_TABLE);
-            return DatabaseUtil.isTableCreated(METHOD_DEFINITION_TABLE);
-            //            System.out.println("MethodDefnDAOImpl:isTableCreated: " + isTableCreated);
+        //            System.out.println("MethodDefnDAOImpl:isTableCreated: " + isTableCreated);
+        // isTableCreated = DatabaseUtil.isTableCreated(METHOD_DEFINITION_TABLE);
+        return DatabaseUtil.isTableCreated(METHOD_DEFINITION_TABLE);
+        //            System.out.println("MethodDefnDAOImpl:isTableCreated: " + isTableCreated);
         // }
         //        System.out.println("ending isTableCreated");
         // return isTableCreated;
@@ -44,7 +44,7 @@ public class MethodDefnDAOImpl {
                 e.printStackTrace();
             }
         }
-        //        System.out.println("ending createTable");
+        System.out.println("ending createTable");
     }
 
     public static void insert(List<String> vals) {
@@ -104,4 +104,36 @@ public class MethodDefnDAOImpl {
         }
         throw new IllegalStateException("Table does not exist. Hence cannot fetch any rows from it.");
     }
+
+    public static void insertList(List<List<String>> parsedLineList) {
+
+        try (Statement statement = DatabaseUtil.getConnection().createStatement()) {
+            parsedLineList.forEach(parsedLine -> {
+                try {
+                    statement.addBatch(getInsertSQL(parsedLine));
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            });
+
+            statement.executeBatch();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private static String getInsertSQL(List<String> vals) {
+        int methodID = Integer.parseInt(vals.get(0));
+        String packageName = vals.get(1);
+        String methodName = vals.get(2);
+        String arguments = vals.get(3);
+        return "INSERT INTO " + METHOD_DEFINITION_TABLE + " VALUES(\n"+
+                methodID + ", '" +
+                packageName + "', '" +
+                methodName + "', '" +
+                arguments + "'" +
+                ")";
+    }
+
 }

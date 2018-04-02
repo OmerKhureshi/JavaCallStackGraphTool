@@ -1,5 +1,6 @@
 package com.application;
 
+import com.application.controller.ControllerUtil;
 import com.application.db.DAO.DAOImplementation.*;
 import com.application.db.DatabaseUtil;
 import com.application.db.TableNames;
@@ -181,6 +182,7 @@ public class Main extends Application {
         primaryStage.setTitle("Call Stack Visualization");
         primaryStage.show();
 
+        ControllerUtil.setPrimaryStage(primaryStage);
         chooseFreshStartOrReload();
 
         // *****************
@@ -798,6 +800,7 @@ public class Main extends Application {
     }
 
     private void postRunAnalysisSteps() {
+        System.out.println("Main.postRunAnalysisSteps:");
         setUpProgressBar();
         reload();
 
@@ -808,6 +811,7 @@ public class Main extends Application {
         }
 
         buttonFunctionsPostRunAnalysis();
+        System.out.println("Main.postRunAnalysisSteps method end");
     }
 
 
@@ -1157,6 +1161,7 @@ public class Main extends Application {
     }
 
     private void constructElementTree() {
+        System.out.println("Main.constructElementTree");
         elementTreeModule = new ElementTreeModule();
         CheckFileIntegrity.saveRef(this);
         EventHandlers.saveRef(elementTreeModule);
@@ -1263,6 +1268,7 @@ public class Main extends Application {
             loadUI();
 
         }
+        System.out.println("Main.constructElementTree method ends.");
     }
 
     private void setUpProgressBar() {

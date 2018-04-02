@@ -39,7 +39,7 @@ public class DatabaseUtil {
     }
 
     private static Connection createDatabaseConnection() {
-        System.out.println("DatabaseUtil.createDatabaseConnection: method started.");
+        // System.out.println("DatabaseUtil.createDatabaseConnection: method started.");
         String driver = "org.apache.derby.jdbc.EmbeddedDriver";
         Connection conn = null;
         try {
@@ -54,16 +54,16 @@ public class DatabaseUtil {
                 url = "jdbc:derby:" + prefix + sDate + ";create=true";
                 // url = "jdbc:derby:DB;create=true";
                 dataSourceDir = new File(prefix + sDate);
-                System.out.println("DatabaseUtil.createDatabaseConnection dataSourceDir == null: new url: " + url);
+                // System.out.println("DatabaseUtil.createDatabaseConnection dataSourceDir == null: new url: " + url);
             } else {
                 url = "jdbc:derby:" + dataSourceDir.getPath() + ";create=true";
-                System.out.println("DatabaseUtil.createDatabaseConnection dpPath not null: " + url);
+                // System.out.println("DatabaseUtil.createDatabaseConnection dpPath not null: " + url);
             }
             conn = DriverManager.getConnection(url);
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException | SQLException e) {
             e.printStackTrace();
         }
-        System.out.println("DatabaseUtil.createDatabaseConnection: method ended");
+        // System.out.println("DatabaseUtil.createDatabaseConnection: method ended");
         return conn;
     }
 
@@ -385,6 +385,7 @@ public class DatabaseUtil {
     }
 
     public static void resetDB() {
+        System.out.println("DatabaseUtil.resetDB");
         shutdownDatabase();
         CallTraceDAOImpl.dropTable();
         MethodDefnDAOImpl.dropTable();
@@ -398,6 +399,7 @@ public class DatabaseUtil {
         CallTraceDAOImpl.createTable();
         MethodDefnDAOImpl.createTable();
         // FilesDAOImpl.createTable();
+        System.out.println("DatabaseUtil.resetDB method ends");
     }
 
 
@@ -439,6 +441,23 @@ public class DatabaseUtil {
         Statement statement = conn.createStatement();
         ResultSet rs = statement.executeQuery(query);
         return rs;
+    }
+
+    public static void addAndExecuteBatch(List<String> queryList) {
+        try(Statement statement = DatabaseUtil.createStatement()) {
+            queryList.forEach(query -> {
+                try {
+                    statement.addBatch(query);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            });
+
+            statement.executeBatch();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
     }
 }
 
