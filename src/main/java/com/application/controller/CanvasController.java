@@ -3,16 +3,22 @@ package com.application.controller;
 import com.application.db.DTO.ElementDTO;
 import com.application.db.model.Bookmark;
 import com.application.fxgraph.cells.CircleCell;
+import com.application.fxgraph.graph.BoundBox;
 import com.application.fxgraph.graph.Edge;
 import com.application.fxgraph.graph.RectangleCell;
 import com.application.presentation.graph.ZoomableScrollPane;
 import com.application.service.modules.GraphLoaderModule;
 import com.application.service.modules.ModuleLocator;
+import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.geometry.BoundingBox;
 import javafx.scene.Group;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
+import javafx.scene.shape.Line;
+import javafx.scene.shape.Rectangle;
 
 import java.util.HashMap;
 import java.util.List;
@@ -33,12 +39,10 @@ public class CanvasController {
     private Map<String, Bookmark> bookmarkMap = new HashMap<>();
 
     // Region where UI components are loaded.
-    private static BoundingBox activeRegion;
+    private static BoundingBox activeRegion = null;
 
     // Trigger UI components to be reloaded when visible viewport is outside this region. triggerRegion < activeRegion
-    private static BoundingBox triggerRegion;
-    private static boolean firstLoad = true;
-
+    private static BoundingBox triggerRegion = null;
 
     @FXML
     private void initialize() {
@@ -48,16 +52,22 @@ public class CanvasController {
     }
 
     private void setUpCenterLayout() {
-        canvasContainer = new Group();
         canvas = new Pane();
+        canvasContainer = new Group();
+        canvasContainer.getChildren().add(canvas);
         scrollPane = new ZoomableScrollPane(canvasContainer);
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(true);
 
         centerAnchorPane.getChildren().add(scrollPane);
 
-        setListeners();
         update();
+        drawPlaceHolderLines();
+        // setListeners();
+
+
+        Rectangle rect = new Rectangle(30, 60, Color.BLACK);
+        canvas.getChildren().add(rect);
     }
 
 
@@ -74,13 +84,21 @@ public class CanvasController {
      * This methods creates and draws circle cells on the active region of the viewport.
      */
     private void loadCircles() {
+        System.out.println("CanvasController.loadCircles");
         List<ElementDTO> elementDTOList = graphLoaderModule.addCircleCellsNew(getViewPortDims());
         List<CircleCell> circleCells = ControllerUtil.convertElementDTOTOCell(elementDTOList);
         drawCircles(circleCells);
+        System.out.println("CanvasController.loadCircles ended");
     }
 
     private void drawCircles(List<CircleCell> circleCells) {
-        circleCells.forEach(circleCell -> circleCellsOnUI.put(circleCell.getCellId(), circleCell));
+        circleCells.forEach(circleCell -> {
+            if (!circleCellsOnUI.containsKey(circleCell.getCellId())) {
+                circleCellsOnUI.put(circleCell.getCellId(), circleCell);
+                canvas.getChildren().add(circleCell);
+                circleCell.toFront();
+            }
+        });
     }
 
     private BoundingBox getViewPortDims() {
@@ -107,6 +125,8 @@ public class CanvasController {
         //     return true;
         // }
         System.out.println("CanvasController.isUIDrawingRequired");
+        System.out.println("active region: " + activeRegion + " ; trigger region: " + triggerRegion
+                + " ; contains? " + triggerRegion.contains(getViewPortDims()));
         if (activeRegion == null)
             setActiveRegion();
 
@@ -168,12 +188,12 @@ public class CanvasController {
         // System.out.println("triggerRegion: " + triggerRegion);
         // System.out.println("------------------");
     }
-
+/*
     public static void resetRegions() {
         activeRegion = null;
         triggerRegion = null;
         firstLoad = true;
-    }
+    }*/
 
     public Map<String, CircleCell> getCircleCellsOnUI() {
         return circleCellsOnUI;
@@ -192,9 +212,31 @@ public class CanvasController {
     }
 
     private void setListeners() {
-        scrollPane.vvalueProperty().addListener((observable, oldValue, newValue) -> update());
-        scrollPane.hvalueProperty().addListener((observable, oldValue, newValue) -> update());
-        scrollPane.viewportBoundsProperty().addListener((observable, oldValue, newValue) -> update());
+        scrollPane.vvalueProperty().addListener(valuePropListener);
+        scrollPane.hvalueProperty().addListener(valuePropListener);
+        scrollPane.viewportBoundsProperty().addListener(valuePropListener);
     }
 
+    private ChangeListener valuePropListener = (observable, oldValue, newValue) -> update();
+
+    private void removeListeners() {
+        scrollPane.vvalueProperty().removeListener(valuePropListener);
+        scrollPane.hvalueProperty().removeListener(valuePropListener);
+        scrollPane.viewportBoundsProperty().removeListener(valuePropListener);
+    }
+
+
+
+    public void drawPlaceHolderLines(String currentThreadId) {
+        int height = graphLoaderModule.computePlaceHolderHeight(currentThreadId);
+        int width = graphLoaderModule.computePlaceHolderWidth(currentThreadId);
+
+        Line hPlaceHolderLine = new Line(0, 0, (width + 2) * BoundBox.unitWidthFactor, 0);
+        hPlaceHolderLine.setStrokeWidth(.001);
+        canvas.getChildren().add(hPlaceHolderLine);
+
+        Line vPlaceHolderLine = new Line(0, 0, 0, height * BoundBox.unitHeightFactor);
+        vPlaceHolderLine.setStrokeWidth(.001);
+        canvas.getChildren().add(vPlaceHolderLine);
+    }
 }

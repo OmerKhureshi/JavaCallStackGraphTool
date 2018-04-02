@@ -48,6 +48,8 @@ public class CenterLayoutController {
     private ObservableList<String> threadsObsList;
     private GraphLoaderModule graphLoaderModule;
 
+    private String currentThreadId = "0";
+
 
     @FXML
     private void initialize() {
@@ -120,6 +122,10 @@ public class CenterLayoutController {
         double maxWidth = text.getLayoutBounds().getWidth();
 
         threadListView.setMaxWidth(maxWidth + 30);
+    }
+
+    public String getCurrentThreadId() {
+        return currentThreadId;
     }
 
 }

@@ -62,7 +62,6 @@ public class ConstructTreeTask extends Task<Void> {
     }
 
     private void computeAndInsertElements() {
-        System.out.println("ConstructTreeTask.computeAndInsertElements");
         LinesInserted linesInserted = new LinesInserted(
                 0,
                 2 * ParseCallTrace.countNumberOfLines(callTraceLogFile)
@@ -108,13 +107,9 @@ public class ConstructTreeTask extends Task<Void> {
             updateProgress(linesInserted.insertedSoFar, linesInserted.total);
         }
 
-        System.out.println("ConstructTreeTask.computeAndInsertElements 0 : " + elementList.size());
         List<ElementDTO> elementDTOList = ControllerUtil.convertElementToElementDTO(elementList);
-        System.out.println("ConstructTreeTask.computeAndInsertElements 1");
         ElementDAOImpl.insert(elementDTOList);
-        System.out.println("ConstructTreeTask.computeAndInsertElements 2");
         ElementToChildDAOImpl.insert(elementToChildDTOList);
-        System.out.println("ConstructTreeTask.computeAndInsertElements ended");
     }
 
 

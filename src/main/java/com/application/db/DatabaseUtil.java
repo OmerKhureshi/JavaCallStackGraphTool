@@ -57,7 +57,7 @@ public class DatabaseUtil {
                 // System.out.println("DatabaseUtil.createDatabaseConnection dataSourceDir == null: new url: " + url);
             } else {
                 url = "jdbc:derby:" + dataSourceDir.getPath() + ";create=true";
-                // System.out.println("DatabaseUtil.createDatabaseConnection dpPath not null: " + url);
+                System.out.println("DatabaseUtil.createDatabaseConnection dpPath not null: " + url);
             }
             conn = DriverManager.getConnection(url);
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException | SQLException e) {
@@ -339,6 +339,21 @@ public class DatabaseUtil {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public static int executeSelectForInt(String query) {
+        int res;
+        try(ResultSet rs = DatabaseUtil.select(query)) {
+            if (rs.next()) {
+                res = rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DatabaseUtil.close();
+        }
+
+        return res;
     }
 
     public static void executeUpdate(String query ) {

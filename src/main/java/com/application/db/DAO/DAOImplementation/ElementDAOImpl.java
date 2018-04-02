@@ -4,6 +4,7 @@ import com.application.db.DTO.ElementDTO;
 import com.application.db.DatabaseUtil;
 import com.application.db.TableNames;
 import com.application.fxgraph.ElementHelpers.Element;
+import com.application.fxgraph.graph.Graph;
 import javafx.geometry.BoundingBox;
 
 import javax.xml.crypto.Data;
@@ -249,4 +250,29 @@ public class ElementDAOImpl {
 
         return elementDTOList;
     }
+
+    public static int getMaxLevelCount(String threadId) {
+        // Get the width for placeholder line.
+        String SQLMaxLevelCount = "select max(LEVEL_COUNT) from ELEMENT " +
+                "where ID_ENTER_CALL_TRACE in " +
+                "(SELECT  CALL_TRACE.ID from CALL_TRACE where THREAD_ID  = " + threadId + ")";
+
+        return DatabaseUtil.executeSelectForInt(SQLMaxLevelCount);
+
+    }
+
+    public static int getMaxLeafCount(String threadId) {
+        // Get the height for placeholder line.
+        String SQLMaxLeafCount = "select LEAF_COUNT from ELEMENT " +
+                "where LEVEL_COUNT = 1 AND ID = " +
+                "(SELECT PARENT_ID from ELEMENT_TO_CHILD " +
+                "where CHILD_ID = " +
+                "(SELECT id from ELEMENT " +
+                "where ID_ENTER_CALL_TRACE = " +
+                "(SELECT  min(CALL_TRACE.ID) from CALL_TRACE " +
+                "where THREAD_ID  = " + threadId + ")))";
+
+        return DatabaseUtil.executeSelectForInt(SQLMaxLeafCount);
+    }
+
 }

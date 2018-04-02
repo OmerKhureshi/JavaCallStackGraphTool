@@ -2,9 +2,14 @@
 
 <?import javafx.scene.layout.AnchorPane?>
 
+<?import javafx.scene.control.Label?>
 <AnchorPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.application.controller.CanvasController"
-            fx:id="centerAnchorPane" minHeight="0.0" minWidth="0.0" prefHeight="200.0" prefWidth="200.0">
+            fx:id="centerAnchorPane" minHeight="60.0" minWidth="60.0" prefHeight="200.0" prefWidth="200.0">
+    <children >
+
+        <Label fx:id="blum" text="shit test." />
+    </children>
 </AnchorPane>
 

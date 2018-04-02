@@ -37,6 +37,14 @@ public class GraphLoaderModule {
         CallTraceDAOImpl.setCurrentSelectedThread(currentSelectedThread);
     }
 
+    public int computePlaceHolderWidth(String threadId) {
+        int width = ElementDAOImpl.getMaxLeafCount(threadId);
+    }
+
+    public int computePlaceHolderHeight(String threadId) {
+        int height = ElementDAOImpl.getMaxLevelCount(threadId);
+
+    }
 
 /*
     public void update() {
