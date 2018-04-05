@@ -5,7 +5,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.layout.BorderPane;
 
-import java.io.File;
 import java.io.IOException;
 
 public class MainController {
@@ -15,8 +14,9 @@ public class MainController {
     @FXML private CenterLayoutController centerLayoutController;
 
     @FXML protected void initialize() {
-        System.out.println("MainController.initialize started.");
+        System.out.println("MainController.initialize");
         menuBarController.setParentController(this);
+        menuBarController.iamalive();
     }
 
     void showInstructionsPane() {
@@ -33,8 +33,8 @@ public class MainController {
         }
     }
 
-    void showGraphPane() {
-        System.out.println("MainController.showGraphPane");
+    void loadGraphPane() {
+        System.out.println("MainController.loadGraphPane");
         try {
             FXMLLoader fxmlLoader = new FXMLLoader();
             System.out.println("setting fxmlLoader locations: " + getClass().getResource("/fxml/centerLayout.fxml"));

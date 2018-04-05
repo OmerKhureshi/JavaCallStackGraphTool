@@ -38,12 +38,11 @@ public class GraphLoaderModule {
     }
 
     public int computePlaceHolderWidth(String threadId) {
-        int width = ElementDAOImpl.getMaxLeafCount(threadId);
+        return ElementDAOImpl.getMaxLeafCount(threadId);
     }
 
     public int computePlaceHolderHeight(String threadId) {
-        int height = ElementDAOImpl.getMaxLevelCount(threadId);
-
+         return ElementDAOImpl.getMaxLevelCount(threadId);
     }
 
 /*

@@ -1,12 +1,6 @@
 package com.application.controller;
 
 import com.application.db.DAO.DAOImplementation.CallTraceDAOImpl;
-import com.application.db.DTO.ElementDTO;
-import com.application.db.model.Bookmark;
-import com.application.fxgraph.cells.CircleCell;
-import com.application.fxgraph.graph.Edge;
-import com.application.fxgraph.graph.RectangleCell;
-import com.application.presentation.graph.ZoomableScrollPane;
 import com.application.service.modules.ElementTreeModule;
 import com.application.service.modules.GraphLoaderModule;
 import com.application.service.modules.ModuleLocator;
@@ -17,22 +11,14 @@ import javafx.beans.property.DoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.geometry.BoundingBox;
-import javafx.scene.Group;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Pane;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
-import sun.security.pkcs11.Secmod;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @SuppressWarnings("ALL")
 public class CenterLayoutController {
@@ -42,6 +28,12 @@ public class CenterLayoutController {
     @FXML private SplitPane horizontalSplitPane;
 
     @FXML private ListView<String> threadListView;
+
+    @FXML
+    private AnchorPane canvas;
+
+    @FXML
+    private CanvasController canvasController;
 
     private DoubleProperty verticalSplitPanePosProperty;
     private DoubleProperty horizontalSplitPanePosProperty;
@@ -53,8 +45,13 @@ public class CenterLayoutController {
 
     @FXML
     private void initialize() {
+        System.out.println("CenterLayoutController.initialize");
         setUpPaneButtonsActions();
         graphLoaderModule = ModuleLocator.getGraphLoaderModule();
+        if (canvasController == null) {
+            System.out.println("CenterLayoutController.initialize canvasController is null.");
+        }
+        canvasController.setUp(this);
     }
 
     public void injectController() {
@@ -105,6 +102,8 @@ public class CenterLayoutController {
             String threadId = threadListView.getSelectionModel().getSelectedItem().split(" ")[1];
             ElementTreeModule.resetRegions();
             if (!String.valueOf(graphLoaderModule.getCurrentSelectedThread()).equalsIgnoreCase(threadId)) {
+                currentThreadId = threadId;
+                System.out.println("CenterLayoutController.setUpThreadsListView: changed thread to : " + threadId);
                 // showThread(threadId);
             }
         });

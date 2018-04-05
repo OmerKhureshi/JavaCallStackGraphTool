@@ -78,8 +78,7 @@ public class MenuController {
 
     private void setUpRunMenu() {
         runAnalysisMenuItem.setOnAction(event -> {
-            System.out.println("MenuController.setUpRunMenu");
-            this.mainController.showGraphPane();
+            this.mainController.loadGraphPane();
 
             // No need to parse log file and compute graph if loading from DB.
             if (!LoadedFiles.IsFreshLoad()) {
@@ -117,6 +116,10 @@ public class MenuController {
 
     void setParentController(MainController mainController) {
         this.mainController = mainController;
+    }
+
+    public void iamalive() {
+        System.out.println("MenuController.iamalive");
     }
 
 }

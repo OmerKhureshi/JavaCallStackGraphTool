@@ -16,7 +16,6 @@ import javafx.scene.Group;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 
@@ -27,10 +26,10 @@ import java.util.Map;
 public class CanvasController {
 
     @FXML
-    AnchorPane centerAnchorPane;
+    AnchorPane canvasAnchorPane;
 
+    private CenterLayoutController centerLayoutController;
     private GraphLoaderModule graphLoaderModule;
-    private Group canvasContainer;
     private Pane canvas;
     private ZoomableScrollPane scrollPane;
     private Map<String, CircleCell> circleCellsOnUI = new HashMap<>();
@@ -47,24 +46,33 @@ public class CanvasController {
     @FXML
     private void initialize() {
         System.out.println("CanvasController.initialize");
+        if (centerLayoutController == null) {
+            System.out.println("CanvasController.initialize centerlayoutcontroller is null");
+        }
         graphLoaderModule = ModuleLocator.getGraphLoaderModule();
+    }
+
+    public void setUp(CenterLayoutController centerLayoutController) {
+        this.centerLayoutController = centerLayoutController;
         setUpCenterLayout();
     }
 
     private void setUpCenterLayout() {
         canvas = new Pane();
-        canvasContainer = new Group();
+        Group canvasContainer = new Group();
         canvasContainer.getChildren().add(canvas);
         scrollPane = new ZoomableScrollPane(canvasContainer);
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(true);
 
-        centerAnchorPane.getChildren().add(scrollPane);
+        canvasAnchorPane.getChildren().add(scrollPane);
 
         update();
-        drawPlaceHolderLines();
+        if (centerLayoutController == null) {
+            System.out.println("CanvasController.setUpCenterLayout: centerlayoutcontroller is null");
+        }
+        drawPlaceHolderLines(centerLayoutController.getCurrentThreadId());
         // setListeners();
-
 
         Rectangle rect = new Rectangle(30, 60, Color.BLACK);
         canvas.getChildren().add(rect);
@@ -125,13 +133,16 @@ public class CanvasController {
         //     return true;
         // }
         System.out.println("CanvasController.isUIDrawingRequired");
+        if (activeRegion == null) {
+            setActiveRegion();
+        }
+
+        if (triggerRegion == null) {
+            setTriggerRegion();
+        }
+
         System.out.println("active region: " + activeRegion + " ; trigger region: " + triggerRegion
                 + " ; contains? " + triggerRegion.contains(getViewPortDims()));
-        if (activeRegion == null)
-            setActiveRegion();
-
-        if (triggerRegion == null)
-            setTriggerRegion();
 
         if (!triggerRegion.contains(getViewPortDims())) {
             setActiveRegion();
@@ -188,7 +199,8 @@ public class CanvasController {
         // System.out.println("triggerRegion: " + triggerRegion);
         // System.out.println("------------------");
     }
-/*
+
+    /*
     public static void resetRegions() {
         activeRegion = null;
         triggerRegion = null;
@@ -225,9 +237,8 @@ public class CanvasController {
         scrollPane.viewportBoundsProperty().removeListener(valuePropListener);
     }
 
-
-
-    public void drawPlaceHolderLines(String currentThreadId) {
+    private void drawPlaceHolderLines(String currentThreadId) {
+        System.out.println("CanvasController.drawPlaceHolderLines: currentThreadId: " + currentThreadId);
         int height = graphLoaderModule.computePlaceHolderHeight(currentThreadId);
         int width = graphLoaderModule.computePlaceHolderWidth(currentThreadId);
 
@@ -238,5 +249,8 @@ public class CanvasController {
         Line vPlaceHolderLine = new Line(0, 0, 0, height * BoundBox.unitHeightFactor);
         vPlaceHolderLine.setStrokeWidth(.001);
         canvas.getChildren().add(vPlaceHolderLine);
+
+        System.out.println("CanvasController.drawPlaceHolderLines ended");
     }
+
 }

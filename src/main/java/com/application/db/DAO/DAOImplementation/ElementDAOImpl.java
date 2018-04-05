@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.application.db.DAO.DAOImplementation.BookmarksDAOImpl.createTable;
 import static com.application.db.TableNames.ELEMENT_TABLE;
 
 public class ElementDAOImpl {
@@ -107,13 +108,11 @@ public class ElementDAOImpl {
     }
 
     public static void insert(List<ElementDTO> elementDTOList) {
-        System.out.println("ElementDAOImpl.insert");
         if (!isTableCreated())
             createTable();
 
         List<String> queryList = getQueryList(elementDTOList);
         DatabaseUtil.addAndExecuteBatch(queryList);
-        System.out.println("ElementDAOImpl.insert ended");
     }
 
     private static List<String> getQueryList(List<ElementDTO> elementDTOList) {
@@ -252,16 +251,35 @@ public class ElementDAOImpl {
     }
 
     public static int getMaxLevelCount(String threadId) {
+        if (!ElementDAOImpl.isTableCreated()) {
+            ElementDAOImpl.createTable();
+        }
+
+        if (!CallTraceDAOImpl.isTableCreated()) {
+            CallTraceDAOImpl.createTable();
+        }
+
         // Get the width for placeholder line.
         String SQLMaxLevelCount = "select max(LEVEL_COUNT) from ELEMENT " +
                 "where ID_ENTER_CALL_TRACE in " +
                 "(SELECT  CALL_TRACE.ID from CALL_TRACE where THREAD_ID  = " + threadId + ")";
 
         return DatabaseUtil.executeSelectForInt(SQLMaxLevelCount);
-
     }
 
     public static int getMaxLeafCount(String threadId) {
+        if (!ElementDAOImpl.isTableCreated()) {
+            ElementDAOImpl.createTable();
+        }
+
+        if (!CallTraceDAOImpl.isTableCreated()) {
+            CallTraceDAOImpl.createTable();
+        }
+
+        if (!ElementToChildDAOImpl.isTableCreated()) {
+            ElementToChildDAOImpl.createTable();
+        }
+
         // Get the height for placeholder line.
         String SQLMaxLeafCount = "select LEAF_COUNT from ELEMENT " +
                 "where LEVEL_COUNT = 1 AND ID = " +

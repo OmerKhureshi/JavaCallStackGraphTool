@@ -64,28 +64,23 @@ public class ControllerUtil {
     }
 
     public static List<ElementDTO> convertElementToElementDTO(List<Element> elements) {
-        System.out.println("ControllerUtil.convertElementToElementDTO");
         return elements.stream()
                 .map((element) -> {
                     ElementDTO elementDTO = new ElementDTO();
-                    System.out.println("ControllerUtil.convertElementToElementDTO 1");
                     elementDTO.setId(String.valueOf(element.getElementId()));
                     elementDTO.setParentId(element.getParent() == null? -1 : element.getParent().getElementId());
                     elementDTO.setIdEnterCallTrace(element.getFkEnterCallTrace());
                     elementDTO.setIdExitCallTrace(element.getFkExitCallTrace());
-                    System.out.println("ControllerUtil.convertElementToElementDTO 2");
                     elementDTO.setBoundBoxXTopLeft(element.getBoundBox().xTopLeft);
                     elementDTO.setBoundBoxYTopLeft(element.getBoundBox().yTopLeft);
                     elementDTO.setBoundBoxXTopRight(element.getBoundBox().xTopRight);
                     elementDTO.setBoundBoxYTopRight(element.getBoundBox().yTopRight);
-                    System.out.println("ControllerUtil.convertElementToElementDTO 3");
                     elementDTO.setBoundBoxXBottomRight(element.getBoundBox().xBottomRight);
                     elementDTO.setBoundBoxYBottomRight(element.getBoundBox().yBottomRight);
                     elementDTO.setBoundBoxXBottomLeft(element.getBoundBox().xBottomLeft);
                     elementDTO.setBoundBoxYBottomLeft(element.getBoundBox().yBottomLeft);
                     elementDTO.setBoundBoxXCoordinate(element.getBoundBox().xCoordinate);
                     elementDTO.setBoundBoxYCoordinate(element.getBoundBox().yCoordinate);
-                    System.out.println("ControllerUtil.convertElementToElementDTO 4");
                     elementDTO.setIndexInParent(element.getIndexInParent());
                     elementDTO.setLeafCount(element.getLeafCount());
                     elementDTO.setLevelCount(element.getLevelCount());
@@ -93,14 +88,12 @@ public class ControllerUtil {
                     elementDTO.setDelta((float) element.getDelta());
                     elementDTO.setDeltaX((float) element.getDeltaX());
 
-                    System.out.println("ControllerUtil.convertElementToElementDTO 5");
                     return elementDTO;
                 })
                 .collect(Collectors.toList());
     }
 
     public static List<EdgeDTO> convertEdgeElementsToEdgeDTO(List<EdgeElement> edgeList) {
-        System.out.println("ControllerUtil.convertEdgeElementsToEdgeDTO");
         return edgeList.stream()
                 .map((edge) -> {
                     EdgeDTO edgeDTO = new EdgeDTO();

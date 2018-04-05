@@ -10,6 +10,7 @@ public class InstructionsPaneController {
     @FXML private Label runInfoLabel;
 
     @FXML private void initialize() {
+        System.out.println("InstructionsPaneController.initialize");
     }
 
     public void setMethodDefnInfoLabel(String methodDefnInfoLabelString) {

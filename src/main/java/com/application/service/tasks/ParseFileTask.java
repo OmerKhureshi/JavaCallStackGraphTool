@@ -30,7 +30,6 @@ public class ParseFileTask extends Task<Void> {
 
     @Override
     protected Void call() {
-        System.out.println("ParseFileTask.call:");
         // Reset Database
         updateTitle("Resetting the Database.");
         DatabaseUtil.resetDB();
@@ -39,20 +38,16 @@ public class ParseFileTask extends Task<Void> {
                 0,
                 methodDefinitionLogFile.length() + 2 * callTraceLogFile.length()
         );
-        System.out.println("ParseFileTask.call 0");
         // Method Definition log file integrity check.
         updateTitle("Checking integrity of Method Definition log file.");
         updateMessage("Please wait... total Bytes: " + bytesRead.total + " bytes processed: " + bytesRead.readSoFar);
         updateProgress(bytesRead.readSoFar, bytesRead.total);
-
-        System.out.println("ParseFileTask.call 1");
 
         CheckFileIntegrity.checkFile(LoadedFiles.getFile(FileNames.Call_Trace.getFileName()), bytesRead, (Void) -> {
             updateMessage("Please wait... total Bytes: " + bytesRead.total + " bytes processed: " + bytesRead.readSoFar);
             updateProgress(bytesRead.readSoFar, bytesRead.total);
         });
 
-        System.out.println("ParseFileTask.call 2");
         // Parse Method Definition Log files.
         updateTitle("Parsing log files.");
         updateMessage("Please wait... total Bytes: " + bytesRead.total + " bytes processed: " + bytesRead.readSoFar);
@@ -66,7 +61,6 @@ public class ParseFileTask extends Task<Void> {
                     updateProgress(bytesRead.readSoFar, bytesRead.total);
                 });
 
-        System.out.println("ParseFileTask.call 3");
         MethodDefnDAOImpl.insertList(parsedMDLineList);
 
         // new ParseMethodDefinition().readFile(MethodDefinitionLogFile.getFile(), bytesRead, parsedLineList -> {
@@ -74,7 +68,6 @@ public class ParseFileTask extends Task<Void> {
         //     updateMessage("Please wait... total Bytes: " + bytesRead.total + " bytes processed: " + bytesRead.readSoFar);
         //     updateProgress(bytesRead.readSoFar, bytesRead.total);
         // });
-        System.out.println("ParseFileTask.call 4");
 
         new ParseCallTrace().readFile(
                 LoadedFiles.getFile(FileNames.Call_Trace.getFileName()),
@@ -90,7 +83,6 @@ public class ParseFileTask extends Task<Void> {
                     }
                 });
 
-        System.out.println("ParseFileTask.call method ends");
         return null;
     }
 

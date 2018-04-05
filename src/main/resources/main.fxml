@@ -13,7 +13,7 @@
       <fx:include source="fxml/statusBar.fxml"/>
    </bottom>
 
-    <!--Main content-->
+   <!--Main content-->
    <center>
       <!--<fx:include source="fxml/centerLayout.fxml"/>-->
       <!--<fx:include source="fxml/instructionsPane.fxml"/>-->

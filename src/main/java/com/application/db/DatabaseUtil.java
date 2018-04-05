@@ -7,6 +7,8 @@ import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
+import static com.application.db.DAO.DAOImplementation.BookmarksDAOImpl.createTable;
+
 public class DatabaseUtil {
 
     private static File dataSourceDir;
@@ -57,7 +59,6 @@ public class DatabaseUtil {
                 // System.out.println("DatabaseUtil.createDatabaseConnection dataSourceDir == null: new url: " + url);
             } else {
                 url = "jdbc:derby:" + dataSourceDir.getPath() + ";create=true";
-                System.out.println("DatabaseUtil.createDatabaseConnection dpPath not null: " + url);
             }
             conn = DriverManager.getConnection(url);
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException | SQLException e) {
@@ -313,8 +314,8 @@ public class DatabaseUtil {
     }
 
 
-    static Connection conn;
-    static Statement ps;
+    private static Connection conn;
+    private static Statement ps;
     public static ResultSet select(String query ) {
         try {
             conn = getConnection();
@@ -342,7 +343,7 @@ public class DatabaseUtil {
     }
 
     public static int executeSelectForInt(String query) {
-        int res;
+        int res = 0;
         try(ResultSet rs = DatabaseUtil.select(query)) {
             if (rs.next()) {
                 res = rs.getInt(1);
