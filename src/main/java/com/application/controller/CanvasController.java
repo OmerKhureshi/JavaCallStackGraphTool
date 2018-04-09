@@ -37,9 +37,11 @@ public class CanvasController {
 
     // Region where UI components are loaded.
     private static BoundingBox activeRegion = null;
-
     // Trigger UI components to be reloaded when visible viewport is outside this region. triggerRegion < activeRegion
     private static BoundingBox triggerRegion = null;
+
+    private Map<String, Double> vScrollBarPos = new HashMap<>();
+    private Map<String, Double> hScrollBarPos = new HashMap<>();
 
     @FXML
     private void initialize() {
@@ -101,14 +103,20 @@ public class CanvasController {
         List<ElementDTO> elementDTOList = graphLoaderModule.addCircleCellsNew(viewPort);
         List<CircleCell> circleCells = ControllerUtil.convertElementDTOTOCell(elementDTOList);
 
-        System.out.println();
-        System.out.println("finally adding to UI.");
+        // System.out.println();
+        // System.out.println("finally adding to UI.");
         circleCells.forEach(circleCell -> {
             if (!circleCellsOnUI.containsKey(circleCell.getCellId())) {
                 circleCellsOnUI.put(circleCell.getCellId(), circleCell);
                 canvas.getChildren().add(circleCell);
                 circleCell.toFront();
-                System.out.print(circleCell.getCellId() + ", ");
+                // System.out.print(circleCell.getCellId() + ", ");
+            }
+        });
+
+        circleCellsOnUI.forEach((id, cell) -> {
+            if (triggerRegion.contains(cell)) {
+
             }
         });
     }
@@ -134,7 +142,9 @@ public class CanvasController {
 
     public void onThreadSelect() {
         clear();
+
         drawPlaceHolderLines();
+        positionScrollBarFromHistory();
         updateIfNeeded(false);
     }
 
@@ -171,8 +181,12 @@ public class CanvasController {
         if (!triggerRegion.contains(getViewPortDims())) {
             setActiveRegion();
             setTriggerRegion();
+            System.out.println("CanvasController.isUIDrawingRequired drawing IS required.");
+
             return true;
         }
+
+        System.out.println("CanvasController.isUIDrawingRequired drawing not required.");
         return false;
     }
 
@@ -201,13 +215,13 @@ public class CanvasController {
                 viewPort.getHeight() * 5
         );
     }
-
     /*
     public static void resetRegions() {
         activeRegion = null;
         triggerRegion = null;
         firstLoad = true;
     }*/
+
 
     public Map<String, CircleCell> getCircleCellsOnUI() {
         return circleCellsOnUI;
@@ -230,8 +244,8 @@ public class CanvasController {
         scrollPane.hvalueProperty().addListener(valuePropListener);
         scrollPane.viewportBoundsProperty().addListener(valuePropListener);
     }
-
     private ChangeListener valuePropListener = (observable, oldValue, newValue) -> updateIfNeeded(true);
+
 
     private void removeListeners() {
         scrollPane.vvalueProperty().removeListener(valuePropListener);
@@ -240,7 +254,7 @@ public class CanvasController {
     }
 
     private void drawPlaceHolderLines() {
-        String currentThreadId = ControllerLoader.centerLayoutController.getCurrentThreadId();;
+        String currentThreadId = ControllerLoader.centerLayoutController.getCurrentThreadId();
         int height = graphLoaderModule.computePlaceHolderHeight(currentThreadId);
         int width = graphLoaderModule.computePlaceHolderWidth(currentThreadId);
 
@@ -253,6 +267,24 @@ public class CanvasController {
         canvas.getChildren().add(vPlaceHolderLine);
 
         getViewPortDims();
+    }
+
+    public void saveScrollBarPos() {
+        String threadId = ControllerLoader.centerLayoutController.getCurrentThreadId();
+
+        vScrollBarPos.put(threadId, scrollPane.getVvalue());
+        System.out.println("CanvasController.saveScrollBarPos vvalue: " + scrollPane.getVvalue() + " : " + vScrollBarPos.get(threadId));
+        hScrollBarPos.put(threadId, scrollPane.getHvalue());
+        System.out.println("CanvasController.saveScrollBarPos hvalue: " + scrollPane.getHvalue() + " : " + hScrollBarPos.get(threadId));
+    }
+
+    private void positionScrollBarFromHistory() {
+        String threadId = ControllerLoader.centerLayoutController.getCurrentThreadId();
+
+        scrollPane.setVvalue(vScrollBarPos.getOrDefault(threadId, 0.0));
+        System.out.println("CanvasController.positionScrollBarFromHistory vvalue: " + vScrollBarPos.get(threadId));
+        scrollPane.setHvalue(hScrollBarPos.getOrDefault(threadId, 0.0));
+        System.out.println("CanvasController.positionScrollBarFromHistory hvalue: " + hScrollBarPos.get(threadId));
     }
 
 }

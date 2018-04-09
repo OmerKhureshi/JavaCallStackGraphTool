@@ -49,7 +49,7 @@ public class CenterLayoutController {
     private ObservableList<String> threadsObsList;
     private GraphLoaderModule graphLoaderModule;
 
-    private String currentThreadId;
+    private static String currentThreadId;
 
     private double sidePaneAnimationDuration = .05;
 
@@ -103,8 +103,9 @@ public class CenterLayoutController {
             String threadId = threadListView.getSelectionModel().getSelectedItem().split(" ")[1];
             ElementTreeModule.resetRegions();
             if (!String.valueOf(graphLoaderModule.getCurrentSelectedThread()).equalsIgnoreCase(threadId)) {
+                canvasController.saveScrollBarPos();
                 currentThreadId = threadId;
-                onThreadSelect();
+                canvasController.onThreadSelect();
             }
         });
 
@@ -124,11 +125,6 @@ public class CenterLayoutController {
         threadListView.setMaxWidth(maxWidth + 30);
         threadListView.setPrefWidth(maxWidth + 30);
     }
-
-    public void onThreadSelect() {
-        canvasController.onThreadSelect();
-    }
-
 
     public String getCurrentThreadId() {
         return currentThreadId;

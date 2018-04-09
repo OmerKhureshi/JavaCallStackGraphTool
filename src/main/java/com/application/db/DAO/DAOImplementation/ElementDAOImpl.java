@@ -228,8 +228,8 @@ public class ElementDAOImpl {
                 " AND (E.COLLAPSED = 0" +
                 " OR E.COLLAPSED = 2)";
 
-        System.out.println();
-        System.out.println("ElementDAOImpl.getElementDTOs query: " + sql);
+        // System.out.println();
+        // System.out.println("ElementDAOImpl.getElementDTOs query: " + sql);
         try (ResultSet rs = DatabaseUtil.select(sql)) {
             while (rs.next()) {
                 ElementDTO elementDTO = new ElementDTO();

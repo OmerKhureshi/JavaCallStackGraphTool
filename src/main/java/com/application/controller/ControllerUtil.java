@@ -60,7 +60,7 @@ public class ControllerUtil {
         elementDTOList.forEach(elementDTO -> {
             CircleCell circleCell = new CircleCell(elementDTO.getId(), elementDTO.getBoundBoxXCoordinate(), elementDTO.getBoundBoxYCoordinate(), elementDTO.getMethodName());
             circleCellList.add(circleCell);
-            System.out.print(circleCell.getCellId() + ", ");
+            // System.out.print(circleCell.getCellId() + ", ");
         });
 
         return circleCellList;
