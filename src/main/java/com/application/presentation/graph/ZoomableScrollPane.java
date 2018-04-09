@@ -35,6 +35,8 @@ public class ZoomableScrollPane extends ScrollPane {
         zoomGroup.getTransforms().add(scaleTransform);
         zoomGroup.setOnScroll(new ZoomHandler());
 
+        setHbarPolicy(ScrollBarPolicy.ALWAYS);
+        setVbarPolicy(ScrollBarPolicy.ALWAYS);
 /*
         hValProperty = hvalueProperty();
         hValListener = (observable, oldValue, newValue) -> main.updateUi();

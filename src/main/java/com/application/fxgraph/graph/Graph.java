@@ -252,12 +252,12 @@ public class Graph {
         double minX = hValue * (scaledContentWidth - scaledViewportWidth);
         double minY = vValue * (scaledContentHeight - scaledViewportHeight);
 
-        // System.out.println("Scale: " + scale);
-//        System.out.println("vValue: " + vValue + " : hValue: " + hValue);
-//        System.out.println("Content height: " + scaledContentHeight + " : width: " + scaledContentWidth);
-//        System.out.println("Viewport height: " + scaledViewportHeight + " : width: " + scaledViewportWidth);
-//        System.out.println("minY: " + minY + " : minX: " + minX);
-//        System.out.println();
+       //  System.out.println("Scale: " + scale);
+       // System.out.println("vValue: " + vValue + " : hValue: " + hValue);
+       // System.out.println("Content height: " + scaledContentHeight + " : width: " + scaledContentWidth);
+       // System.out.println("Viewport height: " + scaledViewportHeight + " : width: " + scaledViewportWidth);
+       // System.out.println("minY: " + minY + " : minX: " + minX);
+       // System.out.println();
         /*
             1 -> contentWidth - viewPortWidth
             ? -> x cord

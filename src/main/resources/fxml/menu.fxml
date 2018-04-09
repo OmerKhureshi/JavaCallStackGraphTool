@@ -4,7 +4,8 @@
 <?import javafx.scene.control.MenuItem?>
 
 <?import javafx.scene.control.SeparatorMenuItem?>
-<MenuBar xmlns:fx="http://javafx.com/fxml/1">
+<MenuBar fx:controller="com.application.controller.MenuController"
+        xmlns:fx="http://javafx.com/fxml/1">
     <menus>
         <Menu fx:id="fileMenu" mnemonicParsing="false" text="File">
             <items>
@@ -35,9 +36,9 @@
                 <MenuItem mnemonicParsing="false" text="About MyHelloApp" />
             </items>
         </Menu>
-        <Menu mnemonicParsing="false" text="Debug">
+        <Menu text="_Debug">
             <items>
-                <MenuItem mnemonicParsing="false" text="About MyHelloApp" />
+                <MenuItem fx:id="printViewPortDimsMenuItem" text="Print _viewport dimensions" />
             </items>
         </Menu>
     </menus>

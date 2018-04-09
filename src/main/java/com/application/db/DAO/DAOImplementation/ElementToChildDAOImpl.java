@@ -56,13 +56,10 @@ public class ElementToChildDAOImpl {
 
 
     public static void insert(List<ElementToChildDTO> elementToChildDTOs) {
-        System.out.println("ElementToChildDAOImpl.insert");
         if (!isTableCreated())
             createTable();
 
         DatabaseUtil.addAndExecuteBatch(getQueryList(elementToChildDTOs));
-
-        System.out.println("ElementToChildDAOImpl.insert ended");
     }
 
     private static List<String> getQueryList(List<ElementToChildDTO> elementToChildDTOS) {

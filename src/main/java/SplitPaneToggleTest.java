@@ -30,7 +30,7 @@ public class SplitPaneToggleTest extends Application {
 
         DoubleProperty splitPaneDividerPosition = splitPane.getDividers().get(0).positionProperty();
 
-        //update toggle button status if user moves divider:
+        //updateIfNeeded toggle button status if user moves divider:
         splitPaneDividerPosition.addListener((obs, oldPos, newPos) ->
                 settings.setSelected(newPos.doubleValue() < 0.95));
 

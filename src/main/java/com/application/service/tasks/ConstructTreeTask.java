@@ -58,7 +58,6 @@ public class ConstructTreeTask extends Task<Void> {
 
         List<EdgeDTO> edgeDTOList = ControllerUtil.convertEdgeElementsToEdgeDTO(edgeElementList);
         EdgeDAOImpl.insert(edgeDTOList);
-        System.out.println("ConstructTreeTask.computeAndInsertEdges ended");
     }
 
     private void computeAndInsertElements() {

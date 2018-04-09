@@ -14,6 +14,14 @@ public class EdgeDTO extends BaseDTO {
     public EdgeDTO() {
     }
 
+    public EdgeDTO(String targetElementId, float startX, float startY, float endX, float endY) {
+        this.targetElementId = targetElementId;
+        this.startX = startX;
+        this.startY = startY;
+        this.endX = endX;
+        this.endY = endY;
+    }
+
     public String getId() {
         return id;
     }

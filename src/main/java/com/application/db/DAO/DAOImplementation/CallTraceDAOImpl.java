@@ -12,22 +12,11 @@ import static com.application.db.TableNames.CALL_TRACE_TABLE;
 public class CallTraceDAOImpl {
     private static int currentSelectedThread;
 
-    // public static boolean isTableCreated = false;
     public static boolean isTableCreated() {
-        //        System.out.println("starting isTableCreated");
-        // if (!isTableCreated) {// No need to call DatabaseUtil method every time. Save time this way.
-        //                System.out.println("CallTraceDAOImpl:isTableCreated: " + isTableCreated);
-        // isTableCreated = DatabaseUtil.isTableCreated(CALL_TRACE_TABLE);
-        //            System.out.println("CallTraceDAOImpl:isTableCreated: " + isTableCreated);
-        // }
-        //        System.out.println("ending isTableCreated");
-        // return isTableCreated;
         return DatabaseUtil.isTableCreated(TableNames.CALL_TRACE_TABLE);
     }
 
     public static void createTable() {
-        //        System.out.println("starting createTable");
-        //        System.out.println("CallTraceDAOImpl:createTable: " + isTableCreated());
         if (!isTableCreated()) {
             try (Connection c = DatabaseUtil.getConnection(); Statement ps = c.createStatement()) {
                 sql = "CREATE TABLE " + CALL_TRACE_TABLE + " (" +
@@ -47,11 +36,9 @@ public class CallTraceDAOImpl {
                 e.printStackTrace();
             }
         }
-        //        System.out.println("ending createTable");
     }
 
-    public static int insert(List<String> val)
-            throws SQLException, ClassNotFoundException, InstantiationException, IllegalAccessException{
+    public static int insert(List<String> val) {
 
         int autoIncrementedId = -1;
         // int processID = Integer.parseInt(readSoFar.get(0));
@@ -192,7 +179,7 @@ public class CallTraceDAOImpl {
     public static List<Integer> getDistinctThreadIds() {
         List<Integer> threadList = new ArrayList<>();
         try (Connection conn = DatabaseUtil.getConnection()) {
-            String query = "SELECT DISTINCT(THREAD_ID) FROM " + TableNames.CALL_TRACE_TABLE;
+            String query = "SELECT DISTINCT(THREAD_ID) FROM " + TableNames.CALL_TRACE_TABLE + " order by THREAD_ID";
             ResultSet rs = DatabaseUtil.executeQuery(conn, query);
             while (rs.next()) {
                 threadList.add(rs.getInt("thread_id"));

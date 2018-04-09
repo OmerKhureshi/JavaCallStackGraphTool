@@ -353,7 +353,7 @@ public class DatabaseUtil {
         } finally {
             DatabaseUtil.close();
         }
-
+        // System.out.println("DatabaseUtil.executeSelectForInt: executing query: " + query);
         return res;
     }
 
@@ -455,8 +455,7 @@ public class DatabaseUtil {
 
     public static ResultSet executeQuery(Connection conn, String query) throws SQLException {
         Statement statement = conn.createStatement();
-        ResultSet rs = statement.executeQuery(query);
-        return rs;
+        return statement.executeQuery(query);
     }
 
     public static void addAndExecuteBatch(List<String> queryList) {

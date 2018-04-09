@@ -19,13 +19,22 @@ import javafx.scene.text.Text;
 import javafx.util.Duration;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("ALL")
 public class CenterLayoutController {
-    @FXML private ToggleButton settingsToggleButton;
-    @FXML private ToggleButton bookmarksToggleButton;
-    @FXML private SplitPane verticalSplitPane;
-    @FXML private SplitPane horizontalSplitPane;
+    @FXML
+    private ToggleButton settingsToggleButton;
+
+    @FXML
+    private ToggleButton bookmarksToggleButton;
+
+    @FXML
+    private SplitPane verticalSplitPane;
+
+    @FXML
+    private SplitPane horizontalSplitPane;
+
 
     @FXML private ListView<String> threadListView;
 
@@ -40,26 +49,18 @@ public class CenterLayoutController {
     private ObservableList<String> threadsObsList;
     private GraphLoaderModule graphLoaderModule;
 
-    private String currentThreadId = "0";
+    private String currentThreadId;
+
+    private double sidePaneAnimationDuration = .05;
 
 
     @FXML
     private void initialize() {
-        System.out.println("CenterLayoutController.initialize");
+        ControllerLoader.register(this);
         setUpPaneButtonsActions();
         graphLoaderModule = ModuleLocator.getGraphLoaderModule();
-        if (canvasController == null) {
-            System.out.println("CenterLayoutController.initialize canvasController is null.");
-        }
-        canvasController.setUp(this);
-    }
-
-    public void injectController() {
-        ModuleLocator.getGraphLoaderModule().inject(this);
-    }
-
-    private void resetCenterLayout() {
-
+        setUpThreadsListView();
+        canvasController.setUp();
     }
 
     private void setUpPaneButtonsActions() {
@@ -90,8 +91,8 @@ public class CenterLayoutController {
             vSplitPaneKeyVal = new KeyValue(verticalSplitPanePosProperty, 0);
             hSplitPaneKeyVal = new KeyValue(horizontalSplitPanePosProperty, 0);
         }
-        new Timeline(new KeyFrame(Duration.seconds(0.3), vSplitPaneKeyVal)).play();
-        new Timeline(new KeyFrame(Duration.seconds(0.3), hSplitPaneKeyVal)).play();
+        new Timeline(new KeyFrame(Duration.seconds(sidePaneAnimationDuration), vSplitPaneKeyVal)).play();
+        new Timeline(new KeyFrame(Duration.seconds(sidePaneAnimationDuration), hSplitPaneKeyVal)).play();
     }
 
     public void setUpThreadsListView() {
@@ -103,25 +104,31 @@ public class CenterLayoutController {
             ElementTreeModule.resetRegions();
             if (!String.valueOf(graphLoaderModule.getCurrentSelectedThread()).equalsIgnoreCase(threadId)) {
                 currentThreadId = threadId;
-                System.out.println("CenterLayoutController.setUpThreadsListView: changed thread to : " + threadId);
-                // showThread(threadId);
+                onThreadSelect();
             }
         });
 
         final String[] maxLenThreadName = {};
         List<Integer> threadIds = CallTraceDAOImpl.getDistinctThreadIds();
 
-        threadIds.forEach(id -> {
-            String val = "Thread: " + id;
-            maxLenThreadName[0] = maxLenThreadName[0].length() < val.length()? val : maxLenThreadName[0];
-            threadsObsList.add("Thread: " + id);
-        });
+        threadsObsList.addAll(threadIds.stream().map(id -> "Thread: " + id).collect(Collectors.toList()));
 
-        Text text = new Text(maxLenThreadName[0]);
+        if (threadsObsList.size() > 0) {
+            currentThreadId = threadsObsList.get(0).split(" ")[1];
+            System.out.println("CenterLayoutController.setUpThreadsListView: setting current threadId: " + currentThreadId);
+        }
+
+        Text text = new Text(String.valueOf(threadIds.get(threadIds.size() - 1)));
         double maxWidth = text.getLayoutBounds().getWidth();
 
         threadListView.setMaxWidth(maxWidth + 30);
+        threadListView.setPrefWidth(maxWidth + 30);
     }
+
+    public void onThreadSelect() {
+        canvasController.onThreadSelect();
+    }
+
 
     public String getCurrentThreadId() {
         return currentThreadId;

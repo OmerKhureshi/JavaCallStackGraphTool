@@ -1,5 +1,6 @@
 package com.application.db.DAO.DAOImplementation;
 
+import com.application.controller.ControllerLoader;
 import com.application.db.DTO.ElementDTO;
 import com.application.db.DatabaseUtil;
 import com.application.db.TableNames;
@@ -216,22 +217,24 @@ public class ElementDAOImpl {
                 "   ELSE M.METHOD_NAME " +
                 "END) AS method_name " +
                 "FROM " + TableNames.CALL_TRACE_TABLE + " AS CT " +
-                "JOIN " + TableNames.ELEMENT_TABLE + "AS E ON CT.ID = E.ID_ENTER_CALL_TRACE " +
+                "JOIN " + TableNames.ELEMENT_TABLE + " AS E ON CT.ID = E.ID_ENTER_CALL_TRACE " +
                 "INNER JOIN " + TableNames.METHOD_DEFINITION_TABLE + " AS M ON CT.METHOD_ID = M.ID " +
-                "WHERE CT.THREAD_ID = " + CallTraceDAOImpl.getCurrentSelectedThread() +
-                " AND E.bound_box_x_coordinate > " + (viewPort.getMinX()) +
-                " AND E.bound_box_x_coordinate < " + (viewPort.getMaxX()) +
-                " AND E.bound_box_y_coordinate > " + (viewPort.getMinY()) +
-                " AND E.bound_box_y_coordinate < " + (viewPort.getMaxY()) +
+                "WHERE CT.THREAD_ID = " + ControllerLoader.centerLayoutController.getCurrentThreadId() +
+                " AND E.bound_box_x_coordinate >= " + (viewPort.getMinX()) +
+                " AND E.bound_box_x_coordinate <= " + (viewPort.getMaxX()) +
+                " AND E.bound_box_y_coordinate >= " + (viewPort.getMinY()) +
+                " AND E.bound_box_y_coordinate <= " + (viewPort.getMaxY()) +
                 " AND E.LEVEL_COUNT > 1" +
                 " AND (E.COLLAPSED = 0" +
                 " OR E.COLLAPSED = 2)";
 
+        System.out.println();
+        System.out.println("ElementDAOImpl.getElementDTOs query: " + sql);
         try (ResultSet rs = DatabaseUtil.select(sql)) {
             while (rs.next()) {
                 ElementDTO elementDTO = new ElementDTO();
                 elementDTO.setId(String.valueOf(rs.getInt("EID")));
-                elementDTO.setParentId(rs.getInt("parent_id "));
+                elementDTO.setParentId(rs.getInt("parent_id"));
                 elementDTO.setCollapsed(rs.getInt("collapsed"));
                 elementDTO.setBoundBoxXCoordinate(rs.getFloat("bound_box_x_coordinate"));
                 elementDTO.setBoundBoxYCoordinate(rs.getFloat("bound_box_y_coordinate"));
@@ -246,7 +249,6 @@ public class ElementDAOImpl {
         } finally {
             DatabaseUtil.close();
         }
-
         return elementDTOList;
     }
 
@@ -289,6 +291,7 @@ public class ElementDAOImpl {
                 "where ID_ENTER_CALL_TRACE = " +
                 "(SELECT  min(CALL_TRACE.ID) from CALL_TRACE " +
                 "where THREAD_ID  = " + threadId + ")))";
+        // System.out.println("ElementDAOImpl.getMaxLeafCount query: " + SQLMaxLeafCount);
 
         return DatabaseUtil.executeSelectForInt(SQLMaxLeafCount);
     }

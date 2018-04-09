@@ -754,7 +754,7 @@ public class EventHandlers {
             expandParentTreeChain(cellId, Integer.parseInt(threadId));
         }
 
-        // update UI
+        // updateIfNeeded UI
         ElementTreeModule.resetRegions();
         main.showThread(threadId);
         Main.makeSelection(threadId);
@@ -1286,7 +1286,7 @@ public class EventHandlers {
      * Then updates cell's BOUND_BOX_Y_BOTTOM_LEFT and BOUND_BOX_Y_BOTTOM_RIGHT values.
      * Recurse to the parent and updates it's BOUND_BOX_Y_BOTTOM_LEFT and BOUND_BOX_Y_BOTTOM_RIGHT values.
      *
-     * @param cellId    The id of cell where recursive update starts.
+     * @param cellId    The id of cell where recursive updateIfNeeded starts.
      * @param delta     The value to be subtracted from or added to the columns.
      * @param statement All updated queries are added to this statement as batch.
      */

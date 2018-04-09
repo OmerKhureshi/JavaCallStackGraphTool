@@ -15,6 +15,7 @@ import javafx.stage.Stage;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ControllerUtil {
@@ -55,9 +56,11 @@ public class ControllerUtil {
     public static List<CircleCell> convertElementDTOTOCell(List<ElementDTO> elementDTOList) {
         List<CircleCell> circleCellList = new ArrayList<>();
 
+        System.out.println();
         elementDTOList.forEach(elementDTO -> {
             CircleCell circleCell = new CircleCell(elementDTO.getId(), elementDTO.getBoundBoxXCoordinate(), elementDTO.getBoundBoxYCoordinate(), elementDTO.getMethodName());
             circleCellList.add(circleCell);
+            System.out.print(circleCell.getCellId() + ", ");
         });
 
         return circleCellList;
@@ -106,6 +109,16 @@ public class ControllerUtil {
                     edgeDTO.setCollapsed(edge.getCollpased());
 
                     return edgeDTO;
+                })
+                .collect(Collectors.toList());
+    }
+
+    public static List<Edge> convertEdgeDTOToEdges(List<EdgeDTO> edgeDTOList) {
+        return edgeDTOList.stream()
+                .map(edgeDTO -> {
+                    return new Edge(edgeDTO.getTargetElementId(),
+                            edgeDTO.getStartX(), edgeDTO.getEndX(),
+                            edgeDTO.getStartY(), edgeDTO.getEndY());
                 })
                 .collect(Collectors.toList());
     }

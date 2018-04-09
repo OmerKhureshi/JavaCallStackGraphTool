@@ -12,6 +12,7 @@ public class Edge extends Group {
     private String edgeId;
     Line line;
 
+    // not used.
     public Edge(Cell source, Cell target) {
         edgeId = target.getCellId();
         this.source = source;

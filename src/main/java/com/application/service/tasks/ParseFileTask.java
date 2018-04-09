@@ -73,14 +73,10 @@ public class ParseFileTask extends Task<Void> {
                 LoadedFiles.getFile(FileNames.Call_Trace.getFileName()),
                 bytesRead,
                 parsedLineList -> {
-                    try {
-                        int autoIncrementedId = CallTraceDAOImpl.insert(parsedLineList);
-                        ModuleLocator.getElementTreeModule().StringToElementList(parsedLineList, autoIncrementedId);
-                        updateMessage("Please wait... total Bytes: " + bytesRead.total + " bytes processed: " + bytesRead.readSoFar);
-                        updateProgress(bytesRead.readSoFar, bytesRead.total);
-                    } catch (SQLException | ClassNotFoundException | IllegalAccessException | InstantiationException e) {  // Todo Create a custom exception class and clean this.
-                        e.printStackTrace();
-                    }
+                    int autoIncrementedId = CallTraceDAOImpl.insert(parsedLineList);
+                    ModuleLocator.getElementTreeModule().StringToElementList(parsedLineList, autoIncrementedId);
+                    updateMessage("Please wait... total Bytes: " + bytesRead.total + " bytes processed: " + bytesRead.readSoFar);
+                    updateProgress(bytesRead.readSoFar, bytesRead.total);
                 });
 
         return null;

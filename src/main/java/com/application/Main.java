@@ -160,9 +160,6 @@ public class Main extends Application {
 
         Parent content = null;
         FXMLLoader loader = new FXMLLoader();
-        System.out.println(" 1st: " + getClass());
-        System.out.println(" 2ND: " + getClass().getResource("main.fxml"));
-        System.out.println(" 3rd: " + getClass().getResource("/main.fxml"));
 
         loader.setLocation(getClass().getResource("/main.fxml"));
         try {
@@ -1188,14 +1185,10 @@ public class Main extends Application {
                 updateTitle("Parsing log files.");
                 new ParseCallTrace().readFile(CallTraceLogFile.getFile(), bytesRead,
                         parsedLineList -> {
-                            try {
-                                int autoIncrementedId = CallTraceDAOImpl.insert(parsedLineList);
-                                elementTreeModule.StringToElementList(parsedLineList, autoIncrementedId);
-                                updateMessage("Please wait... total Bytes: " + bytesRead.total + " bytes processed: " + bytesRead.readSoFar);
-                                updateProgress(bytesRead.readSoFar, bytesRead.total);
-                            } catch (SQLException | ClassNotFoundException | IllegalAccessException | InstantiationException e) {  // Todo Create a custom exception class and clean this.
-                                e.printStackTrace();
-                            }
+                            int autoIncrementedId = CallTraceDAOImpl.insert(parsedLineList);
+                            elementTreeModule.StringToElementList(parsedLineList, autoIncrementedId);
+                            updateMessage("Please wait... total Bytes: " + bytesRead.total + " bytes processed: " + bytesRead.readSoFar);
+                            updateProgress(bytesRead.readSoFar, bytesRead.total);
                         });
 
 

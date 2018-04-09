@@ -14,17 +14,12 @@ public class MainController {
     @FXML private CenterLayoutController centerLayoutController;
 
     @FXML protected void initialize() {
-        System.out.println("MainController.initialize");
         menuBarController.setParentController(this);
-        menuBarController.iamalive();
     }
 
     void showInstructionsPane() {
-        System.out.println("MainController.showInstructionsPane");
         try {
             FXMLLoader fxmlLoader = new FXMLLoader();
-            System.out.println("MainController.showInstructionsPane: ");
-            System.out.println("setting fxmlLoader locations: " + getClass().getResource("/fxml/instructionsPane.fxml"));
             fxmlLoader.setLocation(getClass().getResource("/fxml/instructionsPane.fxml"));
             Node content = fxmlLoader.load();
             borderPane.setCenter(content);
@@ -34,13 +29,14 @@ public class MainController {
     }
 
     void loadGraphPane() {
-        System.out.println("MainController.loadGraphPane");
         try {
             FXMLLoader fxmlLoader = new FXMLLoader();
-            System.out.println("setting fxmlLoader locations: " + getClass().getResource("/fxml/centerLayout.fxml"));
             fxmlLoader.setLocation(getClass().getResource("/fxml/centerLayout.fxml"));
             Node content = fxmlLoader.load();
             borderPane.setCenter(content);
+
+            centerLayoutController = fxmlLoader.getController();
+
         } catch (IOException e) {
             e.printStackTrace();
         }

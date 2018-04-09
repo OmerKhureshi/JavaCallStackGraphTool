@@ -1,33 +1,18 @@
 package com.application.service.modules;
 
-import com.application.controller.CenterLayoutController;
 import com.application.db.DAO.DAOImplementation.CallTraceDAOImpl;
+import com.application.db.DAO.DAOImplementation.EdgeDAOImpl;
 import com.application.db.DAO.DAOImplementation.ElementDAOImpl;
-import com.application.db.DAO.DAOImplementation.HighlightDAOImpl;
-import com.application.db.DAO.DAOImplementation.MethodDefnDAOImpl;
+import com.application.db.DTO.EdgeDTO;
 import com.application.db.DTO.ElementDTO;
-import com.application.db.DatabaseUtil;
-import com.application.db.TableNames;
-import com.application.db.model.Bookmark;
-import com.application.fxgraph.cells.CircleCell;
-import com.application.fxgraph.graph.*;
-import javafx.application.Platform;
 import javafx.geometry.BoundingBox;
-import javafx.scene.shape.Line;
-import javafx.scene.shape.Rectangle;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 @SuppressWarnings("ALL")
 public class GraphLoaderModule {
 
     private int currentSelectedThread = 0;
-    private CenterLayoutController centerLayoutController;
 
     public int getCurrentSelectedThread() {
         return CallTraceDAOImpl.getCurrentSelectedThread();
@@ -38,15 +23,15 @@ public class GraphLoaderModule {
     }
 
     public int computePlaceHolderWidth(String threadId) {
-        return ElementDAOImpl.getMaxLeafCount(threadId);
+        return ElementDAOImpl.getMaxLevelCount(threadId);
     }
 
     public int computePlaceHolderHeight(String threadId) {
-         return ElementDAOImpl.getMaxLevelCount(threadId);
+        return ElementDAOImpl.getMaxLeafCount(threadId);
     }
 
 /*
-    public void update() {
+    public void updateIfNeeded() {
         loadUIComponentsInsideVisibleViewPort();
         removeUIComponentsFromInvisibleViewPort();
     }
@@ -104,6 +89,10 @@ public class GraphLoaderModule {
             C 4. populate circle cells on ui
         */
 
+    }
+
+    public List<EdgeDTO> addEdgesNew(BoundingBox viewPort) {
+        return EdgeDAOImpl.getEdgeDTO(viewPort);
     }
 /*
 
@@ -337,7 +326,7 @@ public class GraphLoaderModule {
     }
 
 
-    private void addEdges() {
+    private void addEdgesNew(BoundingBox viewport) {
         BoundingBox viewPortDims = graph.getViewPortDims();
         double viewPortMinX = viewPortDims.getMinX();
         double viewPortMaxX = viewPortDims.getMaxX();
@@ -454,6 +443,7 @@ public class GraphLoaderModule {
         // clearUI();
     }
 
+
     private void removeHighlights(BoundingBox preloadBox) {
         // System.out.println("ElementTreeModule::removeHighlights: method started");
         CellLayer cellLayer = (CellLayer) graph.getCellLayer();
@@ -561,7 +551,4 @@ public class GraphLoaderModule {
     }
 */
 
-    public void inject(CenterLayoutController centerLayoutController) {
-        this.centerLayoutController = centerLayoutController;
-    }
 }

@@ -44,7 +44,6 @@ public class MethodDefnDAOImpl {
                 e.printStackTrace();
             }
         }
-        System.out.println("ending createTable");
     }
 
     public static void insert(List<String> vals) {
