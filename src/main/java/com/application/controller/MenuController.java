@@ -1,20 +1,32 @@
 package com.application.controller;
 
+import com.application.db.DAO.DAOImplementation.BookmarksDAOImpl;
+import com.application.db.DTO.BookmarkDTO;
+import com.application.fxgraph.graph.ColorProp;
 import com.application.presentation.CustomProgressBar;
 import com.application.service.files.FileNames;
 import com.application.service.files.LoadedFiles;
+import com.application.service.modules.ModuleLocator;
 import com.application.service.tasks.ConstructTreeTask;
 import com.application.service.tasks.ParseFileTask;
-import javafx.animation.PauseTransition;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
-import javafx.util.Duration;
+import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
+import javafx.scene.shape.Rectangle;
+import org.controlsfx.glyphfont.FontAwesome;
+import org.controlsfx.glyphfont.Glyph;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 public class MenuController {
 
@@ -28,6 +40,8 @@ public class MenuController {
     @FXML
     private MenuItem printViewPortDimsMenuItem;
 
+    @FXML private Menu bookmarksMenu;
+
     private MainController mainController;
 
     private File methodDefinitionLogFile;
@@ -39,6 +53,8 @@ public class MenuController {
         // onStartUp();
         autoRun();
         setUpDebugMenu();
+        setUpBookmarksMenu();
+        ControllerLoader.register(this);
     }
 
     private void onStartUp() {
@@ -152,6 +168,64 @@ public class MenuController {
             System.out.println("MenuController.setUpRunMenu constructTreeTask completed successfully.");
         });
 
+    }
+
+    private void setUpBookmarksMenu() {
+        bookmarksMenu.setOnAction(event -> updateBookmarksMenu());
+    }
+
+    public void updateBookmarksMenu() {
+        bookmarksMenu.getItems().clear();
+
+        Map<String, BookmarkDTO> bookmarkMap = ModuleLocator.getBookmarksModule().getBookmarkDTOs();
+        MenuItem noBookmarksMenuItem = new MenuItem("No bookmarks");
+
+        System.out.println("MenuController.updateBookmarksMenu: bookmarkMap size: " + bookmarkMap.size());
+        if (bookmarkMap.size() == 0) {
+            noBookmarksMenuItem.setDisable(true);
+            bookmarksMenu.getItems().add(noBookmarksMenuItem);
+
+            return;
+        }
+
+        bookmarkMap.forEach((id, bookmark) -> {
+            Rectangle icon = new Rectangle(15, 15);
+            icon.setFill(Color.web("#6699CC"));
+            icon.setStrokeWidth(3);
+            icon.setStroke(Paint.valueOf(bookmark.getColor()));
+            icon.setArcWidth(3);
+            icon.setArcHeight(3);
+
+            MenuItem bookmarkMenuItem = new MenuItem(
+                    " Id:" + bookmark.getElementId() +
+                            "  |  Method:" + bookmark.getMethodName() +
+                            "  |  Thread:" + bookmark.getThreadId(), icon);
+
+            bookmarkMenuItem.setOnAction(event -> {
+                // graph.getEventHandlers().jumpTo(Integer.valueOf(bookmark.getElementId()), bookmark.getThreadId(), bookmark.getCollapsed());
+            });
+
+            bookmarksMenu.getItems().add(bookmarkMenuItem);
+        });
+
+        SeparatorMenuItem separatorMenuItem = new SeparatorMenuItem();
+
+        bookmarksMenu.getItems().add(separatorMenuItem);
+
+        // clear bookmarks button and logic
+        Glyph clearBookmarksGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.TRASH);
+        clearBookmarksGlyph.setColor(ColorProp.ENABLED);
+        clearBookmarksGlyph.setDisable(bookmarkMap.size() == 0);
+
+        MenuItem clearBookmarksMenuItem = new MenuItem("Delete all", clearBookmarksGlyph);
+
+        clearBookmarksMenuItem.setOnAction(event -> {
+            ModuleLocator.getBookmarksModule().deleteAllBookmarks();
+            bookmarksMenu.getItems().clear();
+            bookmarksMenu.getItems().add(noBookmarksMenuItem);
+        });
+
+        bookmarksMenu.getItems().add(clearBookmarksMenuItem);
     }
 
     void setParentController(MainController mainController) {

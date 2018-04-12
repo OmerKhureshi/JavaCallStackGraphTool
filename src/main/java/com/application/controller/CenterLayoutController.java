@@ -29,19 +29,19 @@ public class CenterLayoutController {
     @FXML
     private ToggleButton settingsToggleButton;
 
-    @FXML
-    private ToggleButton bookmarksToggleButton;
+    // @FXML
+    // private ToggleButton bookmarksToggleButton;
 
     @FXML
     private SplitPane verticalSplitPane;
 
-    @FXML
-    private SplitPane horizontalSplitPane;
+    // @FXML
+    // private SplitPane horizontalSplitPane;
 
 
     @FXML private ListView<String> threadListView;
 
-    @FXML private ListView<String> bookmarkListView;
+    // @FXML private ListView<String> bookmarkListView;
 
     @FXML
     private AnchorPane canvas;
@@ -58,7 +58,7 @@ public class CenterLayoutController {
 
     private static String currentThreadId;
 
-    private double sidePaneAnimationDuration = .05;
+    private double sidePaneAnimationDuration = .01;
 
 
     @FXML
@@ -71,35 +71,52 @@ public class CenterLayoutController {
     }
 
     private void setUpPaneButtonsActions() {
+        settingsToggleButton.setSelected(false);
         verticalSplitPanePosProperty = verticalSplitPane.getDividers().get(0).positionProperty();
-        horizontalSplitPanePosProperty = horizontalSplitPane.getDividers().get(0).positionProperty();
+        verticalSplitPanePosProperty.setValue(0);
 
-        settingsToggleButton.setOnAction(event -> paneActions());
-        bookmarksToggleButton.setOnAction(event -> paneActions());
+        // horizontalSplitPanePosProperty = horizontalSplitPane.getDividers().get(0).positionProperty();
+
+        settingsToggleButton.setOnAction(event -> paneActionsForBookmarksButton());
+        // bookmarksToggleButton.setOnAction(event -> paneActions());
     }
 
-    private void paneActions() {
+    // private void paneActions() {
+    //     KeyValue vSplitPaneKeyVal = null;
+    //     KeyValue hSplitPaneKeyVal = null;
+    //
+    //     if (settingsToggleButton.isSelected() && bookmarksToggleButton.isSelected()) {
+    //         System.out.println("both selected");
+    //         vSplitPaneKeyVal = new KeyValue(verticalSplitPanePosProperty, 0.3);
+    //         hSplitPaneKeyVal = new KeyValue(horizontalSplitPanePosProperty, 0.5);
+    //     } else if (settingsToggleButton.isSelected()) {
+    //         System.out.println("settings selected");
+    //         vSplitPaneKeyVal = new KeyValue(verticalSplitPanePosProperty, 0.3);
+    //         hSplitPaneKeyVal = new KeyValue(horizontalSplitPanePosProperty, 1.0);
+    //     } else if (bookmarksToggleButton.isSelected()) {
+    //         System.out.println("bookmarks selected");
+    //         vSplitPaneKeyVal = new KeyValue(verticalSplitPanePosProperty, 0.3);
+    //         hSplitPaneKeyVal = new KeyValue(horizontalSplitPanePosProperty, 0);
+    //     } else {
+    //         System.out.println("none selected");
+    //         vSplitPaneKeyVal = new KeyValue(verticalSplitPanePosProperty, 0);
+    //         hSplitPaneKeyVal = new KeyValue(horizontalSplitPanePosProperty, 0);
+    //     }
+    //     new Timeline(new KeyFrame(Duration.seconds(sidePaneAnimationDuration), vSplitPaneKeyVal)).play();
+    //     new Timeline(new KeyFrame(Duration.seconds(sidePaneAnimationDuration), hSplitPaneKeyVal)).play();
+    // }
+
+
+    private void paneActionsForBookmarksButton() {
         KeyValue vSplitPaneKeyVal = null;
-        KeyValue hSplitPaneKeyVal = null;
-        if (settingsToggleButton.isSelected() && bookmarksToggleButton.isSelected()) {
-            System.out.println("both selected");
-            vSplitPaneKeyVal = new KeyValue(verticalSplitPanePosProperty, 0.3);
-            hSplitPaneKeyVal = new KeyValue(horizontalSplitPanePosProperty, 0.5);
-        } else if (settingsToggleButton.isSelected()) {
-            System.out.println("settings selected");
-            vSplitPaneKeyVal = new KeyValue(verticalSplitPanePosProperty, 0.3);
-            hSplitPaneKeyVal = new KeyValue(horizontalSplitPanePosProperty, 1.0);
-        } else if (bookmarksToggleButton.isSelected()) {
-            System.out.println("bookmarks selected");
-            vSplitPaneKeyVal = new KeyValue(verticalSplitPanePosProperty, 0.3);
-            hSplitPaneKeyVal = new KeyValue(horizontalSplitPanePosProperty, 0);
+
+         if (settingsToggleButton.isSelected()) {
+            vSplitPaneKeyVal = new KeyValue(verticalSplitPanePosProperty, 0.15);
         } else {
-            System.out.println("none selected");
             vSplitPaneKeyVal = new KeyValue(verticalSplitPanePosProperty, 0);
-            hSplitPaneKeyVal = new KeyValue(horizontalSplitPanePosProperty, 0);
         }
+
         new Timeline(new KeyFrame(Duration.seconds(sidePaneAnimationDuration), vSplitPaneKeyVal)).play();
-        new Timeline(new KeyFrame(Duration.seconds(sidePaneAnimationDuration), hSplitPaneKeyVal)).play();
     }
 
     public void setUpThreadsListView() {
@@ -134,27 +151,27 @@ public class CenterLayoutController {
     }
 
 
-    public void setUpBookmarkListView() {
-
-        bookmarkListView.setCellFactory(bookmarkView -> new ListCell<String>() {
-
-            private ImageView imageView = new ImageView();
-
-            @Override
-            public void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty) {
-                    setGraphic(null);
-                } else {
-                    // true makes this load in background
-                    // see other constructors if you want to control the size, etc
-                    Image image = new Image(item, true) ;
-                    imageView.setImage(image);
-                    setGraphic(imageView);
-                }
-            }
-        });
-    }
+    // public void setUpBookmarkListView() {
+    //
+    //     bookmarkListView.setCellFactory(bookmarkView -> new ListCell<String>() {
+    //
+    //         private ImageView imageView = new ImageView();
+    //
+    //         @Override
+    //         public void updateItem(String item, boolean empty) {
+    //             super.updateItem(item, empty);
+    //             if (empty) {
+    //                 setGraphic(null);
+    //             } else {
+    //                 // true makes this load in background
+    //                 // see other constructors if you want to control the size, etc
+    //                 Image image = new Image(item, true) ;
+    //                 imageView.setImage(image);
+    //                 setGraphic(imageView);
+    //             }
+    //         }
+    //     });
+    // }
 
     public String getCurrentThreadId() {
         return currentThreadId;

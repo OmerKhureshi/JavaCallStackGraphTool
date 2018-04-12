@@ -56,12 +56,12 @@ public class ControllerUtil {
     public static List<CircleCell> convertElementDTOTOCell(List<ElementDTO> elementDTOList) {
         List<CircleCell> circleCellList = new ArrayList<>();
 
-        // System.out.println();
-        // System.out.println("ControllerUtil.convertElementDTOTOCell ");
+        System.out.println();
+        System.out.println("ControllerUtil.convertElementDTOTOCell ");
         elementDTOList.forEach(elementDTO -> {
             CircleCell circleCell = new CircleCell(elementDTO.getId(), elementDTO.getBoundBoxXCoordinate(), elementDTO.getBoundBoxYCoordinate(), elementDTO.getMethodName());
             circleCellList.add(circleCell);
-            // System.out.print(circleCell.getCellId() + ", ");
+            System.out.print(circleCell.getCellId() + ", ");
         });
 
         return circleCellList;

@@ -10,12 +10,15 @@
     <left>
         <BorderPane fx:id="paneControlButtonPane" minWidth="14.0" prefHeight="902.0" prefWidth="30.0" BorderPane.alignment="CENTER">
             <top>
-                <ToggleButton fx:id="settingsToggleButton" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" rotate="-90.0" text="Settings" BorderPane.alignment="CENTER">
+                <ToggleButton fx:id="settingsToggleButton"
+                              maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" rotate="-90.0"
+                              text="Threads" BorderPane.alignment="CENTER">
                     <BorderPane.margin>
                         <Insets top="25.0" />
                     </BorderPane.margin>
                 </ToggleButton>
             </top>
+<!--
             <bottom>
                 <ToggleButton fx:id="bookmarksToggleButton" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" prefWidth="90.0" rotate="-90.0" text="Bookmarks" BorderPane.alignment="CENTER">
                     <BorderPane.margin>
@@ -23,6 +26,7 @@
                     </BorderPane.margin>
                 </ToggleButton>
             </bottom>
+-->
         </BorderPane>
     </left>
 
@@ -33,10 +37,15 @@
                        minHeight="0.0" minWidth="0.0"
                        AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
                 <AnchorPane>
+
+                    <ListView fx:id="threadListView" prefHeight="200.0" prefWidth="200.0"
+                              AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"/>
+
+<!--
                     <SplitPane fx:id="horizontalSplitPane" dividerPositions="0.4960182025028441" focusTraversable="true"
                                minHeight="0.0" minWidth="0.0" orientation="VERTICAL" prefHeight="879.0" prefWidth="238.0"
                                AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
-                        <!--<AnchorPane minHeight="0.0" minWidth="0.0" prefWidth="303.0">-->
+                        &lt;!&ndash;<AnchorPane minHeight="0.0" minWidth="0.0" prefWidth="303.0">&ndash;&gt;
                         <AnchorPane minHeight="0">
                             <ListView fx:id="threadListView" prefHeight="200.0" prefWidth="200.0"
                                       AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"/>
@@ -47,6 +56,7 @@
                                       AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"/>
                         </AnchorPane>
                     </SplitPane>
+-->
                 </AnchorPane>
 
                 <AnchorPane>

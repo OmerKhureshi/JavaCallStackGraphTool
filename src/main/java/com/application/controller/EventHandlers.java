@@ -2,12 +2,14 @@ package com.application.controller;
 
 import com.application.Main;
 import com.application.db.DAO.DAOImplementation.*;
+import com.application.db.DTO.BookmarkDTO;
 import com.application.db.DatabaseUtil;
 import com.application.db.TableNames;
 import com.application.db.model.Bookmark;
 import com.application.fxgraph.cells.CircleCell;
 import com.application.fxgraph.graph.*;
 import com.application.service.modules.ElementTreeModule;
+import com.application.service.modules.ModuleLocator;
 import javafx.animation.FillTransition;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
@@ -41,12 +43,12 @@ public class EventHandlers {
     final DragContext dragContext = new DragContext();
     private boolean clickable = true;
 
-    Graph graph;
+    // Graph graph;
     static Main main;
 
-    public EventHandlers(Graph graph) {
-        this.graph = graph;
-    }
+    // public EventHandlers(Graph graph) {
+    //     this.graph = graph;
+    // }
 
     public static void resetEventHandlers() {
         // deltaCache = new HashMap<>();
@@ -273,7 +275,7 @@ public class EventHandlers {
                                 Button jumpToButton = new Button();
                                 jumpToButton.setOnMouseClicked(event1 -> {
                                     System.out.println("EventHandlers.handle: jumpToButton Clicked. for eleId: " + eId);
-                                    jumpTo(eId, targetThreadId, collapsed);
+                                    // jumpTo(eId, targetThreadId, collapsed);
                                 });
                                 buttonList.add(jumpToButton);
                             }
@@ -343,7 +345,7 @@ public class EventHandlers {
 
                     String finalMethodNameTemp = methodName;
                     addBookmarkButton.setOnMouseClicked(event1 -> {
-                        Bookmark bookmark = new Bookmark(
+                        BookmarkDTO bookmarkDTO = new BookmarkDTO(
                                 String.valueOf(elementId),
                                 String.valueOf(threadId),
                                 finalMethodNameTemp,
@@ -352,21 +354,28 @@ public class EventHandlers {
                                 yCord,
                                 collapsed);
 
-                        BookmarksDAOImpl.insertBookmark(bookmark);
-                        graph.getModel().updateBookmarkMap();
-                        elementTreeModule.clearAndUpdateCellLayer();
+                        // BookmarksDAOImpl.insertBookmark(bookmarkDTO);
+                        // graph.getModel().updateBookmarkMap();
+                        // elementTreeModule.clearAndUpdateCellLayer();
+
+                        ModuleLocator.getBookmarksModule().insertBookmark(bookmarkDTO);
+
                         removeBookmarkButton.setDisable(false);
                         addBookmarkButton.setDisable(true);
 
-                        // graph.addMarkToBarPane(bookmark);
+                        // graph.addMarkToBarPane(bookmarkDTO);
                     });
-                    addBookmarkButton.setDisable(graph.getModel().getBookmarkMap().containsKey(String.valueOf(elementId)));
-                    removeBookmarkButton.setDisable(!graph.getModel().getBookmarkMap().containsKey(String.valueOf(elementId)));
+
+                    boolean contains = ModuleLocator.getBookmarksModule().getBookmarkDTOs().containsKey(String.valueOf(elementId));
+                    addBookmarkButton.setDisable(contains);
+                    removeBookmarkButton.setDisable(!contains);
 
                     removeBookmarkButton.setOnMouseClicked(eve -> {
-                        BookmarksDAOImpl.deleteBookmark(String.valueOf(elementId));
-                        graph.getModel().updateBookmarkMap();
-                        elementTreeModule.clearAndUpdateCellLayer();
+                        // BookmarksDAOImpl.deleteBookmark(String.valueOf(elementId));
+                        // graph.getModel().updateBookmarkMap();
+                        // elementTreeModule.clearAndUpdateCellLayer();
+                        ModuleLocator.getBookmarksModule().deleteBookmark(String.valueOf(elementId));
+
                         addBookmarkButton.setDisable(false);
 
                         // graph.removeMarkFromBarPane(String.valueOf(elementId));
@@ -689,7 +698,8 @@ public class EventHandlers {
             if (rs.next()) {
                 double xCord = rs.getDouble("BOUND_BOX_X_COORDINATE");
                 double yCord = rs.getDouble("BOUND_BOX_Y_COORDINATE");
-                graph.moveScrollPane(graph.getHValue(xCord), graph.getVValue(yCord));
+                // graph.moveScrollPane(graph.getHValue(xCord), graph.getVValue(yCord));
+                ControllerLoader.canvasController.moveScrollPane(xCord, yCord);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -753,39 +763,39 @@ public class EventHandlers {
     }
 
 
-    public void removeChildrenFromUI(int cellId, int endCellId) {
-        // System.out.println("EventHandler::removeChildrenFromUI: method stated. start cellid: " + cellId + " end cellid: " + endCellId);
-        Map<String, CircleCell> mapCircleCellsOnUI = graph.getModel().getCircleCellsOnUI();
-        List<String> removeCircleCells = new ArrayList<>();
-
-        Map<String, Edge> mapEdgesOnUI = graph.getModel().getEdgesOnUI();
-        List<String> removeEdges = new ArrayList<>();
-
-        Map<Integer, RectangleCell> highlightsOnUi = graph.getModel().getHighlightsOnUI();
-        List<Integer> removeHighlights = new ArrayList<>();
-
-        mapCircleCellsOnUI.forEach((id, circleCell) -> {
-            int intId = Integer.parseInt(id);
-            if (intId > cellId && intId < endCellId) {
-                removeCircleCells.add(id);
-            }
-        });
-
-        mapEdgesOnUI.forEach((id, edge) -> {
-            int intId = Integer.parseInt(id);
-            if (intId > cellId && intId < endCellId) {
-                removeEdges.add(id);
-            }
-        });
-
-        highlightsOnUi.forEach((id, rectangle) -> {
-            // System.out.println("EventHandler::removeChildrenFromUI: foreach in highlightsOnUi: id: " + id);
-            int elementId = rectangle.getElementId();
-            if (elementId> cellId && elementId < endCellId) {
-                // System.out.println("EventHandler::removeChildrenFromUI: adding to removeHighlights, elementId: " + elementId);
-                removeHighlights.add(id);
-            }
-        });
+    // public void removeChildrenFromUI(int cellId, int endCellId) {
+    //     // System.out.println("EventHandler::removeChildrenFromUI: method stated. start cellid: " + cellId + " end cellid: " + endCellId);
+    //     Map<String, CircleCell> mapCircleCellsOnUI = graph.getModel().getCircleCellsOnUI();
+    //     List<String> removeCircleCells = new ArrayList<>();
+    //
+    //     Map<String, Edge> mapEdgesOnUI = graph.getModel().getEdgesOnUI();
+    //     List<String> removeEdges = new ArrayList<>();
+    //
+    //     Map<Integer, RectangleCell> highlightsOnUi = graph.getModel().getHighlightsOnUI();
+    //     List<Integer> removeHighlights = new ArrayList<>();
+    //
+    //     mapCircleCellsOnUI.forEach((id, circleCell) -> {
+    //         int intId = Integer.parseInt(id);
+    //         if (intId > cellId && intId < endCellId) {
+    //             removeCircleCells.add(id);
+    //         }
+    //     });
+    //
+    //     mapEdgesOnUI.forEach((id, edge) -> {
+    //         int intId = Integer.parseInt(id);
+    //         if (intId > cellId && intId < endCellId) {
+    //             removeEdges.add(id);
+    //         }
+    //     });
+    //
+    //     highlightsOnUi.forEach((id, rectangle) -> {
+    //         // System.out.println("EventHandler::removeChildrenFromUI: foreach in highlightsOnUi: id: " + id);
+    //         int elementId = rectangle.getElementId();
+    //         if (elementId> cellId && elementId < endCellId) {
+    //             // System.out.println("EventHandler::removeChildrenFromUI: adding to removeHighlights, elementId: " + elementId);
+    //             removeHighlights.add(id);
+    //         }
+    //     });
 
         // error comment
         // removeCircleCells.forEach((id) -> {
@@ -887,7 +897,7 @@ public class EventHandlers {
         // } catch (SQLException e) {
         //     e.printStackTrace();
         // }
-    }
+    // }
 
 
     // error comment
@@ -1248,23 +1258,23 @@ public class EventHandlers {
         // System.out.println("EventHandler::updateParentChainRecursive: method ended");
     }
 
-    private void updateAllParentHighlightsOnUI(String clickedCellId, double x, double y, double delta, double deltaX) {
-        double finalX = x + BoundBox.unitWidthFactor * 0.5;
-        double finalY = y + BoundBox.unitHeightFactor * 0.5;
-        graph.getModel().getHighlightsOnUI().forEach((id, rectangleCell) -> {
-            // if this is the clicked cell, make highlight unit dimensions.
-            if (rectangleCell.getElementId() == Integer.valueOf(clickedCellId)) {
-                rectangleCell.setHeight(rectangleCell.getPrefHeight() - delta);
-                rectangleCell.setWidth(rectangleCell.getPrefWidth() - deltaX);
-            }
-
-            // if this rectangle contains y, then shrink it by delta
-            else if (rectangleCell.getBoundsInParent().contains(finalX, finalY)) {
-                rectangleCell.setHeight(rectangleCell.getPrefHeight() - delta);
-
-            }
-        });
-    }
+    // private void updateAllParentHighlightsOnUI(String clickedCellId, double x, double y, double delta, double deltaX) {
+    //     double finalX = x + BoundBox.unitWidthFactor * 0.5;
+    //     double finalY = y + BoundBox.unitHeightFactor * 0.5;
+    //     graph.getModel().getHighlightsOnUI().forEach((id, rectangleCell) -> {
+    //         // if this is the clicked cell, make highlight unit dimensions.
+    //         if (rectangleCell.getElementId() == Integer.valueOf(clickedCellId)) {
+    //             rectangleCell.setHeight(rectangleCell.getPrefHeight() - delta);
+    //             rectangleCell.setWidth(rectangleCell.getPrefWidth() - deltaX);
+    //         }
+    //
+    //         // if this rectangle contains y, then shrink it by delta
+    //         else if (rectangleCell.getBoundsInParent().contains(finalX, finalY)) {
+    //             rectangleCell.setHeight(rectangleCell.getPrefHeight() - delta);
+    //
+    //         }
+    //     });
+    // }
 
     private void updateChildrenHighlightsInDB(int cellId, boolean isCollapsed, Statement statement, double delta, int nextCellId, int threadId) {
         // System.out.println("EventHandlers.updateChildrenHighlightsInDB: method started");
@@ -1443,29 +1453,29 @@ public class EventHandlers {
 
 
     @SuppressWarnings("unused")
-    EventHandler<MouseEvent> onMousePressedEventHandler = new EventHandler<MouseEvent>() {
-        @Override
-        public void handle(MouseEvent event) {
-            Node node = (Node) event.getSource();
-            double scale = graph.getScale();
-            dragContext.x = node.getBoundsInParent().getMinX() * scale - event.getScreenX();
-            dragContext.y = node.getBoundsInParent().getMinY() * scale - event.getScreenY();
-        }
-    };
+    // EventHandler<MouseEvent> onMousePressedEventHandler = new EventHandler<MouseEvent>() {
+    //     @Override
+    //     public void handle(MouseEvent event) {
+    //         Node node = (Node) event.getSource();
+    //         double scale = graph.getScale();
+    //         dragContext.x = node.getBoundsInParent().getMinX() * scale - event.getScreenX();
+    //         dragContext.y = node.getBoundsInParent().getMinY() * scale - event.getScreenY();
+    //     }
+    // };
 
-    EventHandler<MouseEvent> onMouseDraggedEventHandler = new EventHandler<MouseEvent>() {
-        @Override
-        public void handle(MouseEvent event) {
-            Node node = (Node) event.getSource();
-            double offsetX = event.getScreenX() + dragContext.x;
-            double offsetY = event.getScreenY() + dragContext.y;
-            // adjust the offset in case we are zoomed
-            double scale = graph.getScale();
-            offsetX /= scale;
-            offsetY /= scale;
-            node.relocate(offsetX, offsetY);
-        }
-    };
+    // EventHandler<MouseEvent> onMouseDraggedEventHandler = new EventHandler<MouseEvent>() {
+    //     @Override
+    //     public void handle(MouseEvent event) {
+    //         Node node = (Node) event.getSource();
+    //         double offsetX = event.getScreenX() + dragContext.x;
+    //         double offsetY = event.getScreenY() + dragContext.y;
+    //         // adjust the offset in case we are zoomed
+    //         double scale = graph.getScale();
+    //         offsetX /= scale;
+    //         offsetY /= scale;
+    //         node.relocate(offsetX, offsetY);
+    //     }
+    // };
 
     EventHandler<MouseEvent> onMouseReleasedEventHandler = event -> {
     };

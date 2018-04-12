@@ -206,6 +206,11 @@ public class CircleCell extends Cell {
         nodeShape.setStrokeWidth(bookmarkStrokeWidth);
     }
 
+    public void removeBookmark() {
+        nodeShape.setStroke(CustomColors.LIGHT_TURQUOISE.getPaint());
+        nodeShape.setStrokeWidth(1);
+    }
+
     @Override
     public String toString() {
         return "CircleCell: id: " + getCellId() + "; x: " + getLayoutX() + "; y: " + getLayoutY();

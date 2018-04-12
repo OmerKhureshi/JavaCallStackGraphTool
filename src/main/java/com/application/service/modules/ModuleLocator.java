@@ -3,6 +3,7 @@ package com.application.service.modules;
 public class ModuleLocator {
     private static ElementTreeModule elementTreeModule;
     private static GraphLoaderModule graphLoaderModule;
+    private static BookmarksModule bookmarksModule;
 
     public static ElementTreeModule getElementTreeModule() {
         if (elementTreeModule == null) {
@@ -18,5 +19,13 @@ public class ModuleLocator {
         }
 
         return graphLoaderModule;
+    }
+
+    public static BookmarksModule getBookmarksModule() {
+        if (bookmarksModule == null) {
+            bookmarksModule = new BookmarksModule();
+        }
+
+        return bookmarksModule;
     }
 }

@@ -16,26 +16,16 @@
             </items>
         </Menu>
         <Menu fx:id="runMenu" mnemonicParsing="false" text="Run">
-            <items>
-                <MenuItem fx:id="runAnalysisMenuItem" mnemonicParsing="false" text="Run" />
-                <MenuItem fx:id="resetMenuItem" mnemonicParsing="false" text="Reset" />
-            </items>
+            <MenuItem fx:id="runAnalysisMenuItem" mnemonicParsing="false" text="Run"/>
+            <MenuItem fx:id="resetMenuItem" mnemonicParsing="false" text="Reset"/>
         </Menu>
         <Menu mnemonicParsing="false" text="View">
-            <items>
-                <MenuItem mnemonicParsing="false" text="Save Image" />
-            </items>
+            <MenuItem mnemonicParsing="false" text="Save Image"/>
         </Menu>
         <Menu mnemonicParsing="false" text="Go To">
-            <items>
-                <MenuItem mnemonicParsing="false" text="About MyHelloApp" />
-            </items>
+            <MenuItem mnemonicParsing="false" text="About MyHelloApp"/>
         </Menu>
-        <Menu mnemonicParsing="false" text="Bookmarks">
-            <items>
-                <MenuItem mnemonicParsing="false" text="About MyHelloApp" />
-            </items>
-        </Menu>
+        <Menu fx:id="bookmarksMenu" text="_Bookmarks"> </Menu>
         <Menu text="_Debug">
             <items>
                 <MenuItem fx:id="printViewPortDimsMenuItem" text="Print _viewport dimensions" />

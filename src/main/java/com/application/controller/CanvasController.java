@@ -1,8 +1,8 @@
 package com.application.controller;
 
+import com.application.db.DTO.BookmarkDTO;
 import com.application.db.DTO.EdgeDTO;
 import com.application.db.DTO.ElementDTO;
-import com.application.db.model.Bookmark;
 import com.application.fxgraph.cells.CircleCell;
 import com.application.fxgraph.graph.BoundBox;
 import com.application.fxgraph.graph.Edge;
@@ -33,17 +33,17 @@ public class CanvasController {
     private Map<String, CircleCell> circleCellsOnUI = new HashMap<>();
     private Map<String, Edge> edgesOnUI = new HashMap<>();
     private Map<Integer, com.application.fxgraph.graph.RectangleCell> highlightsOnUI = new HashMap<>();
-    private Map<String, Bookmark> bookmarkMap = new HashMap<>();
 
     // Region where UI components are loaded.
     private static BoundingBox activeRegion = null;
     // Trigger UI components to be reloaded when visible viewport is outside this region. triggerRegion < activeRegion
     private static BoundingBox triggerRegion = null;
 
+    EventHandlers eventHandlers = new EventHandlers();
+
     private Map<String, Double> vScrollBarPos = new HashMap<>();
     private Map<String, Double> hScrollBarPos = new HashMap<>();
 
-    EventHandlers eventHandlers = new EventHandlers();
 
     @FXML
     private void initialize() {
@@ -86,39 +86,41 @@ public class CanvasController {
     void updateIfNeeded() {
         if (isUIDrawingRequired()) {
 
-            addCircles();
-            addEdges();
-            removeCircles();
+            addCirclesToUI();
+            addEdgesToUI();
+            removeCirclesFromUI();
         }
     }
 
     /**
      * This methods creates and draws circle cells and Edges on the active region of the viewport.
      */
-    private void updateFromDB() {
-        addCircles();
-        addEdges();
+    private void addCanvasComponentsFromDB() {
+        addCirclesToUI();
+        addEdgesToUI();
+        addBookmarks();
     }
 
-    private void addCircles() {
+    private void addCirclesToUI() {
         BoundingBox viewPort = getPrefetchViewPortDims();
 
+        System.out.println("CanvasController.addCirclesToUI prefetch viewport: "+ viewPort);
         List<ElementDTO> elementDTOList = graphLoaderModule.addCircleCellsNew(viewPort);
         List<CircleCell> circleCells = ControllerUtil.convertElementDTOTOCell(elementDTOList);
 
-        // System.out.println();
+        System.out.println();
         circleCells.forEach(circleCell -> {
             if (!circleCellsOnUI.containsKey(circleCell.getCellId())) {
                 circleCellsOnUI.put(circleCell.getCellId(), circleCell);
                 canvas.getChildren().add(circleCell);
                 circleCell.toFront();
-                EventHandlers
-                // System.out.print("+" + circleCell.getCellId() + ", ");
+                eventHandlers.setCustomMouseEventHandlers(circleCell);
+                System.out.print("+" + circleCell.getCellId() + ", ");
             }
         });
     }
 
-    private void removeCircles() {
+    private void removeCirclesFromUI() {
         List<CircleCell> removeCircleCellsList = circleCellsOnUI.values().stream()
                 .filter(circleCell -> {
                     if (!activeRegion.contains(circleCell.getBoundsInParent())) {
@@ -135,7 +137,7 @@ public class CanvasController {
         });
     }
 
-    private void addEdges() {
+    private void addEdgesToUI() {
         BoundingBox viewPort = getPrefetchViewPortDims();
 
         List<EdgeDTO> edgeDTOList = graphLoaderModule.addEdgesNew(viewPort);
@@ -150,18 +152,65 @@ public class CanvasController {
         });
     }
 
+    public void addBookmarks() {
+        Map<String, BookmarkDTO> bookmarkMap = ModuleLocator.getBookmarksModule().getBookmarkDTOs();
+
+        bookmarkMap.forEach((cellId, bookmark) -> {
+            if (circleCellsOnUI.containsKey(cellId)) {
+                circleCellsOnUI.get(cellId).bookmarkCell(bookmark.getColor());
+            }
+        });
+    }
+
+    public void removeBookmarkFromUI(String circleCellId) {
+        if (circleCellsOnUI.containsKey(circleCellId)) {
+            circleCellsOnUI.get(circleCellId).removeBookmark();
+        }
+    }
+
+    public void removeAllBookmarksFromUI() {
+        Map<String, BookmarkDTO> bookmarkDTOs = ModuleLocator.getBookmarksModule().getBookmarkDTOs();
+
+        circleCellsOnUI.forEach((id, circleCell) -> {
+            if (bookmarkDTOs.containsKey(id)) {
+                circleCell.removeBookmark();
+            }
+        });
+    }
+
+
+    /**
+     * Clears all UI components on canvas except the placeholder lines.
+     */
     private void clear() {
+        circleCellsOnUI.forEach((id, circleCell) -> {
+            canvas.getChildren().remove(circleCell);
+        });
+        circleCellsOnUI.clear();
+        // bookmarks are part of circle cells, so no need to remove them explicitly.
+
+        edgesOnUI.forEach((id, edge) -> {
+            canvas.getChildren().remove(edge);
+        });
+        edgesOnUI.clear();
+    }
+
+    /**
+     * Clears all UI components on canvas.
+     */
+    private void clearAll() {
         canvas.getChildren().clear();
         circleCellsOnUI.clear();
         edgesOnUI.clear();
     }
 
+
     public void onThreadSelect() {
-        clear();
+        clearAll();
 
         drawPlaceHolderLines();
         positionScrollBarFromHistory();
-        updateFromDB();
+        addCanvasComponentsFromDB();
     }
 
 
@@ -243,18 +292,18 @@ public class CanvasController {
 
     private void setListeners() {
         scrollPane.vvalueProperty().addListener(valuePropListener);
-        scrollPane.hvalueProperty().addListener(valuePropListener);
+        // scrollPane.hvalueProperty().addListener(valuePropListener);
         scrollPane.viewportBoundsProperty().addListener(viewportChangeListener);
     }
 
     private ChangeListener valuePropListener = (observable, oldValue, newValue) -> {
-        // System.out.println("CanvasController.valuePropListener listener calling update");
+        System.out.println("CanvasController.valuePropListener listener calling update");
         updateIfNeeded();
     };
 
     private ChangeListener viewportChangeListener = (observable, oldValue, newValue) -> {
-        // System.out.println("CanvasController.viewportChangeListener listener calling update");
-        updateFromDB();
+        System.out.println("CanvasController.viewportChangeListener listener calling update");
+        addCanvasComponentsFromDB();
     };
 
 
@@ -270,13 +319,12 @@ public class CanvasController {
         int width = graphLoaderModule.computePlaceHolderWidth(currentThreadId);
 
         Line hPlaceHolderLine = new Line(0, 0, (width + 2) * BoundBox.unitWidthFactor, 0);
-        hPlaceHolderLine.setStrokeWidth(5);
+        hPlaceHolderLine.setStrokeWidth(.0005);
         canvas.getChildren().add(hPlaceHolderLine);
 
         Line vPlaceHolderLine = new Line(0, 0, 0, height * BoundBox.unitHeightFactor);
-        vPlaceHolderLine.setStrokeWidth(5);
+        vPlaceHolderLine.setStrokeWidth(.0005);
         canvas.getChildren().add(vPlaceHolderLine);
-
     }
 
     public void saveScrollBarPos() {
@@ -295,6 +343,25 @@ public class CanvasController {
         System.out.println("CanvasController.positionScrollBarFromHistory vvalue: " + vScrollBarPos.get(threadId));
         scrollPane.setHvalue(hScrollBarPos.getOrDefault(threadId, 0.0));
         System.out.println("CanvasController.positionScrollBarFromHistory hvalue: " + hScrollBarPos.get(threadId));
+    }
+
+    public void moveScrollPane(double xCord, double yCord){
+        scrollPane.setHvalue(getHValue(xCord));
+        scrollPane.setVvalue(getVValue(yCord));
+    }
+
+    private double getHValue(double xCoordinate) {
+        double scaledContentWidth = scrollPane.getContent().getLayoutBounds().getWidth();// * scale;
+        double scaledViewportWidth = scrollPane.getViewportBounds().getWidth(); // / scale;
+
+        return xCoordinate / (scaledContentWidth - scaledViewportWidth);
+    }
+
+    private double getVValue(double yCoordinate) {
+        double scaledContentHeight = scrollPane.getContent().getLayoutBounds().getHeight();// * scale;
+        double scaledViewportHeight = scrollPane.getViewportBounds().getHeight(); // / scale;
+
+        return yCoordinate / (scaledContentHeight - scaledViewportHeight);
     }
 
 }
