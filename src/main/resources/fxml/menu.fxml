@@ -31,7 +31,7 @@
                 <MenuItem mnemonicParsing="false" text="About MyHelloApp" />
             </items>
         </Menu>
-        <Menu mnemonicParsing="false" text="Highlights">
+        <Menu mnemonicParsing="false" text="Bookmarks">
             <items>
                 <MenuItem mnemonicParsing="false" text="About MyHelloApp" />
             </items>

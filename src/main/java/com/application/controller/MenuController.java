@@ -145,7 +145,9 @@ public class MenuController {
             this.mainController.loadGraphPane();
 
             // force update UI
-            ControllerLoader.canvasController.updateIfNeeded(false);
+            // System.out.println("MenuController.onRun calling update ");
+            // System.out.println("MenuController.onRun " + ControllerLoader.canvasController.scrollPane.getViewportBounds());
+            // ControllerLoader.canvasController.updateIfNeeded(false);
 
             System.out.println("MenuController.setUpRunMenu constructTreeTask completed successfully.");
         });

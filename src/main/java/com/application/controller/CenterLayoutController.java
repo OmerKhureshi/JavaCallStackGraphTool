@@ -11,9 +11,12 @@ import javafx.beans.property.DoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
@@ -38,6 +41,8 @@ public class CenterLayoutController {
 
     @FXML private ListView<String> threadListView;
 
+    @FXML private ListView<String> bookmarkListView;
+
     @FXML
     private AnchorPane canvas;
 
@@ -47,6 +52,8 @@ public class CenterLayoutController {
     private DoubleProperty verticalSplitPanePosProperty;
     private DoubleProperty horizontalSplitPanePosProperty;
     private ObservableList<String> threadsObsList;
+    private ObservableList<String> bookmarkObsList;
+
     private GraphLoaderModule graphLoaderModule;
 
     private static String currentThreadId;
@@ -116,7 +123,7 @@ public class CenterLayoutController {
 
         if (threadsObsList.size() > 0) {
             currentThreadId = threadsObsList.get(0).split(" ")[1];
-            System.out.println("CenterLayoutController.setUpThreadsListView: setting current threadId: " + currentThreadId);
+            threadListView.getSelectionModel().select(0);
         }
 
         Text text = new Text(String.valueOf(threadIds.get(threadIds.size() - 1)));
@@ -124,6 +131,29 @@ public class CenterLayoutController {
 
         threadListView.setMaxWidth(maxWidth + 30);
         threadListView.setPrefWidth(maxWidth + 30);
+    }
+
+
+    public void setUpBookmarkListView() {
+
+        bookmarkListView.setCellFactory(bookmarkView -> new ListCell<String>() {
+
+            private ImageView imageView = new ImageView();
+
+            @Override
+            public void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    // true makes this load in background
+                    // see other constructors if you want to control the size, etc
+                    Image image = new Image(item, true) ;
+                    imageView.setImage(image);
+                    setGraphic(imageView);
+                }
+            }
+        });
     }
 
     public String getCurrentThreadId() {
