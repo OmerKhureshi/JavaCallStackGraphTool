@@ -56,6 +56,10 @@ public class CenterLayoutController {
 
     private GraphLoaderModule graphLoaderModule;
 
+    public void setCurrentThreadId(String currentThreadId) {
+        CenterLayoutController.currentThreadId = currentThreadId;
+    }
+
     private static String currentThreadId;
 
     private double sidePaneAnimationDuration = .01;
@@ -125,12 +129,7 @@ public class CenterLayoutController {
 
         threadListView.setOnMouseClicked((e) -> {
             String threadId = threadListView.getSelectionModel().getSelectedItem().split(" ")[1];
-            ElementTreeModule.resetRegions();
-            if (!String.valueOf(graphLoaderModule.getCurrentSelectedThread()).equalsIgnoreCase(threadId)) {
-                canvasController.saveScrollBarPos();
-                currentThreadId = threadId;
-                canvasController.onThreadSelect();
-            }
+            switchCurrentThread(threadId);
         });
 
         final String[] maxLenThreadName = {};
@@ -138,16 +137,25 @@ public class CenterLayoutController {
 
         threadsObsList.addAll(threadIds.stream().map(id -> "Thread: " + id).collect(Collectors.toList()));
 
+        // highlight first thread
         if (threadsObsList.size() > 0) {
             currentThreadId = threadsObsList.get(0).split(" ")[1];
             threadListView.getSelectionModel().select(0);
         }
 
-        Text text = new Text(String.valueOf(threadIds.get(threadIds.size() - 1)));
-        double maxWidth = text.getLayoutBounds().getWidth();
+        // Text text = new Text(String.valueOf(threadIds.get(threadIds.size() - 1)));
+        // double maxWidth = text.getLayoutBounds().getWidth();
+        //
+        // threadListView.setMaxWidth(maxWidth + 30);
+        // threadListView.setPrefWidth(maxWidth + 30);
+    }
 
-        threadListView.setMaxWidth(maxWidth + 30);
-        threadListView.setPrefWidth(maxWidth + 30);
+    public void switchCurrentThread(String threadId) {
+        if (!currentThreadId.equalsIgnoreCase(threadId)) {
+            canvasController.saveScrollBarPos();
+            currentThreadId = threadId;
+            canvasController.onThreadSelect();
+        }
     }
 
 

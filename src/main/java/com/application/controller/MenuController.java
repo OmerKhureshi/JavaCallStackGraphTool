@@ -177,33 +177,34 @@ public class MenuController {
     public void updateBookmarksMenu() {
         bookmarksMenu.getItems().clear();
 
-        Map<String, BookmarkDTO> bookmarkMap = ModuleLocator.getBookmarksModule().getBookmarkDTOs();
+        Map<String, BookmarkDTO> bookmarkDTOs = ModuleLocator.getBookmarksModule().getBookmarkDTOs();
         MenuItem noBookmarksMenuItem = new MenuItem("No bookmarks");
 
-        System.out.println("MenuController.updateBookmarksMenu: bookmarkMap size: " + bookmarkMap.size());
-        if (bookmarkMap.size() == 0) {
+        System.out.println("MenuController.updateBookmarksMenu: bookmarkDTOs size: " + bookmarkDTOs.size());
+        if (bookmarkDTOs.size() == 0) {
             noBookmarksMenuItem.setDisable(true);
             bookmarksMenu.getItems().add(noBookmarksMenuItem);
 
             return;
         }
 
-        bookmarkMap.forEach((id, bookmark) -> {
+        bookmarkDTOs.forEach((id, bookmarkDTO) -> {
             Rectangle icon = new Rectangle(15, 15);
             icon.setFill(Color.web("#6699CC"));
             icon.setStrokeWidth(3);
-            icon.setStroke(Paint.valueOf(bookmark.getColor()));
+            icon.setStroke(Paint.valueOf(bookmarkDTO.getColor()));
             icon.setArcWidth(3);
             icon.setArcHeight(3);
 
             MenuItem bookmarkMenuItem = new MenuItem(
-                    " Id:" + bookmark.getElementId() +
-                            "  |  Method:" + bookmark.getMethodName() +
-                            "  |  Thread:" + bookmark.getThreadId(), icon);
+                    " Id:" + bookmarkDTO.getElementId() +
+                            "  |  Method:" + bookmarkDTO.getMethodName() +
+                            "  |  Thread:" + bookmarkDTO.getThreadId(), icon);
 
-            bookmarkMenuItem.setOnAction(event -> {
-                // graph.getEventHandlers().jumpTo(Integer.valueOf(bookmark.getElementId()), bookmark.getThreadId(), bookmark.getCollapsed());
-            });
+            bookmarkMenuItem.setOnAction(event -> ControllerLoader.getEventHandlers().jumpTo(
+                    Integer.valueOf(bookmarkDTO.getElementId()),
+                    bookmarkDTO.getThreadId(),
+                    bookmarkDTO.getCollapsed()));
 
             bookmarksMenu.getItems().add(bookmarkMenuItem);
         });
@@ -215,7 +216,7 @@ public class MenuController {
         // clear bookmarks button and logic
         Glyph clearBookmarksGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.TRASH);
         clearBookmarksGlyph.setColor(ColorProp.ENABLED);
-        clearBookmarksGlyph.setDisable(bookmarkMap.size() == 0);
+        clearBookmarksGlyph.setDisable(bookmarkDTOs.size() == 0);
 
         MenuItem clearBookmarksMenuItem = new MenuItem("Delete all", clearBookmarksGlyph);
 

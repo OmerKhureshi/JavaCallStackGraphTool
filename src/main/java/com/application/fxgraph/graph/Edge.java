@@ -10,7 +10,7 @@ public class Edge extends Group {
 
     // EdgeId is also the CircleCellId for the target/end circle cell.
     private String edgeId;
-    Line line;
+    public Line line;
 
     // not used.
     public Edge(Cell source, Cell target) {

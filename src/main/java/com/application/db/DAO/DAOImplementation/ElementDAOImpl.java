@@ -14,7 +14,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.application.db.DAO.DAOImplementation.BookmarksDAOImpl.createTable;
@@ -22,6 +24,8 @@ import static com.application.db.TableNames.ELEMENT_TABLE;
 
 public class ElementDAOImpl {
     // public static boolean isTableCreated = false;
+
+    private  static Map<String, Integer> lowestCellInThreadMap = new HashMap<>();
 
     public static boolean isTableCreated() {
         //        System.out.println("starting isTableCreated");
@@ -203,6 +207,71 @@ public class ElementDAOImpl {
         throw new IllegalStateException("Table does not exist. Hence cannot fetch any rows from it.");
     }
 
+    public static void updateElementCollapseValues(ElementDTO elementDTO) {
+        String updateClickedElement = "UPDATE " + TableNames.ELEMENT_TABLE + " " +
+                "SET COLLAPSED = 2, " +
+                "DELTA = " + elementDTO.getDelta() + ", " +
+                "DELTA_X = " + elementDTO.getDeltaX() + " " +
+                "WHERE ID = " + elementDTO.getId();
+
+
+        DatabaseUtil.executeUpdate(updateClickedElement);
+
+    }
+
+    public static ElementDTO getElementDTO(String id) {
+        ElementDTO elementDTO = null;
+
+        String sql = "SELECT * FROM " + TableNames.ELEMENT_TABLE + " WHERE ID = " + id;
+
+        System.out.println();
+        System.out.println("ElementDAOImpl.getElementDTOs query: " + sql);
+        try (ResultSet rs = DatabaseUtil.select(sql)) {
+            if (rs.next()) {
+                elementDTO = new ElementDTO();
+                elementDTO.setId(String.valueOf(rs.getInt("ID")));
+                elementDTO.setParentId(rs.getInt("parent_id"));
+                elementDTO.setIdEnterCallTrace(rs.getInt("id_enter_call_trace"));
+                elementDTO.setIdExitCallTrace(rs.getInt("id_exit_call_trace"));
+
+                // top left
+                elementDTO.setBoundBoxXTopLeft(rs.getFloat("bound_box_x_top_left"));
+                elementDTO.setBoundBoxYTopLeft(rs.getFloat("bound_box_y_top_left"));
+
+                // bottom left
+                elementDTO.setBoundBoxXBottomLeft(rs.getFloat("bound_box_x_bottom_left"));
+                elementDTO.setBoundBoxYBottomLeft(rs.getFloat("bound_box_y_bottom_left"));
+
+                // top right
+                elementDTO.setBoundBoxXTopRight(rs.getFloat("bound_box_x_top_right"));
+                elementDTO.setBoundBoxYTopRight(rs.getFloat("bound_box_y_top_right"));
+
+                // bottom right
+                elementDTO.setBoundBoxXBottomRight(rs.getFloat("bound_box_x_bottom_right"));
+                elementDTO.setBoundBoxYBottomRight(rs.getFloat("bound_box_y_bottom_right"));
+
+                // coordinates
+                elementDTO.setBoundBoxXCoordinate(rs.getFloat("bound_box_x_coordinate"));
+                elementDTO.setBoundBoxYCoordinate(rs.getFloat("bound_box_y_coordinate"));
+
+                elementDTO.setIndexInParent(rs.getInt("index_in_parent"));
+                elementDTO.setLeafCount(rs.getInt("leaf_count"));
+                elementDTO.setLevelCount(rs.getInt("level_count"));
+                elementDTO.setCollapsed(rs.getInt("collapsed"));
+
+                elementDTO.setDelta(rs.getFloat("delta"));
+                elementDTO.setDeltaX(rs.getFloat("delta_x"));
+
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            DatabaseUtil.close();
+        }
+        return elementDTO;
+
+    }
+
     /**
      * This method fetches the rows for elements that should be drawn next on the UI.
      */
@@ -296,4 +365,79 @@ public class ElementDAOImpl {
         return DatabaseUtil.executeSelectForInt(SQLMaxLeafCount);
     }
 
+    public static int getLowestCellInThread(String threadId) {
+        if (lowestCellInThreadMap.containsKey(threadId)) {
+            return lowestCellInThreadMap.get(threadId);
+        }
+
+        String maxEleIdQuery = "SELECT MAX(E.ID) AS MAXID " +
+                "FROM " + TableNames.ELEMENT_TABLE + " AS E JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT " +
+                "ON E.ID_ENTER_CALL_TRACE = CT.ID " +
+                "WHERE CT.THREAD_ID = " + threadId;
+
+        try (ResultSet eleIdRS = DatabaseUtil.select(maxEleIdQuery)){
+            if (eleIdRS.next()) {
+                int eleId = eleIdRS.getInt("MAXID");
+                lowestCellInThreadMap.put(threadId, eleId);
+                return eleId;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DatabaseUtil.close();
+        }
+
+        return Integer.MAX_VALUE;
+    }
+
+    public static int getNextLowerSiblingOrAncestorNode(ElementDTO elementDTO, String threadId) {
+        String clickedCellId = elementDTO.getId();
+        double x = elementDTO.getBoundBoxXTopLeft();
+        double y = elementDTO.getBoundBoxYTopLeft();
+
+        int lastCellId = getLowestCellInThread(threadId) + 1;
+
+        String getNextQuery = "SELECT " +
+                "CASE " +
+                "WHEN MIN(E.ID) IS NULL THEN " + lastCellId + " " +
+                "ELSE MIN(E.ID) " +
+                "END " +
+                "AS MINID " +
+                "FROM " + TableNames.ELEMENT_TABLE + " AS E JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT " +
+                "ON E.ID_ENTER_CALL_TRACE = CT.ID " +
+                "WHERE E.BOUND_BOX_Y_TOP_LEFT > " + y + " " +
+                "AND E.BOUND_BOX_X_TOP_LEFT <= " + x + " " +
+                "AND E.ID > " + clickedCellId + " " +
+                "AND CT.THREAD_ID = " + threadId;
+
+        try (ResultSet rs = DatabaseUtil.select(getNextQuery)) {
+            if (rs.next()) {
+                return rs.getInt("MINID");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DatabaseUtil.close();
+        }
+
+        return Integer.MAX_VALUE;
+    }
+
+    public static float getDeltaX(ElementDTO elementDTO, String nextCellId) {
+        String getDeltaXQuery = "SELECT MAX(BOUND_BOX_X_TOP_RIGHT) AS MAX_X FROM " + TableNames.ELEMENT_TABLE + " " +
+                "WHERE ID >= " + elementDTO.getId() + " AND ID < " + nextCellId + " " +
+                "AND COLLAPSED IN (0, 2)";
+
+        try (ResultSet rs = DatabaseUtil.select(getDeltaXQuery)) {
+            if (rs.next()) {
+                return rs.getFloat("MAX_X") - elementDTO.getBoundBoxXTopRight();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DatabaseUtil.close();
+        }
+
+        return 0;
+    }
 }

@@ -828,7 +828,7 @@ public class EventHandlers {
 
 
     public void removeChildrenFromUI(int cellId, int endCellId) {
-        // System.out.println("EventHandler::removeChildrenFromUI: method stated. start cellid: " + cellId + " end cellid: " + endCellId);
+        // System.out.println("EventHandler::removeUIComponentsBetween: method stated. start cellid: " + cellId + " end cellid: " + endCellId);
         Map<String, CircleCell> mapCircleCellsOnUI = graph.getModel().getCircleCellsOnUI();
         List<String> removeCircleCells = new ArrayList<>();
 
@@ -853,10 +853,10 @@ public class EventHandlers {
         });
 
         highlightsOnUi.forEach((id, rectangle) -> {
-            // System.out.println("EventHandler::removeChildrenFromUI: foreach in highlightsOnUi: id: " + id);
+            // System.out.println("EventHandler::removeUIComponentsBetween: foreach in highlightsOnUi: id: " + id);
             int elementId = rectangle.getElementId();
             if (elementId> cellId && elementId < endCellId) {
-                // System.out.println("EventHandler::removeChildrenFromUI: adding to removeHighlights, elementId: " + elementId);
+                // System.out.println("EventHandler::removeUIComponentsBetween: adding to removeHighlights, elementId: " + elementId);
                 removeHighlights.add(id);
             }
         });
@@ -881,15 +881,15 @@ public class EventHandlers {
             if (highlightsOnUi.containsKey(id)) {
                 RectangleCell rectangleCell = highlightsOnUi.get(id);
                 int elementId = highlightsOnUi.get(id).getElementId();
-                // System.out.println("EventHandler::removeChildrenFromUI: removing from highlightsOnUi and cellLayer: " + id + " ElementId: " + elementId);
+                // System.out.println("EventHandler::removeUIComponentsBetween: removing from highlightsOnUi and cellLayer: " + id + " ElementId: " + elementId);
                 highlightsOnUi.remove(id);
                 cellLayer.getChildren().remove(rectangleCell);
             }
         });
 
-        // System.out.println("EventHandler::removeChildrenFromUI: method ended.");
+        // System.out.println("EventHandler::removeUIComponentsBetween: method ended.");
 
-        // System.out.println("EventHandler::removeChildrenFromUI: clicked on cell id: " + cellId);
+        // System.out.println("EventHandler::removeUIComponentsBetween: clicked on cell id: " + cellId);
         // try (ResultSet rs = ElementDAOImpl.getWhere("id = " + cellId)) {
         //     if (rs.next()) {
         //         float clickedCellTopRightX = rs.getFloat("bound_box_x_top_right");
@@ -899,7 +899,7 @@ public class EventHandlers {
         //         float clickedCellBottomY = clickedCellTopY + BoundBox.unitHeightFactor;
         //         float clickedCellBoundBottomY = rs.getFloat("bound_box_y_bottom_left");
         //
-        //         // System.out.println("EventHandler::removeChildrenFromUI: clickedCellTopY Top: " + clickedCellTopY + " ; clickedCellTopY Bottom: " + (clickedCellTopY + clickedCellHeight));
+        //         // System.out.println("EventHandler::removeUIComponentsBetween: clickedCellTopY Top: " + clickedCellTopY + " ; clickedCellTopY Bottom: " + (clickedCellTopY + clickedCellHeight));
         //
         //         // Remove all children cells and edges that end at these cells from UI
         //         mapCircleCellsOnUI.forEach((id, circleCell) -> {

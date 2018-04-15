@@ -358,10 +358,8 @@ public class DatabaseUtil {
     }
 
     public static void executeUpdate(String query ) {
-        try {
-            conn = getConnection();
-            ps = conn.createStatement();
-            ps.executeUpdate(query);
+        try (Connection connection = getConnection(); Statement statement = connection.createStatement()) {
+            statement.executeUpdate(query);
             return;
         } catch (SQLException e) {
             System.out.println("Exception caused by: " + query);

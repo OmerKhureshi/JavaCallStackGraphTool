@@ -4,25 +4,9 @@ import com.application.controller.ControllerLoader;
 import com.application.db.DAO.DAOImplementation.BookmarksDAOImpl;
 import com.application.db.DTO.BookmarkDTO;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class BookmarksModule {
-
-    public Map<String, String> getBookmarks() {
-        Map<String, String> bookmarkMap = new HashMap<>();
-
-        Map<String, BookmarkDTO> bookmarkDTOMap = BookmarksDAOImpl.getBookmarkDTOs();
-
-        for (HashMap.Entry<String, BookmarkDTO> entry: bookmarkDTOMap.entrySet()) {
-            String text = " Id:" + entry.getValue().getElementId() +
-                    "  |  Method:" + entry.getValue().getMethodName() +
-                    "  |  Thread:" + entry.getValue().getThreadId();
-            bookmarkMap.putIfAbsent(entry.getKey(), text);
-        }
-
-        return bookmarkMap;
-    }
 
     public Map<String, BookmarkDTO> getBookmarkDTOs() {
         return BookmarksDAOImpl.getBookmarkDTOs();

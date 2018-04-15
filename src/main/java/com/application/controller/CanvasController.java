@@ -6,6 +6,7 @@ import com.application.db.DTO.ElementDTO;
 import com.application.fxgraph.cells.CircleCell;
 import com.application.fxgraph.graph.BoundBox;
 import com.application.fxgraph.graph.Edge;
+import com.application.fxgraph.graph.RectangleCell;
 import com.application.presentation.graph.ZoomableScrollPane;
 import com.application.service.modules.GraphLoaderModule;
 import com.application.service.modules.ModuleLocator;
@@ -16,6 +17,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Line;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,16 +32,28 @@ public class CanvasController {
     public Pane canvas;
     public ZoomableScrollPane scrollPane;
 
+    public Map<String, CircleCell> getCircleCellsOnUI() {
+        return circleCellsOnUI;
+    }
+
     private Map<String, CircleCell> circleCellsOnUI = new HashMap<>();
+
+    public Map<String, Edge> getEdgesOnUI() {
+        return edgesOnUI;
+    }
+
     private Map<String, Edge> edgesOnUI = new HashMap<>();
+
+    public Map<Integer, RectangleCell> getHighlightsOnUI() {
+        return highlightsOnUI;
+    }
+
     private Map<Integer, com.application.fxgraph.graph.RectangleCell> highlightsOnUI = new HashMap<>();
 
     // Region where UI components are loaded.
     private static BoundingBox activeRegion = null;
     // Trigger UI components to be reloaded when visible viewport is outside this region. triggerRegion < activeRegion
     private static BoundingBox triggerRegion = null;
-
-    EventHandlers eventHandlers = new EventHandlers();
 
     private Map<String, Double> vScrollBarPos = new HashMap<>();
     private Map<String, Double> hScrollBarPos = new HashMap<>();
@@ -83,12 +97,13 @@ public class CanvasController {
     /**
      * This method is invoked to check and draw any UI components on the graph if needed.
      */
-    void updateIfNeeded() {
+    public void updateIfNeeded() {
         if (isUIDrawingRequired()) {
 
             addCirclesToUI();
             addEdgesToUI();
             removeCirclesFromUI();
+            removeEdgesFromUI();
         }
     }
 
@@ -109,32 +124,32 @@ public class CanvasController {
         List<CircleCell> circleCells = ControllerUtil.convertElementDTOTOCell(elementDTOList);
 
         System.out.println();
-        circleCells.forEach(circleCell -> {
-            if (!circleCellsOnUI.containsKey(circleCell.getCellId())) {
-                circleCellsOnUI.put(circleCell.getCellId(), circleCell);
-                canvas.getChildren().add(circleCell);
-                circleCell.toFront();
-                eventHandlers.setCustomMouseEventHandlers(circleCell);
-                System.out.print("+" + circleCell.getCellId() + ", ");
-            }
-        });
+        circleCells.forEach(circleCell -> addNewCellToUI(circleCell));
+    }
+
+    public void addNewCellToUI(CircleCell circleCell) {
+        if (!circleCellsOnUI.containsKey(circleCell.getCellId())) {
+            circleCellsOnUI.put(circleCell.getCellId(), circleCell);
+            canvas.getChildren().add(circleCell);
+            circleCell.toFront();
+            ControllerLoader.getEventHandlers().setCustomMouseEventHandlers(circleCell);
+            System.out.print("+" + circleCell.getCellId() + ", ");
+        }
     }
 
     private void removeCirclesFromUI() {
         List<CircleCell> removeCircleCellsList = circleCellsOnUI.values().stream()
-                .filter(circleCell -> {
-                    if (!activeRegion.contains(circleCell.getBoundsInParent())) {
-                        // System.out.print("-" + circleCell.getCellId() + ", ");
-                        return true;
-                    }
-                    return false;
-                })
+                .filter(circleCell -> !activeRegion.contains(circleCell.getBoundsInParent()))
                 .collect(Collectors.toList());
 
-        removeCircleCellsList.forEach(circleCell -> {
+        removeCircleCellsList.forEach(this::removeCellFromUI);
+    }
+
+    public void removeCellFromUI(CircleCell circleCell) {
+        if (circleCell != null && circleCellsOnUI.containsKey(circleCell.getCellId())) {
             circleCellsOnUI.remove(circleCell.getCellId());
             canvas.getChildren().remove(circleCell);
-        });
+        }
     }
 
     private void addEdgesToUI() {
@@ -150,6 +165,160 @@ public class CanvasController {
                 edge.toBack();
             }
         });
+    }
+
+    private void removeEdgesFromUI() {
+        List<Edge> removeEdgeList = edgesOnUI.values().stream()
+                .filter(edge -> !activeRegion.contains(edge.line.getEndX(), edge.line.getEndY()))
+                .collect(Collectors.toList());
+
+        removeEdgeList.forEach(this::removeEdgeFromUI);
+    }
+
+    public void removeEdgeFromUI(Edge edge) {
+        if (edge != null && circleCellsOnUI.containsKey(edge.getEdgeId())) {
+            circleCellsOnUI.remove(edge.getEdgeId());
+            canvas.getChildren().remove(edge);
+        }
+    }
+
+
+    public void removeUIComponentsBetween(ElementDTO elementDTO, int endCellId) {
+        int startCellId = Integer.valueOf(elementDTO.getId());
+        float clickedCellTopRightX =  elementDTO.getBoundBoxXTopRight();
+        float clickedCellTopY = elementDTO.getBoundBoxYTopLeft();
+        float leafCount = elementDTO.getLeafCount();
+        float clickedCellHeight = leafCount * BoundBox.unitHeightFactor;
+        float clickedCellBottomY = clickedCellTopY + BoundBox.unitHeightFactor;
+        float clickedCellBoundBottomY = elementDTO.getBoundBoxYBottomLeft();
+
+        List<CircleCell> removeCircleCells = new ArrayList<>();
+        List<Edge> removeEdges = new ArrayList<>();
+
+        Map<Integer, RectangleCell> highlightsOnUi = ControllerLoader.canvasController.getHighlightsOnUI();
+        List<RectangleCell> removeHighlights = new ArrayList<>();
+
+        circleCellsOnUI.forEach((id, circleCell) -> {
+            int intId = Integer.parseInt(id);
+            if (intId > startCellId && intId < endCellId) {
+                removeCircleCells.add(circleCell);
+            }
+
+            // Remove all children cells and edges that end at these cells from UI
+
+            double thisCellTopLeftX = circleCell.getLayoutX();
+            double thisCellTopY = circleCell.getLayoutY();
+
+            if (thisCellTopY >= clickedCellBottomY && thisCellTopY < clickedCellBoundBottomY && thisCellTopLeftX > clickedCellTopRightX) {
+                // if (thisCellTopY >= clickedCellTopY ) {
+                // System.out.println("adding to remove list: startCellId: " + id + " cell: " + circleCell);
+                removeCircleCells.add(circleCell);
+                removeEdges.add(edgesOnUI.get(id));
+            } else if (thisCellTopY == clickedCellTopY && thisCellTopLeftX >= clickedCellTopRightX) {
+                // System.out.println("adding to remove list: startCellId: " + id + " cell: " + circleCell);
+                removeCircleCells.add(circleCell);
+                removeEdges.add(edgesOnUI.get(id));
+            }
+        });
+
+        removeCircleCells.forEach((circleCell) -> {
+            ControllerLoader.canvasController.removeCellFromUI(circleCell);
+        });
+
+        edgesOnUI.forEach((id, edge) -> {
+            int intId = Integer.parseInt(id);
+            if (intId > startCellId && intId < endCellId) {
+                removeEdges.add(edge);
+            }
+
+            // Get edges which don't have an target cicle rendered on UI.
+            double thisLineEndY = edge.line.getEndY();
+            double thisLineStartY = edge.line.getStartY();
+            double thisLineStartX = edge.line.getStartX();
+
+            if (thisLineEndY >= clickedCellTopY && thisLineEndY <= clickedCellBoundBottomY && thisLineStartY >= clickedCellTopY && thisLineStartX >= (clickedCellTopRightX-BoundBox.unitWidthFactor)) {
+                System.out.println("adding to remove list: edge ID-: " + id);
+                removeEdges.add(edge);
+            }
+        });
+
+        removeEdges.forEach((edge) -> {
+            ControllerLoader.canvasController.removeEdgeFromUI(edge);
+
+        });
+
+        // will do highlights later.......
+        // highlightsOnUi.forEach((id, rectangle) -> {
+        //     // System.out.println("EventHandler::removeUIComponentsBetween: foreach in highlightsOnUi: id: " + id);
+        //     int elementId = rectangle.getElementId();
+        //     if (elementId> startCellId && elementId < endCellId) {
+        //         // System.out.println("EventHandler::removeUIComponentsBetween: adding to removeHighlights, elementId: " + elementId);
+        //         removeHighlights.add(id);
+        //     }
+        // });
+
+        // removeHighlights.forEach((id) -> {
+        //     if (highlightsOnUi.containsKey(id)) {
+        //         RectangleCell rectangleCell = highlightsOnUi.get(id);
+        //         int elementId = highlightsOnUi.get(id).getElementId();
+        //         // System.out.println("EventHandler::removeUIComponentsBetween: removing from highlightsOnUi and cellLayer: " + id + " ElementId: " + elementId);
+        //         highlightsOnUi.remove(id);
+        //         cellLayer.getChildren().remove(rectangleCell);
+        //     }
+        // });
+    }
+
+    public void moveLowerTreeByDelta(ElementDTO elementDTO) {
+
+        String clickedCellID = elementDTO.getId();
+        float clickedCellBottomY = elementDTO.getBoundBoxYTopLeft() + BoundBox.unitHeightFactor;
+        double delta = elementDTO.getDelta();
+
+        // For each circle cell on UI that is below the clicked cell, move up by delta
+        circleCellsOnUI.forEach((thisCellID, thisCircleCell) -> {
+            double thisCellTopY = thisCircleCell.getLayoutY();
+
+            if (thisCellTopY >= clickedCellBottomY) {
+                thisCircleCell.relocate(thisCircleCell.getLayoutX(), thisCellTopY - delta);
+            }
+
+        });
+
+        // For each edge on UI whose endY or startY is below the clicked cell, relocate that edge appropriately
+        edgesOnUI.forEach((id, edge) -> {
+            double thisEdgeEndY = edge.line.getEndY();
+            double thisEdgeStartY = edge.line.getStartY();
+
+            if (thisEdgeEndY >= clickedCellBottomY) {
+                edge.line.setEndY(thisEdgeEndY - delta);
+            }
+
+            if (thisEdgeStartY >= clickedCellBottomY) {
+                edge.line.setStartY(thisEdgeStartY - delta);
+            }
+        });
+
+        // For each highlight rectangle whose startY is below the clicked cell, relocate that rectangle appropriately
+        highlightsOnUI.forEach((id, rectangleCell) -> {
+            double y = rectangleCell.getLayoutY();
+            if (y >= clickedCellBottomY - BoundBox.unitHeightFactor/2) {
+                rectangleCell.relocate(rectangleCell.getLayoutX(), y - delta);
+            }
+        });
+
+    }
+
+
+
+    private void addHighlightsToUI() {
+        BoundingBox viewPort = getPrefetchViewPortDims();
+
+        System.out.println("CanvasController.addCirclesToUI prefetch viewport: "+ viewPort);
+        List<ElementDTO> elementDTOList = graphLoaderModule.addCircleCellsNew(viewPort);
+        List<CircleCell> circleCells = ControllerUtil.convertElementDTOTOCell(elementDTOList);
+
+        System.out.println();
+        circleCells.forEach(circleCell -> addNewCellToUI(circleCell));
     }
 
     public void addBookmarks() {
@@ -211,6 +380,12 @@ public class CanvasController {
         drawPlaceHolderLines();
         positionScrollBarFromHistory();
         addCanvasComponentsFromDB();
+    }
+
+    public void showGraphForThread(String threadId) {
+        ControllerLoader.centerLayoutController.setCurrentThreadId(threadId);
+
+        onThreadSelect();
     }
 
 

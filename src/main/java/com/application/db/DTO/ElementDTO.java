@@ -19,7 +19,7 @@ public class ElementDTO extends BaseDTO {
     private float indexInParent;
     private float leafCount;
     private float levelCount;
-    private float collapsed;
+    private int collapsed;
     private float delta;
     private float deltaX;
 
@@ -166,11 +166,11 @@ public class ElementDTO extends BaseDTO {
         this.levelCount = levelCount;
     }
 
-    public float getCollapsed() {
+    public int getCollapsed() {
         return collapsed;
     }
 
-    public void setCollapsed(float collapsed) {
+    public void setCollapsed(int collapsed) {
         this.collapsed = collapsed;
     }
 
