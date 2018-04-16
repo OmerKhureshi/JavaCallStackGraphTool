@@ -186,6 +186,7 @@ public class ElementDAOImpl {
         throw new IllegalStateException("Table does not exist. Hence cannot fetch any rows from it.");
     }
 
+
     public static void updateWhere(String columnName, String columnValue, String where) {
         if (isTableCreated()) {
             try  {
@@ -207,7 +208,15 @@ public class ElementDAOImpl {
         throw new IllegalStateException("Table does not exist. Hence cannot fetch any rows from it.");
     }
 
-    public static void updateElementCollapseValues(ElementDTO elementDTO) {
+    public static void updateCollapse(ElementDTO elementDTO) {
+        String updateClickedElement = "UPDATE " + TableNames.ELEMENT_TABLE + " " +
+                "SET COLLAPSED = 2 " +
+                "WHERE ID = " + elementDTO.getId();
+
+        DatabaseUtil.executeUpdate(updateClickedElement);
+    }
+
+    public static void updateCollapseAndDelta(ElementDTO elementDTO) {
         String updateClickedElement = "UPDATE " + TableNames.ELEMENT_TABLE + " " +
                 "SET COLLAPSED = 2, " +
                 "DELTA = " + elementDTO.getDelta() + ", " +

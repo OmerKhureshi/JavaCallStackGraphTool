@@ -10,7 +10,6 @@ import com.application.fxgraph.cells.CircleCell;
 import com.application.fxgraph.graph.*;
 import com.application.service.modules.ElementTreeModule;
 import com.application.service.modules.ModuleLocator;
-import com.sun.scenario.effect.InvertMask;
 import javafx.animation.FillTransition;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
@@ -516,7 +515,7 @@ public class EventHandlers {
                 clickedElementDTO.setDelta(newDelta);
                 clickedElementDTO.setDeltaX(newDeltaX);
                 clickedElementDTO.setCollapsed(2);
-                ElementDAOImpl.updateElementCollapseValues(clickedElementDTO);
+                ElementDAOImpl.updateCollapseAndDelta(clickedElementDTO);
 
                 ControllerLoader.canvasController.removeUIComponentsBetween(clickedElementDTO, nextCellId);
                 ControllerLoader.canvasController.moveLowerTreeByDelta(clickedElementDTO);
@@ -529,18 +528,23 @@ public class EventHandlers {
                 // ((Circle) clickedCell.getChildren().get(0)).setFill(Color.RED);
                 // ( (Circle) ( (Group)cell.getView() ).getChildren().get(0) ).setFill(Color.RED);
                 // main.setStatus("Please wait ......");
-                System.out.println("====== Maximize cellId: " + clickedCellID + " ++++++ ");
 
-                // double delta = deltaCache.get(clickedCellID);
-
-                expandTreeAt(clickedElementDTO, clickedCellID, parentId, threadId, newDelta, newDeltaX,
-                        clickedCellTopLeftX, clickedCellTopLeftY, clickedCellBoundBottomLeftY, clickedCellTopRightX );
+                expandTreeAt(clickedElementDTO, threadId);
             }
         }
     }
 
-    private void expandTreeAt(ElementDTO clickedEleDTO, String clickedCellID, int parentId, String threadId, double newDelta, double newDeltaX,
-                              double clickedCellTopLeftX, double clickedCellTopLeftY, double clickedCellBoundBottomLeftY, double clickedCellTopRightX) {
+    private void expandTreeAt(ElementDTO clickedEleDTO, String threadId) {
+        String clickedCellID = clickedEleDTO.getId();
+        int parentId = clickedEleDTO.getParentId();
+        float delta = clickedEleDTO.getDelta();
+        float deltaX = clickedEleDTO.getDeltaX();
+        float clickedCellTopLeftX = clickedEleDTO.getBoundBoxXTopLeft();
+        float clickedCellTopLeftY = clickedEleDTO.getBoundBoxYTopLeft();
+        float clickedCellBoundBottomLeftY = clickedEleDTO.getBoundBoxYBottomLeft();
+        float clickedCellTopRightX = clickedEleDTO.getBoundBoxXTopRight();
+
+
         int nextCellId = ElementDAOImpl.getNextLowerSiblingOrAncestorNode(clickedEleDTO, threadId);
         int lastCellId = ElementDAOImpl.getLowestCellInThread(threadId);
 
@@ -548,18 +552,19 @@ public class EventHandlers {
         double newClickedCellBottomY = clickedEleDTO.getBoundBoxYTopLeft() + BoundBox.unitHeightFactor + newDelta;
 
 
-        ControllerLoader.canvasController.moveLowerTreeByDelta(clickedElementDTO);
-        moveLowerTreeByDelta(clickedCellID, clickedCellBottomY, -newDelta);
+        clickedEleDTO.setDelta(-delta);
+        clickedEleDTO.setDeltaX(-deltaX);
+
+        ControllerLoader.canvasController.moveLowerTreeByDelta(clickedEleDTO);
         //later ....
         // updateAllParentHighlightsOnUI(clickedCellID, clickedCellTopLeftX, clickedCellTopLeftY, -newDelta, -newDeltaX);
 
-        ElementDAOImpl.updateWhere("collapsed", "0", "id = " + clickedCellID);
-        updateDBInBackgroundThread(Integer.parseInt(clickedCellID), clickedCellTopLeftY, clickedCellBoundBottomLeftY,
-                clickedCellTopLeftX, clickedCellTopRightX, -newDelta, -newDeltaX, false,
-                nextCellId, threadId, lastCellId, parentId);
+        clickedEleDTO.setCollapsed(0);
+        ElementDAOImpl.updateCollapse(clickedEleDTO);
+
+        updateDBInBackgroundThread(clickedEleDTO, false, nextCellId, Integer.valueOf(threadId), lastCellId);
     }
 
-    // error comment
     private void expandTreeAt(String cellId, int threadId) {
         String clickedCellID = cellId;
         int collapsed = 0;
