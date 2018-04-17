@@ -80,7 +80,7 @@ public class GraphLoaderModule {
     // }
 
     public List<ElementDTO> addCircleCellsNew(BoundingBox viewPort) {
-        return ElementDAOImpl.getElementDTOs(viewPort);
+        return ElementDAOImpl.getElementDTOsInViewport(viewPort);
     }
 
     public List<EdgeDTO> addEdgesNew(BoundingBox viewPort) {

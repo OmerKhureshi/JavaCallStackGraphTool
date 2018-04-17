@@ -23,6 +23,8 @@ public class ElementDTO extends BaseDTO {
     private float delta;
     private float deltaX;
 
+    private String thredId;
+
     private int methodId;
 
     private String methodName;
@@ -204,5 +206,13 @@ public class ElementDTO extends BaseDTO {
 
     public void setMethodName(String methodName) {
         this.methodName = methodName;
+    }
+
+    public String getThredId() {
+        return thredId;
+    }
+
+    public void setThredId(String thredId) {
+        this.thredId = thredId;
     }
 }

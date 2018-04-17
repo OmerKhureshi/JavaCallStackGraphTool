@@ -234,57 +234,69 @@ public class ElementDAOImpl {
         String sql = "SELECT * FROM " + TableNames.ELEMENT_TABLE + " WHERE ID = " + id;
 
         System.out.println();
-        System.out.println("ElementDAOImpl.getElementDTOs query: " + sql);
+        System.out.println("ElementDAOImpl.getElementDTOsInViewport query: " + sql);
         try (ResultSet rs = DatabaseUtil.select(sql)) {
             if (rs.next()) {
-                elementDTO = new ElementDTO();
-                elementDTO.setId(String.valueOf(rs.getInt("ID")));
-                elementDTO.setParentId(rs.getInt("parent_id"));
-                elementDTO.setIdEnterCallTrace(rs.getInt("id_enter_call_trace"));
-                elementDTO.setIdExitCallTrace(rs.getInt("id_exit_call_trace"));
-
-                // top left
-                elementDTO.setBoundBoxXTopLeft(rs.getFloat("bound_box_x_top_left"));
-                elementDTO.setBoundBoxYTopLeft(rs.getFloat("bound_box_y_top_left"));
-
-                // bottom left
-                elementDTO.setBoundBoxXBottomLeft(rs.getFloat("bound_box_x_bottom_left"));
-                elementDTO.setBoundBoxYBottomLeft(rs.getFloat("bound_box_y_bottom_left"));
-
-                // top right
-                elementDTO.setBoundBoxXTopRight(rs.getFloat("bound_box_x_top_right"));
-                elementDTO.setBoundBoxYTopRight(rs.getFloat("bound_box_y_top_right"));
-
-                // bottom right
-                elementDTO.setBoundBoxXBottomRight(rs.getFloat("bound_box_x_bottom_right"));
-                elementDTO.setBoundBoxYBottomRight(rs.getFloat("bound_box_y_bottom_right"));
-
-                // coordinates
-                elementDTO.setBoundBoxXCoordinate(rs.getFloat("bound_box_x_coordinate"));
-                elementDTO.setBoundBoxYCoordinate(rs.getFloat("bound_box_y_coordinate"));
-
-                elementDTO.setIndexInParent(rs.getInt("index_in_parent"));
-                elementDTO.setLeafCount(rs.getInt("leaf_count"));
-                elementDTO.setLevelCount(rs.getInt("level_count"));
-                elementDTO.setCollapsed(rs.getInt("collapsed"));
-
-                elementDTO.setDelta(rs.getFloat("delta"));
-                elementDTO.setDeltaX(rs.getFloat("delta_x"));
-
+                elementDTO = processElementDTO(rs);
             }
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
             DatabaseUtil.close();
         }
-        return elementDTO;
 
+        return elementDTO;
+    }
+
+    private static ElementDTO processElementDTO(ResultSet rs) {
+        ElementDTO elementDTO = new ElementDTO();
+
+        try {
+            elementDTO = new ElementDTO();
+            elementDTO.setId(String.valueOf(rs.getInt("ID")));
+            elementDTO.setParentId(rs.getInt("parent_id"));
+            elementDTO.setIdEnterCallTrace(rs.getInt("id_enter_call_trace"));
+            elementDTO.setIdExitCallTrace(rs.getInt("id_exit_call_trace"));
+
+            // top left
+            elementDTO.setBoundBoxXTopLeft(rs.getFloat("bound_box_x_top_left"));
+            elementDTO.setBoundBoxYTopLeft(rs.getFloat("bound_box_y_top_left"));
+
+            // bottom left
+            elementDTO.setBoundBoxXBottomLeft(rs.getFloat("bound_box_x_bottom_left"));
+            elementDTO.setBoundBoxYBottomLeft(rs.getFloat("bound_box_y_bottom_left"));
+
+            // top right
+            elementDTO.setBoundBoxXTopRight(rs.getFloat("bound_box_x_top_right"));
+            elementDTO.setBoundBoxYTopRight(rs.getFloat("bound_box_y_top_right"));
+
+            // bottom right
+            elementDTO.setBoundBoxXBottomRight(rs.getFloat("bound_box_x_bottom_right"));
+            elementDTO.setBoundBoxYBottomRight(rs.getFloat("bound_box_y_bottom_right"));
+
+            // coordinates
+            elementDTO.setBoundBoxXCoordinate(rs.getFloat("bound_box_x_coordinate"));
+            elementDTO.setBoundBoxYCoordinate(rs.getFloat("bound_box_y_coordinate"));
+
+            elementDTO.setIndexInParent(rs.getInt("index_in_parent"));
+            elementDTO.setLeafCount(rs.getInt("leaf_count"));
+            elementDTO.setLevelCount(rs.getInt("level_count"));
+            elementDTO.setCollapsed(rs.getInt("collapsed"));
+
+            elementDTO.setDelta(rs.getFloat("delta"));
+            elementDTO.setDeltaX(rs.getFloat("delta_x"));
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return elementDTO;
     }
 
     /**
      * This method fetches the rows for elements that should be drawn next on the UI.
      */
-    public static List<ElementDTO> getElementDTOs(BoundingBox viewPort) {
+    public static List<ElementDTO> getElementDTOsInViewport(BoundingBox viewPort) {
         List<ElementDTO> elementDTOList = new ArrayList<>();
         // Get element properties for those elements that are inside the expanded region calculated above.
         String sql = "SELECT E.ID AS EID, parent_id, collapsed, " +
@@ -307,7 +319,7 @@ public class ElementDAOImpl {
                 " OR E.COLLAPSED = 2)";
 
         System.out.println();
-        System.out.println("ElementDAOImpl.getElementDTOs query: " + sql);
+        System.out.println("ElementDAOImpl.getElementDTOsInViewport query: " + sql);
         try (ResultSet rs = DatabaseUtil.select(sql)) {
             while (rs.next()) {
                 ElementDTO elementDTO = new ElementDTO();
@@ -450,7 +462,9 @@ public class ElementDAOImpl {
         return 0;
     }
 
-    public static void getAllParentElementDTOs(ElementDTO elementDTO, String threadId) {
+    public static List<ElementDTO> getAllParentElementDTOs(ElementDTO elementDTO, String threadId) {
+        List<ElementDTO> elementDTOs = new ArrayList<>();
+
         String getAllParentIDsQuery = "SELECT MAX(ID) AS IDS " +
                 "FROM " + TableNames.ELEMENT_TABLE + " AS E " +
                 "WHERE E.ID < " + elementDTO.getId() + " " +
@@ -467,7 +481,7 @@ public class ElementDAOImpl {
 
         try (ResultSet rs = DatabaseUtil.select(getAllParentIDsQuery)) {
             while (rs.next()) {
-                ;
+                elementDTOs.add(processElementDTO(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -475,6 +489,6 @@ public class ElementDAOImpl {
             DatabaseUtil.close();
         }
 
-
+        return elementDTOs;
     }
 }

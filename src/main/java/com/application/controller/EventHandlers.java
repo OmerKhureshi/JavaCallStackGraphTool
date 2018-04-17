@@ -272,7 +272,7 @@ public class EventHandlers {
                                 Button jumpToButton = new Button();
                                 jumpToButton.setOnMouseClicked(event1 -> {
                                     System.out.println("EventHandlers.handle: jumpToButton Clicked. for eleId: " + eId);
-                                    jumpTo(eId, targetThreadId, collapsed);
+                                    jumpTo(String.valueOf(eId), targetThreadId, collapsed);
                                 });
                                 buttonList.add(jumpToButton);
                             }
@@ -527,6 +527,8 @@ public class EventHandlers {
         }
     }
 
+
+    // update in background
     private void expandTreeAt(ElementDTO clickedEleDTO, String threadId) {
         String clickedCellID = clickedEleDTO.getId();
         int parentId = clickedEleDTO.getParentId();
@@ -558,74 +560,58 @@ public class EventHandlers {
         updateDBInBackgroundThread(clickedEleDTO, false, nextCellId, Integer.valueOf(threadId), lastCellId);
     }
 
-    private void expandTreeAt(String cellId, int threadId) {
-        String clickedCellID = cellId;
-        int collapsed = 0;
-        double clickedCellTopLeftY = 0;
-        double clickedCellTopLeftX = 0;
-        double clickedCellTopRightX = 0;
-        double clickedCellBoundBottomLeftY = 0;
-        double newDelta = 0;
-        double newDeltaX = 0;
-        int parentId = 0;
-
-        try (ResultSet cellRS = ElementDAOImpl.selectWhere("id = " + clickedCellID)) {
-            if (cellRS.next()) {
-                collapsed = cellRS.getInt("collapsed");
-                clickedCellTopLeftY = cellRS.getDouble("bound_box_y_top_left");
-                clickedCellTopLeftX = cellRS.getDouble("bound_box_x_top_left");
-                clickedCellTopRightX = cellRS.getDouble("bound_box_x_top_right");
-                clickedCellBoundBottomLeftY = cellRS.getDouble("bound_box_y_bottom_left");
-                newDelta = cellRS.getDouble("delta");
-                newDeltaX = cellRS.getDouble("delta_x");
-                parentId = cellRS.getInt("parent_id");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        expandTreeAt(clickedCellID, parentId, threadId, newDelta, newDeltaX, clickedCellTopLeftX, clickedCellTopLeftY, clickedCellBoundBottomLeftY, clickedCellTopRightX);
-    }
+    // wrapper
+    // private void expandTreeAt(String cellId, int threadId) {
+    //     String clickedCellID = cellId;
+    //     int collapsed = 0;
+    //     double clickedCellTopLeftY = 0;
+    //     double clickedCellTopLeftX = 0;
+    //     double clickedCellTopRightX = 0;
+    //     double clickedCellBoundBottomLeftY = 0;
+    //     double newDelta = 0;
+    //     double newDeltaX = 0;
+    //     int parentId = 0;
+    //
+    //     try (ResultSet cellRS = ElementDAOImpl.selectWhere("id = " + clickedCellID)) {
+    //         if (cellRS.next()) {
+    //             collapsed = cellRS.getInt("collapsed");
+    //             clickedCellTopLeftY = cellRS.getDouble("bound_box_y_top_left");
+    //             clickedCellTopLeftX = cellRS.getDouble("bound_box_x_top_left");
+    //             clickedCellTopRightX = cellRS.getDouble("bound_box_x_top_right");
+    //             clickedCellBoundBottomLeftY = cellRS.getDouble("bound_box_y_bottom_left");
+    //             newDelta = cellRS.getDouble("delta");
+    //             newDeltaX = cellRS.getDouble("delta_x");
+    //             parentId = cellRS.getInt("parent_id");
+    //         }
+    //     } catch (SQLException e) {
+    //         e.printStackTrace();
+    //     }
+    //
+    //     expandTreeAt(clickedCellID, parentId, threadId, newDelta, newDeltaX, clickedCellTopLeftX, clickedCellTopLeftY, clickedCellBoundBottomLeftY, clickedCellTopRightX);
+    // }
 
 
     private EventHandler<MouseEvent> minMaxButtonOnClickEventHandler = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {
             CircleCell cell = ((CircleCell) ((Node) event.getSource()).getParent());
-            minMaxButtonOnClick(cell, Integer.valueOf(ControllerLoader.centerLayoutController.getCurrentThreadId()));
+            minMaxButtonOnClick(cell, ControllerLoader.centerLayoutController.getCurrentThreadId());
         }
     };
 
-    private void expandParentTreeChain(ElementDTO elementDTO , int threadId) {
-        // System.out.println("EventHandlers.expandParentTreeChain: method started");
-        Deque<Integer> stack = new LinkedList<>();
+    private void expandParentTreeChain(ElementDTO elementDTO , String threadId) {
+        List<ElementDTO> parentElementDTOs = ElementDAOImpl.getAllParentElementDTOs(elementDTO, threadId);
 
-        String getAllParentIDsQuery = "SELECT MAX(ID) AS IDS " +
-                "FROM " + TableNames.ELEMENT_TABLE + " AS E " +
-                "WHERE E.ID < " + cellId + " " +
-                "AND E.BOUND_BOX_X_COORDINATE < (SELECT BOUND_BOX_X_COORDINATE " +
-                "FROM " + TableNames.ELEMENT_TABLE + " AS E1 " +
-                "WHERE E1.ID = " + cellId + ") " +
-                "AND EXISTS (SELECT * FROM " + TableNames.CALL_TRACE_TABLE + " AS CT " +
-                "WHERE CT.ID = E.ID_ENTER_CALL_TRACE AND " +
-                "CT.THREAD_ID = " + threadId + ")" +
-                "AND E.PARENT_ID > 1 " +
-                "AND E.COLLAPSED <> 0 " +
-                "GROUP BY E.BOUND_BOX_X_COORDINATE " +
-                "ORDER BY IDS ASC ";
-
-        try (ResultSet rs = DatabaseUtil.select(getAllParentIDsQuery)) {
-            while (rs.next()) {
-                // System.out.println("EventHandlers.expandParentTreeChain: expandTreeAt: " + String.valueOf(rs.getInt("IDS")));
-                expandTreeAt(String.valueOf(rs.getInt("IDS")), threadId);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        // System.out.println("EventHandlers.expandParentTreeChain: method ended");
+        parentElementDTOs.stream()
+                .map(eleDTO -> {
+                    eleDTO.setDelta(0);
+                    eleDTO.setDeltaX(0);
+                    return eleDTO;
+                })
+                .forEach(eleDTO -> {
+                    expandTreeAt(eleDTO, threadId);
+                });
     }
-
 
     // error comment
     public void jumpTo(String cellId, String threadId, int collapsed) {
@@ -633,7 +619,7 @@ public class EventHandlers {
         // make changes in DB if needed
         if (collapsed != 0) {
             ElementDTO elementDTO = ElementDAOImpl.getElementDTO(cellId);
-            expandParentTreeChain(elementDTO, Integer.parseInt(threadId));
+            expandParentTreeChain(elementDTO, threadId);
             try {
                 throw new Exception("Cannot jump ");
             } catch (Exception e) {
