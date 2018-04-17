@@ -469,22 +469,16 @@ public class EventHandlers {
             clickable = false;
 
             String clickedCellID = clickedCell.getCellId();
-
-            // double clickedCellTopLeftY = 0, clickedCellTopLeftX = 0, clickedCellTopRightX = 0, clickedCellBoundBottomLeftY = 0, newDelta = 0, newDeltaX = 0;
-
             ElementDTO clickedElementDTO = ElementDAOImpl.getElementDTO(clickedCellID);
-
             int collapsed = clickedElementDTO.getCollapsed();
-            float newDelta = 0, newDeltaX = 0;
+            float newDeltaY = 0, newDeltaX = 0;
 
+            // Collapsed value -> description
+            // 0               -> visible     AND  uncollapsed
+            // 2               -> visible     AND  collapsed
+            // >2              -> not visible AND  collapsed
+            // <0              -> not visible AND  collapsed
 
-            /*
-             * collapsed - actions
-             *     0     - Cell visible on UI. Starting value for all cells.
-             *     1     - parent of this cell was minimized. Don't show on UI
-             *     2     - this cell was minimized. Show on UI. Don't show children on UI.
-             *    >= 3   - parent of this cell was minimized. This cell was also minimized. Don't expand this cell's children. Don't show on UI.
-             */
             if (collapsed == 0) {
                 // MINIMIZE SUBTREE
 
@@ -505,14 +499,13 @@ public class EventHandlers {
                 int nextCellId = ElementDAOImpl.getNextLowerSiblingOrAncestorNode(clickedElementDTO, threadId);
                 int lastCellId = ElementDAOImpl.getLowestCellInThread(threadId);
 
-                newDelta = clickedElementDTO.getBoundBoxYBottomLeft() - clickedElementDTO.getBoundBoxYTopLeft() - BoundBox.unitHeightFactor;
-
+                newDeltaY = clickedElementDTO.getBoundBoxYBottomLeft() - clickedElementDTO.getBoundBoxYTopLeft() - BoundBox.unitHeightFactor;
                 newDeltaX = ElementDAOImpl.getDeltaX(clickedElementDTO, String.valueOf(nextCellId));
 
                 double clickedCellBottomY = clickedElementDTO.getBoundBoxYTopLeft() + BoundBox.unitHeightFactor;
 
 
-                clickedElementDTO.setDelta(newDelta);
+                clickedElementDTO.setDelta(newDeltaY);
                 clickedElementDTO.setDeltaX(newDeltaX);
                 clickedElementDTO.setCollapsed(2);
                 ElementDAOImpl.updateCollapseAndDelta(clickedElementDTO);
@@ -549,7 +542,7 @@ public class EventHandlers {
         int lastCellId = ElementDAOImpl.getLowestCellInThread(threadId);
 
         double clickedCellBottomY = clickedEleDTO.getBoundBoxYTopLeft() + BoundBox.unitHeightFactor;
-        double newClickedCellBottomY = clickedEleDTO.getBoundBoxYTopLeft() + BoundBox.unitHeightFactor + newDelta;
+        double newClickedCellBottomY = clickedEleDTO.getBoundBoxYTopLeft() + BoundBox.unitHeightFactor + delta;
 
 
         clickedEleDTO.setDelta(-delta);
@@ -603,7 +596,7 @@ public class EventHandlers {
         }
     };
 
-    private void expandParentTreeChain(int cellId, int threadId) {
+    private void expandParentTreeChain(ElementDTO elementDTO , int threadId) {
         // System.out.println("EventHandlers.expandParentTreeChain: method started");
         Deque<Integer> stack = new LinkedList<>();
 
@@ -635,11 +628,12 @@ public class EventHandlers {
 
 
     // error comment
-    public void jumpTo(int cellId, String threadId, int collapsed) {
+    public void jumpTo(String cellId, String threadId, int collapsed) {
 
         // make changes in DB if needed
         if (collapsed != 0) {
-            expandParentTreeChain(cellId, Integer.parseInt(threadId));
+            ElementDTO elementDTO = ElementDAOImpl.getElementDTO(cellId);
+            expandParentTreeChain(elementDTO, Integer.parseInt(threadId));
             try {
                 throw new Exception("Cannot jump ");
             } catch (Exception e) {

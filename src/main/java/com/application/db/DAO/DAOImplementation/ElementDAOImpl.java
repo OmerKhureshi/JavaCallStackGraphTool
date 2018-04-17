@@ -449,4 +449,32 @@ public class ElementDAOImpl {
 
         return 0;
     }
+
+    public static void getAllParentElementDTOs(ElementDTO elementDTO, String threadId) {
+        String getAllParentIDsQuery = "SELECT MAX(ID) AS IDS " +
+                "FROM " + TableNames.ELEMENT_TABLE + " AS E " +
+                "WHERE E.ID < " + elementDTO.getId() + " " +
+                "AND E.BOUND_BOX_X_COORDINATE < (SELECT BOUND_BOX_X_COORDINATE " +
+                "FROM " + TableNames.ELEMENT_TABLE + " AS E1 " +
+                "WHERE E1.ID = " + elementDTO.getId() + ") " +
+                "AND EXISTS (SELECT * FROM " + TableNames.CALL_TRACE_TABLE + " AS CT " +
+                "WHERE CT.ID = E.ID_ENTER_CALL_TRACE AND " +
+                "CT.THREAD_ID = " + threadId + ")" +
+                "AND E.PARENT_ID > 1 " +
+                "AND E.COLLAPSED <> 0 " +
+                "GROUP BY E.BOUND_BOX_X_COORDINATE " +
+                "ORDER BY IDS ASC ";
+
+        try (ResultSet rs = DatabaseUtil.select(getAllParentIDsQuery)) {
+            while (rs.next()) {
+                ;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DatabaseUtil.close();
+        }
+
+
+    }
 }

@@ -202,7 +202,7 @@ public class MenuController {
                             "  |  Thread:" + bookmarkDTO.getThreadId(), icon);
 
             bookmarkMenuItem.setOnAction(event -> ControllerLoader.getEventHandlers().jumpTo(
-                    Integer.valueOf(bookmarkDTO.getElementId()),
+                    bookmarkDTO.getElementId(),
                     bookmarkDTO.getThreadId(),
                     bookmarkDTO.getCollapsed()));
 
