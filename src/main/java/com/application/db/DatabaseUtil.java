@@ -472,6 +472,19 @@ public class DatabaseUtil {
         }
 
     }
+
+    public static void executeQueryList(List<String> queryList) {
+        try (Statement statement = getConnection().createStatement()) {
+            for (String query : queryList) {
+                statement.addBatch(query);
+            }
+
+            statement.executeBatch();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
 }
 
 

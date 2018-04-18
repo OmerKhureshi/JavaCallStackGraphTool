@@ -29,6 +29,7 @@ import javafx.util.Duration;
 import org.controlsfx.control.PopOver;
 import org.controlsfx.glyphfont.Glyph;
 
+import javax.xml.crypto.Data;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -453,8 +454,6 @@ public class EventHandlers {
         }
     };
 
-
-    // error comment
     private void minMaxButtonOnClick(CircleCell clickedCell, String threadId) {
         {
             if (popOver != null) {
@@ -471,7 +470,6 @@ public class EventHandlers {
             String clickedCellID = clickedCell.getCellId();
             ElementDTO clickedElementDTO = ElementDAOImpl.getElementDTO(clickedCellID);
             int collapsed = clickedElementDTO.getCollapsed();
-            float newDeltaY = 0, newDeltaX = 0;
 
             // Collapsed value -> description
             // 0               -> visible     AND  uncollapsed
@@ -480,7 +478,10 @@ public class EventHandlers {
             // <0              -> not visible AND  collapsed
 
             if (collapsed == 0) {
-                // MINIMIZE SUBTREE
+                // visible and uncollapsed --> visible and collapsed
+                //  0 ->   2
+                // >2 -> ++1
+                // <0 -> --1
 
                 // ((Circle) clickedCell.getChildren().get(0)).setFill(Color.BLUE);
                 // ((Circle) ( (Group)cell.getView() )
@@ -490,26 +491,23 @@ public class EventHandlers {
                 // cell.setStyle("-fx-background-color: blue");
 
                 // will do later....
-                // main.setStatus("Please wait ......");
-
-                System.out.println("====== Minimize cellId: " + clickedCellID + " ------ ");
-
-                Statement statement = DatabaseUtil.createStatement();
+                ControllerLoader.statusBarController.setStatusText("Please wait ...");
 
                 int nextCellId = ElementDAOImpl.getNextLowerSiblingOrAncestorNode(clickedElementDTO, threadId);
                 int lastCellId = ElementDAOImpl.getLowestCellInThread(threadId);
-
-                newDeltaY = clickedElementDTO.getBoundBoxYBottomLeft() - clickedElementDTO.getBoundBoxYTopLeft() - BoundBox.unitHeightFactor;
-                newDeltaX = ElementDAOImpl.getDeltaX(clickedElementDTO, String.valueOf(nextCellId));
-
+                float newDeltaY = clickedElementDTO.getBoundBoxYBottomLeft() - clickedElementDTO.getBoundBoxYTopLeft() - BoundBox.unitHeightFactor;
+                float newDeltaX = ElementDAOImpl.calculateNewDeltaX(clickedElementDTO, String.valueOf(nextCellId));
                 double clickedCellBottomY = clickedElementDTO.getBoundBoxYTopLeft() + BoundBox.unitHeightFactor;
 
-
+                /*
+                   update collapse and delta values in db.
+                */
                 clickedElementDTO.setDelta(newDeltaY);
                 clickedElementDTO.setDeltaX(newDeltaX);
                 clickedElementDTO.setCollapsed(2);
                 ElementDAOImpl.updateCollapseAndDelta(clickedElementDTO);
 
+                // update UI. necessary?
                 ControllerLoader.canvasController.removeUIComponentsBetween(clickedElementDTO, nextCellId);
                 ControllerLoader.canvasController.moveLowerTreeByDelta(clickedElementDTO);
 
@@ -559,37 +557,6 @@ public class EventHandlers {
 
         updateDBInBackgroundThread(clickedEleDTO, false, nextCellId, Integer.valueOf(threadId), lastCellId);
     }
-
-    // wrapper
-    // private void expandTreeAt(String cellId, int threadId) {
-    //     String clickedCellID = cellId;
-    //     int collapsed = 0;
-    //     double clickedCellTopLeftY = 0;
-    //     double clickedCellTopLeftX = 0;
-    //     double clickedCellTopRightX = 0;
-    //     double clickedCellBoundBottomLeftY = 0;
-    //     double newDelta = 0;
-    //     double newDeltaX = 0;
-    //     int parentId = 0;
-    //
-    //     try (ResultSet cellRS = ElementDAOImpl.selectWhere("id = " + clickedCellID)) {
-    //         if (cellRS.next()) {
-    //             collapsed = cellRS.getInt("collapsed");
-    //             clickedCellTopLeftY = cellRS.getDouble("bound_box_y_top_left");
-    //             clickedCellTopLeftX = cellRS.getDouble("bound_box_x_top_left");
-    //             clickedCellTopRightX = cellRS.getDouble("bound_box_x_top_right");
-    //             clickedCellBoundBottomLeftY = cellRS.getDouble("bound_box_y_bottom_left");
-    //             newDelta = cellRS.getDouble("delta");
-    //             newDeltaX = cellRS.getDouble("delta_x");
-    //             parentId = cellRS.getInt("parent_id");
-    //         }
-    //     } catch (SQLException e) {
-    //         e.printStackTrace();
-    //     }
-    //
-    //     expandTreeAt(clickedCellID, parentId, threadId, newDelta, newDeltaX, clickedCellTopLeftX, clickedCellTopLeftY, clickedCellBoundBottomLeftY, clickedCellTopRightX);
-    // }
-
 
     private EventHandler<MouseEvent> minMaxButtonOnClickEventHandler = new EventHandler<MouseEvent>() {
         @Override
@@ -647,12 +614,6 @@ public class EventHandlers {
         // main.setStatus("Done");
     }
 
-
-
-
-    // error comment
-
-
     private void updateDBInBackgroundThread(ElementDTO clickedEleDTO, boolean isCollapsed, int nextCellId, int threadId, int lastCellId) {
 
         int clickedCellId = Integer.valueOf(clickedEleDTO.getId());
@@ -665,6 +626,8 @@ public class EventHandlers {
         int parentId = Integer.valueOf(clickedEleDTO.getParentId());
 
 
+        List<String> queryList = new ArrayList<>();
+
         Statement statement = DatabaseUtil.createStatement();
 
         Task<Void> task = new Task<Void>() {
@@ -673,7 +636,7 @@ public class EventHandlers {
                 // System.out.println("==================== Starting thread updateDBInBackgroundThread. ====================");
                 //
                 // get queries to update collapse values for cells, edges and highlights.
-                updateCollapseValForSubTreeBulk(clickedEleDTO, statement, isCollapsed, nextCellId, threadId);
+                updateCollapseValForSubTreeBulk(clickedEleDTO, queryList, isCollapsed, nextCellId, threadId);
 
                 // No upate required for single line children
                 if (delta == 0) {
@@ -681,25 +644,25 @@ public class EventHandlers {
                     //later ...
                     // updateParentHighlightsInDB(clickedCellId, isCollapsed, statement, delta, nextCellId, leftX, topY, threadId);
 
-                    statement.executeBatch();
+                    DatabaseUtil.executeQueryList(queryList);
+
                     Platform.runLater(() -> elementTreeModule.clearAndUpdateCellLayer());
                     return null;
                 }
 
-                updateParentChainRecursive(clickedEleDTO, statement);
+                updateParentChainRecursive(clickedEleDTO, queryList);
 
                 if (nextCellId != Integer.MAX_VALUE) {
                     // only if next lower sibling ancestor node is present.
                     updateTreeBelowYBulk(topY + BoundBox.unitHeightFactor, delta, statement, nextCellId, lastCellId, threadId);
-                    statement.executeBatch();
+                    DatabaseUtil.executeQueryList(queryList);
                 }
 
                 // later....
                 // updateParentHighlightsInDB(clickedCellId, isCollapsed, statement, delta, nextCellId, leftX, topY, threadId);
                 // updateChildrenHighlightsInDB(clickedCellId, isCollapsed, statement, delta, nextCellId, threadId);
-                statement.executeBatch();
+                DatabaseUtil.executeQueryList(queryList);
 
-                // Platform.runLater(() -> elementTreeModule.clearAndUpdateCellLayer());
                 Platform.runLater(() -> ControllerLoader.canvasController.updateIfNeeded());
                 return null;
             }
@@ -727,7 +690,7 @@ public class EventHandlers {
         new Thread(task).start();
     }
 
-    private void updateCollapseValForSubTreeBulk(ElementDTO elementDTO, Statement statement, boolean isMinimized, int endCellId, int threadId) {
+    private void updateCollapseValForSubTreeBulk(ElementDTO elementDTO, List<String> queryList, boolean isMinimized, int endCellId, int threadId) {
 
         // Collapsed value -> description
         // 0               -> visible     AND  uncollapsed
@@ -819,15 +782,11 @@ public class EventHandlers {
                     ")";
         }
 
-        try {
-            statement.addBatch(updateCellQuery);
-            statement.addBatch(updateEdgeQuery);
-            // later...
-            // statement.addBatch(updateHighlightsQuery);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        // System.out.println("EventHandler::updateCollapseValForSubTreeBulk: method ended");
+        queryList.add(updateCellQuery);
+        queryList.add(updateEdgeQuery);
+
+        // later...
+        // statement.addBatch(updateHighlightsQuery);
     }
 
     private void updateTreeBelowYBulk(double y, double delta, Statement statement, int nextCellId, int lastCellId, int threadId) {
@@ -885,7 +844,7 @@ public class EventHandlers {
      * @param delta     The value to be subtracted from or added to the columns.
      * @param statement All updated queries are added to this statement as batch.
      */
-    private static void updateParentChainRecursive(ElementDTO elementDTO, Statement statement) {
+    private static void updateParentChainRecursive(ElementDTO elementDTO, List<String> queryList) {
         // System.out.println("EventHandler::updateParentChainRecursive: method started");
         // BASE CONDITION. STOP IF ROOT IS REACHED
 
@@ -902,17 +861,13 @@ public class EventHandlers {
                 "bound_box_y_bottom_right = bound_box_y_bottom_right - " + delta + " " +
                 "WHERE ID = " + cellId;
 
-        try {
-            statement.addBatch(updateCurrentCell);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        queryList.add(updateCurrentCell);
 
-        // check if parent id > 1?????
+        // check if parent id > 1 ?????
         int parentCellId = elementDTO.getParentId();
         ElementDTO parentEleDTO = ElementDAOImpl.getElementDTO(String.valueOf(parentCellId));
 
-        updateParentChainRecursive(parentEleDTO, statement);
+        updateParentChainRecursive(parentEleDTO, queryList);
     }
 
     private void updateAllParentHighlightsOnUI(String clickedCellId, double x, double y, double delta, double deltaX) {

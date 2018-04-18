@@ -444,7 +444,7 @@ public class ElementDAOImpl {
         return Integer.MAX_VALUE;
     }
 
-    public static float getDeltaX(ElementDTO elementDTO, String nextCellId) {
+    public static float calculateNewDeltaX(ElementDTO elementDTO, String nextCellId) {
         String getDeltaXQuery = "SELECT MAX(BOUND_BOX_X_TOP_RIGHT) AS MAX_X FROM " + TableNames.ELEMENT_TABLE + " " +
                 "WHERE ID >= " + elementDTO.getId() + " AND ID < " + nextCellId + " " +
                 "AND COLLAPSED IN (0, 2)";

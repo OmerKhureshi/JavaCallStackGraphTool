@@ -8,6 +8,7 @@ public class ControllerLoader {
     public static CanvasController canvasController;
     public static MenuController menuController;
     public static EventHandlers eventHandlers;
+    public static StatusBarController statusBarController;
 
     public static void register(MainController mainController) {
         ControllerLoader.mainController = mainController;
@@ -25,11 +26,16 @@ public class ControllerLoader {
         ControllerLoader.menuController = menuController;
     }
 
+    public static void register(StatusBarController statusBarController) {
+        ControllerLoader.statusBarController = statusBarController;
+    }
+
     public static EventHandlers getEventHandlers() {
         if (eventHandlers == null) {
             eventHandlers = new EventHandlers();
         }
         return eventHandlers;
     }
+
 
 }

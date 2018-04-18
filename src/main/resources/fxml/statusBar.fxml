@@ -6,10 +6,12 @@
 
 <?import javafx.scene.paint.Color?>
 <?import javafx.geometry.Insets?>
-<HBox xmlns:fx="http://javafx.com/fxml/1" fx:id="statusBar"
+<HBox fx:id="statusBar" fx:controller="com.application.controller.StatusBarController"
+      xmlns:fx="http://javafx.com/fxml/1"
       id="HBox" alignment="CENTER_LEFT" prefWidth="1152.0" spacing="5.0" BorderPane.alignment="CENTER">
     <children>
-        <Label maxHeight="1.7976931348623157E308" maxWidth="-1.0" text="Left status" HBox.hgrow="ALWAYS">
+        <Label fx:id="leftStatusText" text="Left status"
+               maxHeight="1.7976931348623157E308" maxWidth="-1.0"  HBox.hgrow="ALWAYS">
             <font>
                 <Font size="11.0" fx:id="x3" />
             </font>
