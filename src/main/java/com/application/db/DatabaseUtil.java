@@ -50,8 +50,13 @@ public class DatabaseUtil {
             if (dataSourceDir == null) {
                 // this is a fresh start, create a new DB.
                 java.util.Date date = new java.util.Date();
-                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmm");
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmsss");
                 String sDate = dateFormat.format(date);
+
+                // File file = new File(prefix + sDate);
+                // if (file.exists()) {
+                //
+                // }
 
                 url = "jdbc:derby:" + prefix + sDate + ";create=true";
                 // url = "jdbc:derby:DB;create=true";

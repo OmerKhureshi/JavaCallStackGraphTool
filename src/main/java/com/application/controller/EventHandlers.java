@@ -29,7 +29,6 @@ import javafx.util.Duration;
 import org.controlsfx.control.PopOver;
 import org.controlsfx.glyphfont.Glyph;
 
-import javax.xml.crypto.Data;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -454,6 +453,14 @@ public class EventHandlers {
         }
     };
 
+    private EventHandler<MouseEvent> minMaxButtonOnClickEventHandler = new EventHandler<MouseEvent>() {
+        @Override
+        public void handle(MouseEvent event) {
+            CircleCell cell = ((CircleCell) ((Node) event.getSource()).getParent());
+            minMaxButtonOnClick(cell, ControllerLoader.centerLayoutController.getCurrentThreadId());
+        }
+    };
+
     private void minMaxButtonOnClick(CircleCell clickedCell, String threadId) {
         {
             if (popOver != null) {
@@ -479,9 +486,9 @@ public class EventHandlers {
 
             if (collapsed == 0) {
                 // visible and uncollapsed --> visible and collapsed
-                //  0 ->   2
-                // >2 -> ++1
-                // <0 -> --1
+                // this cell only: 0 ->   2
+                // all other cells: >2 -> ++1
+                // all other cells: <0 -> --1
 
                 // ((Circle) clickedCell.getChildren().get(0)).setFill(Color.BLUE);
                 // ((Circle) ( (Group)cell.getView() )
@@ -490,7 +497,6 @@ public class EventHandlers {
                 // cell.getChildren().get(0).setStyle("-fx-background-color: blue");
                 // cell.setStyle("-fx-background-color: blue");
 
-                // will do later....
                 ControllerLoader.statusBarController.setStatusText("Please wait ...");
 
                 int nextCellId = ElementDAOImpl.getNextLowerSiblingOrAncestorNode(clickedElementDTO, threadId);
@@ -499,6 +505,7 @@ public class EventHandlers {
                 float newDeltaX = ElementDAOImpl.calculateNewDeltaX(clickedElementDTO, String.valueOf(nextCellId));
                 double clickedCellBottomY = clickedElementDTO.getBoundBoxYTopLeft() + BoundBox.unitHeightFactor;
 
+                System.out.println("EventHandlers.minMaxButtonOnClick NewDeltaY: " + newDeltaY + "  newDealtX: " + newDeltaX);
                 /*
                    update collapse and delta values in db.
                 */
@@ -507,7 +514,7 @@ public class EventHandlers {
                 clickedElementDTO.setCollapsed(2);
                 ElementDAOImpl.updateCollapseAndDelta(clickedElementDTO);
 
-                // update UI. necessary?
+                // update UI.
                 ControllerLoader.canvasController.removeUIComponentsBetween(clickedElementDTO, nextCellId);
                 ControllerLoader.canvasController.moveLowerTreeByDelta(clickedElementDTO);
 
@@ -516,9 +523,12 @@ public class EventHandlers {
             } else if (collapsed == 2) {
                 // MAXIMIZE SUBTREE
 
-                // ((Circle) clickedCell.getChildren().get(0)).setFill(Color.RED);
-                // ( (Circle) ( (Group)cell.getView() ).getChildren().get(0) ).setFill(Color.RED);
-                // main.setStatus("Please wait ......");
+                // visible and collapsed --> visible and uncollapsed
+                // this cell only :  2 ->   0
+                // all other cells: >2 -> --1
+                // all other cells: <0 -> ++1
+
+                ControllerLoader.statusBarController.setStatusText("Please wait ......");
 
                 expandTreeAt(clickedElementDTO, threadId);
             }
@@ -526,24 +536,15 @@ public class EventHandlers {
     }
 
 
-    // update in background
     private void expandTreeAt(ElementDTO clickedEleDTO, String threadId) {
-        String clickedCellID = clickedEleDTO.getId();
-        int parentId = clickedEleDTO.getParentId();
         float delta = clickedEleDTO.getDelta();
         float deltaX = clickedEleDTO.getDeltaX();
-        float clickedCellTopLeftX = clickedEleDTO.getBoundBoxXTopLeft();
-        float clickedCellTopLeftY = clickedEleDTO.getBoundBoxYTopLeft();
-        float clickedCellBoundBottomLeftY = clickedEleDTO.getBoundBoxYBottomLeft();
-        float clickedCellTopRightX = clickedEleDTO.getBoundBoxXTopRight();
-
 
         int nextCellId = ElementDAOImpl.getNextLowerSiblingOrAncestorNode(clickedEleDTO, threadId);
         int lastCellId = ElementDAOImpl.getLowestCellInThread(threadId);
 
         double clickedCellBottomY = clickedEleDTO.getBoundBoxYTopLeft() + BoundBox.unitHeightFactor;
         double newClickedCellBottomY = clickedEleDTO.getBoundBoxYTopLeft() + BoundBox.unitHeightFactor + delta;
-
 
         clickedEleDTO.setDelta(-delta);
         clickedEleDTO.setDeltaX(-deltaX);
@@ -558,13 +559,6 @@ public class EventHandlers {
         updateDBInBackgroundThread(clickedEleDTO, false, nextCellId, Integer.valueOf(threadId), lastCellId);
     }
 
-    private EventHandler<MouseEvent> minMaxButtonOnClickEventHandler = new EventHandler<MouseEvent>() {
-        @Override
-        public void handle(MouseEvent event) {
-            CircleCell cell = ((CircleCell) ((Node) event.getSource()).getParent());
-            minMaxButtonOnClick(cell, ControllerLoader.centerLayoutController.getCurrentThreadId());
-        }
-    };
 
     private void expandParentTreeChain(ElementDTO elementDTO , String threadId) {
         List<ElementDTO> parentElementDTOs = ElementDAOImpl.getAllParentElementDTOs(elementDTO, threadId);
@@ -611,7 +605,7 @@ public class EventHandlers {
 
     private void setClickable() {
         clickable = true;
-        // main.setStatus("Done");
+        ControllerLoader.statusBarController.setStatusText("Ready ");
     }
 
     private void updateDBInBackgroundThread(ElementDTO clickedEleDTO, boolean isCollapsed, int nextCellId, int threadId, int lastCellId) {
@@ -634,7 +628,7 @@ public class EventHandlers {
             @Override
             protected Void call() throws Exception {
                 // System.out.println("==================== Starting thread updateDBInBackgroundThread. ====================");
-                //
+
                 // get queries to update collapse values for cells, edges and highlights.
                 updateCollapseValForSubTreeBulk(clickedEleDTO, queryList, isCollapsed, nextCellId, threadId);
 
@@ -646,7 +640,7 @@ public class EventHandlers {
 
                     DatabaseUtil.executeQueryList(queryList);
 
-                    Platform.runLater(() -> elementTreeModule.clearAndUpdateCellLayer());
+                    Platform.runLater(() -> ControllerLoader.canvasController.clearAndUpdate());
                     return null;
                 }
 
@@ -654,7 +648,7 @@ public class EventHandlers {
 
                 if (nextCellId != Integer.MAX_VALUE) {
                     // only if next lower sibling ancestor node is present.
-                    updateTreeBelowYBulk(topY + BoundBox.unitHeightFactor, delta, statement, nextCellId, lastCellId, threadId);
+                    updateTreeBelowYBulk(topY + BoundBox.unitHeightFactor, delta, queryList, nextCellId, lastCellId, threadId);
                     DatabaseUtil.executeQueryList(queryList);
                 }
 
@@ -789,33 +783,7 @@ public class EventHandlers {
         // statement.addBatch(updateHighlightsQuery);
     }
 
-    private void updateTreeBelowYBulk(double y, double delta, Statement statement, int nextCellId, int lastCellId, int threadId) {
-        // System.out.println("EventHandler::updateTreeBelowYBulk: method started");
-        String updateCellsQuery = "UPDATE " + TableNames.ELEMENT_TABLE + " " +
-                "SET bound_box_y_top_left = bound_box_y_top_left - " + delta + ", " +
-                "bound_box_y_top_right = bound_box_y_top_right - " + delta + ", " +
-                "bound_box_y_bottom_left = bound_box_y_bottom_left - " + delta + ", " +
-                "bound_box_y_bottom_right = bound_box_y_bottom_right - " + delta + ", " +
-                "bound_box_y_coordinate = bound_box_y_coordinate - " + delta + " " +
-                "WHERE bound_box_y_coordinate >= " + y + " " +
-                "AND ID >= " + nextCellId + " " +
-                "AND ID <= " + lastCellId;
-        // System.out.println("updateTreeBelowYBulk: updateCellsQuery: " + updateCellsQuery);
-
-        String updateEdgeStartPoingQuery = "UPDATE " + TableNames.EDGE_TABLE + " " +
-                "SET START_Y =  START_Y - " + delta + " " +
-                "WHERE START_Y >= " + y + " " +
-                "AND FK_SOURCE_ELEMENT_ID >= " + nextCellId + " " +
-                "AND FK_SOURCE_ELEMENT_ID <= " + lastCellId;
-        // System.out.println("updateTreeBelowYBulk: updateEdgeStartPoingQuery: " + updateEdgeStartPoingQuery);
-
-        String updateEdgeEndPointQuery = "UPDATE " + TableNames.EDGE_TABLE + " " +
-                "SET END_Y =  END_Y - " + delta + " " +
-                "WHERE END_Y >= " + y + " " +
-                "AND FK_TARGET_ELEMENT_ID >= " + nextCellId + " " +
-                "AND FK_TARGET_ELEMENT_ID <= " + lastCellId;
-        // System.out.println("updateTreeBelowYBulk: updateEdgeEndPointQuery: " + updateEdgeEndPointQuery);
-
+    private void updateTreeBelowYBulk(double y, double delta, List<String> queryList, int nextCellId, int lastCellId, int threadId) {
         String updateHighlightsQuery = "UPDATE " + TableNames.HIGHLIGHT_ELEMENT + " " +
                 "SET START_Y = START_Y - " + delta + " " +
                 "WHERE ELEMENT_ID >= " + nextCellId + " " +
@@ -823,15 +791,11 @@ public class EventHandlers {
 
         // System.out.println("EventHandler::updateTreeBelowYBulk: updateHighlightsQuery: " + updateHighlightsQuery);
 
-        try {
-            statement.addBatch(updateCellsQuery);
-            statement.addBatch(updateEdgeStartPoingQuery);
-            statement.addBatch(updateEdgeEndPointQuery);
-            // later....
-            // statement.addBatch(updateHighlightsQuery);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        queryList.add(ElementDAOImpl.getUpdateElementQueryAfterCollapse(y, delta, nextCellId, lastCellId));
+        queryList.add(EdgeDAOImpl.getUpdateEdgeStartPointQuery(y, delta, nextCellId, lastCellId));
+        queryList.add(EdgeDAOImpl.getUpdateEdgeEndPointQuery(y, delta, nextCellId, lastCellId));
+        // later....
+        // statement.addBatch(updateHighlightsQuery);
         // System.out.println("EventHandler::updateTreeBelowYBulk: method ended.");
     }
 

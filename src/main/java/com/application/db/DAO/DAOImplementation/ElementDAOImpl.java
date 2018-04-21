@@ -233,8 +233,8 @@ public class ElementDAOImpl {
 
         String sql = "SELECT * FROM " + TableNames.ELEMENT_TABLE + " WHERE ID = " + id;
 
-        System.out.println();
-        System.out.println("ElementDAOImpl.getElementDTOsInViewport query: " + sql);
+        // System.out.println();
+        // System.out.println("ElementDAOImpl.getElementDTOsInViewport query: " + sql);
         try (ResultSet rs = DatabaseUtil.select(sql)) {
             if (rs.next()) {
                 elementDTO = processElementDTO(rs);
@@ -490,5 +490,18 @@ public class ElementDAOImpl {
         }
 
         return elementDTOs;
+    }
+
+    public static String getUpdateElementQueryAfterCollapse(double y, double delta, int nextCellId, int lastCellId) {
+        return "UPDATE " + TableNames.ELEMENT_TABLE + " " +
+                "SET bound_box_y_top_left = bound_box_y_top_left - " + delta + ", " +
+                "bound_box_y_top_right = bound_box_y_top_right - " + delta + ", " +
+                "bound_box_y_bottom_left = bound_box_y_bottom_left - " + delta + ", " +
+                "bound_box_y_bottom_right = bound_box_y_bottom_right - " + delta + ", " +
+                "bound_box_y_coordinate = bound_box_y_coordinate - " + delta + " " +
+                "WHERE bound_box_y_coordinate >= " + y + " " +
+                "AND ID >= " + nextCellId + " " +
+                "AND ID <= " + lastCellId;
+
     }
 }

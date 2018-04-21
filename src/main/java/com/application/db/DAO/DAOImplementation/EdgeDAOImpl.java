@@ -239,4 +239,23 @@ public class EdgeDAOImpl {
             e.printStackTrace();
         }
     }
+
+    public static String getUpdateEdgeStartPointQuery(double y, double delta, int nextCellId, int lastCellId) {
+        return "UPDATE " + TableNames.EDGE_TABLE + " " +
+                "SET START_Y =  START_Y - " + delta + " " +
+                "WHERE START_Y >= " + y + " " +
+                "AND FK_SOURCE_ELEMENT_ID >= " + nextCellId + " " +
+                "AND FK_SOURCE_ELEMENT_ID <= " + lastCellId;
+
+    }
+
+    public static String getUpdateEdgeEndPointQuery(double y, double delta, int nextCellId, int lastCellId) {
+        return "UPDATE " + TableNames.EDGE_TABLE + " " +
+                "SET END_Y =  END_Y - " + delta + " " +
+                "WHERE END_Y >= " + y + " " +
+                "AND FK_TARGET_ELEMENT_ID >= " + nextCellId + " " +
+                "AND FK_TARGET_ELEMENT_ID <= " + lastCellId;
+
+    }
+
 }

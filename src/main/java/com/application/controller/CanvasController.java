@@ -119,11 +119,11 @@ public class CanvasController {
     private void addCirclesToUI() {
         BoundingBox viewPort = getPrefetchViewPortDims();
 
-        System.out.println("CanvasController.addCirclesToUI prefetch viewport: "+ viewPort);
+        // System.out.println("CanvasController.addCirclesToUI prefetch viewport: "+ viewPort);
         List<ElementDTO> elementDTOList = graphLoaderModule.addCircleCellsNew(viewPort);
         List<CircleCell> circleCells = ControllerUtil.convertElementDTOTOCell(elementDTOList);
 
-        System.out.println();
+        // System.out.println();
         circleCells.forEach(circleCell -> addNewCellToUI(circleCell));
     }
 
@@ -176,7 +176,7 @@ public class CanvasController {
     }
 
     public void removeEdgeFromUI(Edge edge) {
-        if (edge != null && circleCellsOnUI.containsKey(edge.getEdgeId())) {
+        if (edge != null && edgesOnUI.containsKey(edge.getEdgeId())) {
             circleCellsOnUI.remove(edge.getEdgeId());
             canvas.getChildren().remove(edge);
         }
@@ -184,6 +184,7 @@ public class CanvasController {
 
 
     public void removeUIComponentsBetween(ElementDTO elementDTO, int endCellId) {
+        System.out.println("CanvasController.removeUIComponentsBetween");
         int startCellId = Integer.valueOf(elementDTO.getId());
         float clickedCellTopRightX =  elementDTO.getBoundBoxXTopRight();
         float clickedCellTopY = elementDTO.getBoundBoxYTopLeft();
@@ -209,15 +210,28 @@ public class CanvasController {
             double thisCellTopLeftX = circleCell.getLayoutX();
             double thisCellTopY = circleCell.getLayoutY();
 
-            if (thisCellTopY >= clickedCellBottomY && thisCellTopY < clickedCellBoundBottomY && thisCellTopLeftX > clickedCellTopRightX) {
+            if (!removeCircleCells.contains(circleCell) && thisCellTopY >= clickedCellBottomY && thisCellTopY < clickedCellBoundBottomY && thisCellTopLeftX > clickedCellTopRightX) {
                 // if (thisCellTopY >= clickedCellTopY ) {
-                // System.out.println("adding to remove list: startCellId: " + id + " cell: " + circleCell);
+                System.out.println(" -" + id);
+                System.out.println(" --" + id);
                 removeCircleCells.add(circleCell);
                 removeEdges.add(edgesOnUI.get(id));
-            } else if (thisCellTopY == clickedCellTopY && thisCellTopLeftX >= clickedCellTopRightX) {
-                // System.out.println("adding to remove list: startCellId: " + id + " cell: " + circleCell);
+                try {
+                    throw new Exception("here");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else if (!removeCircleCells.contains(circleCell) && thisCellTopY == clickedCellTopY && thisCellTopLeftX >= clickedCellTopRightX) {
+                System.out.println(" -" + id);
+                System.out.println(" --" + id);
                 removeCircleCells.add(circleCell);
                 removeEdges.add(edgesOnUI.get(id));
+                try {
+                    throw new Exception("here");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
             }
         });
 
@@ -228,23 +242,27 @@ public class CanvasController {
         edgesOnUI.forEach((id, edge) -> {
             int intId = Integer.parseInt(id);
             if (intId > startCellId && intId < endCellId) {
+                System.out.print(" .--" + id);
                 removeEdges.add(edge);
             }
 
-            // Get edges which don't have an target cicle rendered on UI.
+            // Get edges that don't have a target circle rendered on UI.
+            // Get edges to right and not extending height of the clicked cell bound box.
             double thisLineEndY = edge.line.getEndY();
             double thisLineStartY = edge.line.getStartY();
             double thisLineStartX = edge.line.getStartX();
 
-            if (thisLineEndY >= clickedCellTopY && thisLineEndY <= clickedCellBoundBottomY && thisLineStartY >= clickedCellTopY && thisLineStartX >= (clickedCellTopRightX-BoundBox.unitWidthFactor)) {
-                System.out.println("adding to remove list: edge ID-: " + id);
+            if (thisLineEndY >= clickedCellTopY
+                    && thisLineEndY <= clickedCellBoundBottomY
+                    && thisLineStartY >= clickedCellTopY
+                    && thisLineStartX >= (clickedCellTopRightX - BoundBox.unitWidthFactor)) {
+                System.out.print(" --" + id);
                 removeEdges.add(edge);
             }
         });
 
         removeEdges.forEach((edge) -> {
             ControllerLoader.canvasController.removeEdgeFromUI(edge);
-
         });
 
         // will do highlights later.......
@@ -270,7 +288,6 @@ public class CanvasController {
 
     public void moveLowerTreeByDelta(ElementDTO elementDTO) {
 
-        String clickedCellID = elementDTO.getId();
         float clickedCellBottomY = elementDTO.getBoundBoxYTopLeft() + BoundBox.unitHeightFactor;
         double delta = elementDTO.getDelta();
 
@@ -373,6 +390,10 @@ public class CanvasController {
         edgesOnUI.clear();
     }
 
+    public void clearAndUpdate() {
+        clear();
+        updateIfNeeded();
+    }
 
     public void onThreadSelect() {
         clearAll();
@@ -467,17 +488,17 @@ public class CanvasController {
 
     private void setListeners() {
         scrollPane.vvalueProperty().addListener(valuePropListener);
-        // scrollPane.hvalueProperty().addListener(valuePropListener);
+        scrollPane.hvalueProperty().addListener(valuePropListener);
         scrollPane.viewportBoundsProperty().addListener(viewportChangeListener);
     }
 
     private ChangeListener valuePropListener = (observable, oldValue, newValue) -> {
-        System.out.println("CanvasController.valuePropListener listener calling update");
+        // System.out.println("CanvasController.valuePropListener listener calling update");
         updateIfNeeded();
     };
 
     private ChangeListener viewportChangeListener = (observable, oldValue, newValue) -> {
-        System.out.println("CanvasController.viewportChangeListener listener calling update");
+        // System.out.println("CanvasController.viewportChangeListener listener calling update");
         addCanvasComponentsFromDB();
     };
 
