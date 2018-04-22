@@ -1,12 +1,10 @@
 package com.application.controller;
 
-import com.application.db.DTO.BaseDTO;
 import com.application.db.DTO.EdgeDTO;
 import com.application.db.DTO.ElementDTO;
 import com.application.fxgraph.ElementHelpers.EdgeElement;
 import com.application.fxgraph.ElementHelpers.Element;
 import com.application.fxgraph.cells.CircleCell;
-import com.application.fxgraph.graph.Cell;
 import com.application.fxgraph.graph.Edge;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
@@ -15,7 +13,6 @@ import javafx.stage.Stage;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ControllerUtil {
@@ -56,12 +53,12 @@ public class ControllerUtil {
     public static List<CircleCell> convertElementDTOTOCell(List<ElementDTO> elementDTOList) {
         List<CircleCell> circleCellList = new ArrayList<>();
 
-        System.out.println();
-        System.out.println("ControllerUtil.convertElementDTOTOCell ");
+        // System.out.println();
+        // System.out.println("ControllerUtil.convertElementDTOTOCell ");
         elementDTOList.forEach(elementDTO -> {
             CircleCell circleCell = new CircleCell(elementDTO.getId(), elementDTO.getBoundBoxXCoordinate(), elementDTO.getBoundBoxYCoordinate(), elementDTO.getMethodName());
             circleCellList.add(circleCell);
-            System.out.print(circleCell.getCellId() + ", ");
+            // System.out.print(circleCell.getCellId() + ", ");
         });
 
         return circleCellList;
@@ -89,7 +86,7 @@ public class ControllerUtil {
                     elementDTO.setLeafCount(element.getLeafCount());
                     elementDTO.setLevelCount(element.getLevelCount());
                     elementDTO.setCollapsed(element.getIsCollapsed());
-                    elementDTO.setDelta((float) element.getDelta());
+                    elementDTO.setDeltaY((float) element.getDelta());
                     elementDTO.setDeltaX((float) element.getDeltaX());
 
                     return elementDTO;

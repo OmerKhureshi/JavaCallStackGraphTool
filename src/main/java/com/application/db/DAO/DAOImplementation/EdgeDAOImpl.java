@@ -207,6 +207,8 @@ public class EdgeDAOImpl {
             getEdgesFromResultSet(rsUpEdges, edgeDTOList);
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            DatabaseUtil.close();
         }
 
         try (ResultSet rsDownEdges = DatabaseUtil.select(sql + commonWhereClausForEdges + whereClauseForDownwardEdges)) {
@@ -226,6 +228,7 @@ public class EdgeDAOImpl {
     private static void getEdgesFromResultSet(ResultSet rs, List<EdgeDTO> edgeDTOList) {
         try {
             while (rs.next()) {
+                // System.out.println("EdgeDAOImpl.getEdgesFromResultSet: in while loop: " + rs.getInt("id"));
                 String targetEdgeId = String.valueOf(rs.getInt("fk_target_element_id"));
                 float startX = rs.getFloat("start_x");
                 float endX = rs.getFloat("end_x");
@@ -236,6 +239,7 @@ public class EdgeDAOImpl {
                 edgeDTOList.add(edgeDTO);
             }
         } catch (SQLException e) {
+            System.out.println("EdgeDAOImpl.getEdgesFromResultSet exception in this method...");
             e.printStackTrace();
         }
     }

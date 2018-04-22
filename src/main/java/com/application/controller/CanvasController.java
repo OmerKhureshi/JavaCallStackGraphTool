@@ -133,7 +133,7 @@ public class CanvasController {
             canvas.getChildren().add(circleCell);
             circleCell.toFront();
             ControllerLoader.getEventHandlers().setCustomMouseEventHandlers(circleCell);
-            System.out.print("+" + circleCell.getCellId() + ", ");
+            // System.out.print("+" + circleCell.getCellId() + ", ");
         }
     }
 
@@ -177,14 +177,14 @@ public class CanvasController {
 
     public void removeEdgeFromUI(Edge edge) {
         if (edge != null && edgesOnUI.containsKey(edge.getEdgeId())) {
-            circleCellsOnUI.remove(edge.getEdgeId());
+            edgesOnUI.remove(edge.getEdgeId());
             canvas.getChildren().remove(edge);
         }
     }
 
 
     public void removeUIComponentsBetween(ElementDTO elementDTO, int endCellId) {
-        System.out.println("CanvasController.removeUIComponentsBetween");
+        // System.out.println("CanvasController.removeUIComponentsBetween");
         int startCellId = Integer.valueOf(elementDTO.getId());
         float clickedCellTopRightX =  elementDTO.getBoundBoxXTopRight();
         float clickedCellTopY = elementDTO.getBoundBoxYTopLeft();
@@ -212,26 +212,15 @@ public class CanvasController {
 
             if (!removeCircleCells.contains(circleCell) && thisCellTopY >= clickedCellBottomY && thisCellTopY < clickedCellBoundBottomY && thisCellTopLeftX > clickedCellTopRightX) {
                 // if (thisCellTopY >= clickedCellTopY ) {
-                System.out.println(" -" + id);
-                System.out.println(" --" + id);
+                // System.out.println(" -" + id);
+                // System.out.println(" --" + id);
                 removeCircleCells.add(circleCell);
                 removeEdges.add(edgesOnUI.get(id));
-                try {
-                    throw new Exception("here");
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
             } else if (!removeCircleCells.contains(circleCell) && thisCellTopY == clickedCellTopY && thisCellTopLeftX >= clickedCellTopRightX) {
-                System.out.println(" -" + id);
-                System.out.println(" --" + id);
+                // System.out.println(" -" + id);
+                // System.out.println(" --" + id);
                 removeCircleCells.add(circleCell);
                 removeEdges.add(edgesOnUI.get(id));
-                try {
-                    throw new Exception("here");
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
             }
         });
 
@@ -242,7 +231,7 @@ public class CanvasController {
         edgesOnUI.forEach((id, edge) -> {
             int intId = Integer.parseInt(id);
             if (intId > startCellId && intId < endCellId) {
-                System.out.print(" .--" + id);
+                // System.out.print(" .--" + id);
                 removeEdges.add(edge);
             }
 
@@ -256,7 +245,7 @@ public class CanvasController {
                     && thisLineEndY <= clickedCellBoundBottomY
                     && thisLineStartY >= clickedCellTopY
                     && thisLineStartX >= (clickedCellTopRightX - BoundBox.unitWidthFactor)) {
-                System.out.print(" --" + id);
+                // System.out.print(" --" + id);
                 removeEdges.add(edge);
             }
         });
@@ -289,7 +278,7 @@ public class CanvasController {
     public void moveLowerTreeByDelta(ElementDTO elementDTO) {
 
         float clickedCellBottomY = elementDTO.getBoundBoxYTopLeft() + BoundBox.unitHeightFactor;
-        double delta = elementDTO.getDelta();
+        double delta = elementDTO.getDeltaY();
 
         // For each circle cell on UI that is below the clicked cell, move up by delta
         circleCellsOnUI.forEach((thisCellID, thisCircleCell) -> {
@@ -392,7 +381,7 @@ public class CanvasController {
 
     public void clearAndUpdate() {
         clear();
-        updateIfNeeded();
+        addCanvasComponentsFromDB();
     }
 
     public void onThreadSelect() {
@@ -405,7 +394,6 @@ public class CanvasController {
 
     public void showGraphForThread(String threadId) {
         ControllerLoader.centerLayoutController.setCurrentThreadId(threadId);
-
         onThreadSelect();
     }
 
@@ -452,7 +440,7 @@ public class CanvasController {
         }
 
         if (!triggerRegion.contains(getViewPortDims())) {
-            System.out.println("CanvasController.isUIDrawingRequired drawing IS required.   YYYYYYYYYYYYYY");
+            // System.out.println("CanvasController.isUIDrawingRequired drawing IS required.   YYYYYYYYYYYYYY");
             setRegions();
             return true;
         }
@@ -527,18 +515,14 @@ public class CanvasController {
         String threadId = ControllerLoader.centerLayoutController.getCurrentThreadId();
 
         vScrollBarPos.put(threadId, scrollPane.getVvalue());
-        System.out.println("CanvasController.saveScrollBarPos vvalue: " + scrollPane.getVvalue() + " : " + vScrollBarPos.get(threadId));
         hScrollBarPos.put(threadId, scrollPane.getHvalue());
-        System.out.println("CanvasController.saveScrollBarPos hvalue: " + scrollPane.getHvalue() + " : " + hScrollBarPos.get(threadId));
     }
 
     private void positionScrollBarFromHistory() {
         String threadId = ControllerLoader.centerLayoutController.getCurrentThreadId();
 
         scrollPane.setVvalue(vScrollBarPos.getOrDefault(threadId, 0.0));
-        System.out.println("CanvasController.positionScrollBarFromHistory vvalue: " + vScrollBarPos.get(threadId));
         scrollPane.setHvalue(hScrollBarPos.getOrDefault(threadId, 0.0));
-        System.out.println("CanvasController.positionScrollBarFromHistory hvalue: " + hScrollBarPos.get(threadId));
     }
 
     public void moveScrollPane(double xCord, double yCord){

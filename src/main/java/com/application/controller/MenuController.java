@@ -159,13 +159,6 @@ public class MenuController {
         constructTreeTask.setOnSucceeded((e) -> {
             customProgressBar.close();
             this.mainController.loadGraphPane();
-
-            // force update UI
-            // System.out.println("MenuController.onRun calling update ");
-            // System.out.println("MenuController.onRun " + ControllerLoader.canvasController.scrollPane.getViewportBounds());
-            // ControllerLoader.canvasController.updateIfNeeded(false);
-
-            System.out.println("MenuController.setUpRunMenu constructTreeTask completed successfully.");
         });
 
     }

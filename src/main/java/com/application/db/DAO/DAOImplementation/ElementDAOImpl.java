@@ -5,10 +5,8 @@ import com.application.db.DTO.ElementDTO;
 import com.application.db.DatabaseUtil;
 import com.application.db.TableNames;
 import com.application.fxgraph.ElementHelpers.Element;
-import com.application.fxgraph.graph.Graph;
 import javafx.geometry.BoundingBox;
 
-import javax.xml.crypto.Data;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -19,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.application.db.DAO.DAOImplementation.BookmarksDAOImpl.createTable;
 import static com.application.db.TableNames.ELEMENT_TABLE;
 
 public class ElementDAOImpl {
@@ -143,7 +140,7 @@ public class ElementDAOImpl {
                             elementDTO.getLeafCount() + ", " +
                             elementDTO.getLevelCount() + ", " +
                             elementDTO.getCollapsed() + ", " +
-                            elementDTO.getDelta() + ", " +
+                            elementDTO.getDeltaY() + ", " +
                             elementDTO.getDeltaX() +
                             ")"; })
                 .collect(Collectors.toList());
@@ -210,7 +207,7 @@ public class ElementDAOImpl {
 
     public static void updateCollapse(ElementDTO elementDTO) {
         String updateClickedElement = "UPDATE " + TableNames.ELEMENT_TABLE + " " +
-                "SET COLLAPSED = 2 " +
+                "SET COLLAPSED = " + elementDTO.getCollapsed() + " " +
                 "WHERE ID = " + elementDTO.getId();
 
         DatabaseUtil.executeUpdate(updateClickedElement);
@@ -219,7 +216,7 @@ public class ElementDAOImpl {
     public static void updateCollapseAndDelta(ElementDTO elementDTO) {
         String updateClickedElement = "UPDATE " + TableNames.ELEMENT_TABLE + " " +
                 "SET COLLAPSED = 2, " +
-                "DELTA = " + elementDTO.getDelta() + ", " +
+                "DELTA = " + elementDTO.getDeltaY() + ", " +
                 "DELTA_X = " + elementDTO.getDeltaX() + " " +
                 "WHERE ID = " + elementDTO.getId();
 
@@ -283,7 +280,7 @@ public class ElementDAOImpl {
             elementDTO.setLevelCount(rs.getInt("level_count"));
             elementDTO.setCollapsed(rs.getInt("collapsed"));
 
-            elementDTO.setDelta(rs.getFloat("delta"));
+            elementDTO.setDeltaY(rs.getFloat("delta"));
             elementDTO.setDeltaX(rs.getFloat("delta_x"));
 
         } catch (SQLException e) {
@@ -318,10 +315,11 @@ public class ElementDAOImpl {
                 " AND (E.COLLAPSED = 0" +
                 " OR E.COLLAPSED = 2)";
 
-        System.out.println();
-        System.out.println("ElementDAOImpl.getElementDTOsInViewport query: " + sql);
+        // System.out.println();
+        // System.out.println("ElementDAOImpl.getElementDTOsInViewport query: " + sql);
         try (ResultSet rs = DatabaseUtil.select(sql)) {
             while (rs.next()) {
+                // System.out.println("ElementDAOImpl.getElementDTOsInViewport: while in loop : "  + rs.getInt("EID"));
                 ElementDTO elementDTO = new ElementDTO();
                 elementDTO.setId(String.valueOf(rs.getInt("EID")));
                 elementDTO.setParentId(rs.getInt("parent_id"));
@@ -335,10 +333,12 @@ public class ElementDAOImpl {
                 elementDTOList.add(elementDTO);
             }
         } catch (Exception e) {
+            System.out.println("ElementDAOImpl.getElementDTOsInViewport Exception in this method....");
             e.printStackTrace();
         } finally {
             DatabaseUtil.close();
         }
+
         return elementDTOList;
     }
 

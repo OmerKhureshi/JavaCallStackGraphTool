@@ -176,11 +176,11 @@ public class ElementDTO extends BaseDTO {
         this.collapsed = collapsed;
     }
 
-    public float getDelta() {
+    public float getDeltaY() {
         return delta;
     }
 
-    public void setDelta(float delta) {
+    public void setDeltaY(float delta) {
         this.delta = delta;
     }
 

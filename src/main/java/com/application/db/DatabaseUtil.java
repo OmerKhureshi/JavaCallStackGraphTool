@@ -418,7 +418,6 @@ public class DatabaseUtil {
         CallTraceDAOImpl.createTable();
         MethodDefnDAOImpl.createTable();
         // FilesDAOImpl.createTable();
-        System.out.println("DatabaseUtil.resetDB method ends");
     }
 
 

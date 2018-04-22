@@ -49,7 +49,6 @@ public class ConstructTreeTask extends Task<Void> {
     }
 
     private void computeAndInsertEdges() {
-        System.out.println("ConstructTreeTask.computeAndInsertEdges");
         List<EdgeElement> edgeElementList = new ArrayList<>();
         ModuleLocator.getElementTreeModule().recursivelyInsertEdgeElementsIntoDB(
                 ElementTreeModule.greatGrandParent,
