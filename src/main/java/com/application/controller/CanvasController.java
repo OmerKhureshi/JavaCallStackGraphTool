@@ -1,8 +1,12 @@
 package com.application.controller;
 
+import com.application.db.DAO.DAOImplementation.EdgeDAOImpl;
+import com.application.db.DAO.DAOImplementation.ElementDAOImpl;
+import com.application.db.DAO.DAOImplementation.HighlightDAOImpl;
 import com.application.db.DTO.BookmarkDTO;
 import com.application.db.DTO.EdgeDTO;
 import com.application.db.DTO.ElementDTO;
+import com.application.db.DTO.HighlightDTO;
 import com.application.fxgraph.cells.CircleCell;
 import com.application.fxgraph.graph.BoundBox;
 import com.application.fxgraph.graph.Edge;
@@ -13,6 +17,7 @@ import com.application.service.modules.ModuleLocator;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.geometry.BoundingBox;
+import javafx.scene.Node;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Line;
@@ -99,11 +104,8 @@ public class CanvasController {
      */
     public void updateIfNeeded() {
         if (isUIDrawingRequired()) {
-
-            addCirclesToUI();
-            addEdgesToUI();
-            removeCirclesFromUI();
-            removeEdgesFromUI();
+            addUIComponents();
+            removeUIComponents();
         }
     }
 
@@ -111,23 +113,36 @@ public class CanvasController {
      * This methods creates and draws circle cells and Edges on the active region of the viewport.
      */
     private void addCanvasComponentsFromDB() {
+        addUIComponents();
+    }
+
+    private void addUIComponents() {
         addCirclesToUI();
         addEdgesToUI();
+        addHighlightsToUI();
         addBookmarks();
+
+        stackRectangles();
+    }
+
+    private void removeUIComponents() {
+        removeCirclesFromUI();
+        removeEdgesFromUI();
+        removeHighlightsFromUI();
     }
 
     private void addCirclesToUI() {
         BoundingBox viewPort = getPrefetchViewPortDims();
 
         // System.out.println("CanvasController.addCirclesToUI prefetch viewport: "+ viewPort);
-        List<ElementDTO> elementDTOList = graphLoaderModule.addCircleCellsNew(viewPort);
+        List<ElementDTO> elementDTOList = ElementDAOImpl.getElementDTOsInViewport(viewPort);
         List<CircleCell> circleCells = ControllerUtil.convertElementDTOTOCell(elementDTOList);
 
         // System.out.println();
-        circleCells.forEach(circleCell -> addNewCellToUI(circleCell));
+        circleCells.forEach(this::addNewCellToUI);
     }
 
-    public void addNewCellToUI(CircleCell circleCell) {
+    private void addNewCellToUI(CircleCell circleCell) {
         if (!circleCellsOnUI.containsKey(circleCell.getCellId())) {
             circleCellsOnUI.put(circleCell.getCellId(), circleCell);
             canvas.getChildren().add(circleCell);
@@ -145,7 +160,7 @@ public class CanvasController {
         removeCircleCellsList.forEach(this::removeCellFromUI);
     }
 
-    public void removeCellFromUI(CircleCell circleCell) {
+    private void removeCellFromUI(CircleCell circleCell) {
         if (circleCell != null && circleCellsOnUI.containsKey(circleCell.getCellId())) {
             circleCellsOnUI.remove(circleCell.getCellId());
             canvas.getChildren().remove(circleCell);
@@ -155,7 +170,7 @@ public class CanvasController {
     private void addEdgesToUI() {
         BoundingBox viewPort = getPrefetchViewPortDims();
 
-        List<EdgeDTO> edgeDTOList = graphLoaderModule.addEdgesNew(viewPort);
+        List<EdgeDTO> edgeDTOList = EdgeDAOImpl.getEdgeDTO(viewPort);
         List<Edge> edges = ControllerUtil.convertEdgeDTOToEdges(edgeDTOList);
 
         edges.forEach(edge -> {
@@ -181,7 +196,6 @@ public class CanvasController {
             canvas.getChildren().remove(edge);
         }
     }
-
 
     public void removeUIComponentsBetween(ElementDTO elementDTO, int endCellId) {
         // System.out.println("CanvasController.removeUIComponentsBetween");
@@ -254,25 +268,18 @@ public class CanvasController {
             ControllerLoader.canvasController.removeEdgeFromUI(edge);
         });
 
-        // will do highlights later.......
-        // highlightsOnUi.forEach((id, rectangle) -> {
-        //     // System.out.println("EventHandler::removeUIComponentsBetween: foreach in highlightsOnUi: id: " + id);
-        //     int elementId = rectangle.getElementId();
-        //     if (elementId> startCellId && elementId < endCellId) {
-        //         // System.out.println("EventHandler::removeUIComponentsBetween: adding to removeHighlights, elementId: " + elementId);
-        //         removeHighlights.add(id);
-        //     }
-        // });
+        highlightsOnUi.forEach((id, rectangle) -> {
+            if (id> startCellId && id < endCellId) {
+                removeHighlights.add(rectangle);
+            }
+        });
 
-        // removeHighlights.forEach((id) -> {
-        //     if (highlightsOnUi.containsKey(id)) {
-        //         RectangleCell rectangleCell = highlightsOnUi.get(id);
-        //         int elementId = highlightsOnUi.get(id).getElementId();
-        //         // System.out.println("EventHandler::removeUIComponentsBetween: removing from highlightsOnUi and cellLayer: " + id + " ElementId: " + elementId);
-        //         highlightsOnUi.remove(id);
-        //         cellLayer.getChildren().remove(rectangleCell);
-        //     }
-        // });
+        removeHighlights.forEach((rectangleCell) -> {
+            if (highlightsOnUi.containsKey(rectangleCell)) {
+                highlightsOnUi.remove(rectangleCell);
+                canvas.getChildren().remove(rectangleCell);
+            }
+        });
     }
 
     public void moveLowerTreeByDelta(ElementDTO elementDTO) {
@@ -315,20 +322,40 @@ public class CanvasController {
     }
 
 
-
     private void addHighlightsToUI() {
         BoundingBox viewPort = getPrefetchViewPortDims();
 
-        System.out.println("CanvasController.addCirclesToUI prefetch viewport: "+ viewPort);
-        List<ElementDTO> elementDTOList = graphLoaderModule.addCircleCellsNew(viewPort);
-        List<CircleCell> circleCells = ControllerUtil.convertElementDTOTOCell(elementDTOList);
+        List<HighlightDTO> highlightDTOs = HighlightDAOImpl.getHighlightDTOsInViewPort(viewPort);
+        List<RectangleCell> highlightRects = ControllerUtil.convertHighlightDTOsToHighlights(highlightDTOs);
 
-        System.out.println();
-        circleCells.forEach(circleCell -> addNewCellToUI(circleCell));
+
+        highlightRects.forEach(this::addNewHighlightsToUI);
+    }
+
+    private void addNewHighlightsToUI(RectangleCell rectangleCell) {
+        if (!highlightsOnUI.containsKey(rectangleCell.getElementId())) {
+            highlightsOnUI.putIfAbsent(rectangleCell.getElementId(), rectangleCell);
+            canvas.getChildren().add(rectangleCell);
+        }
+    }
+
+    private void removeHighlightsFromUI() {
+        List<RectangleCell> removeCircleCellsList = highlightsOnUI.values().stream()
+                .filter(rectangleCell -> !activeRegion.intersects(rectangleCell.getBoundsInParent()))
+                .collect(Collectors.toList());
+
+        removeCircleCellsList.forEach(this::removeHighlightFromUI);
+    }
+
+    private void removeHighlightFromUI(RectangleCell rectangleCell) {
+        if (rectangleCell != null && highlightsOnUI.containsKey(rectangleCell.getCellId())) {
+            highlightsOnUI.remove(rectangleCell.getCellId());
+            canvas.getChildren().remove(rectangleCell);
+        }
     }
 
     public void addBookmarks() {
-        Map<String, BookmarkDTO> bookmarkMap = ModuleLocator.getBookmarksModule().getBookmarkDTOs();
+        Map<String, BookmarkDTO> bookmarkMap = ControllerLoader.menuController.getBookmarkDTOs();
 
         bookmarkMap.forEach((cellId, bookmark) -> {
             if (circleCellsOnUI.containsKey(cellId)) {
@@ -344,7 +371,7 @@ public class CanvasController {
     }
 
     public void removeAllBookmarksFromUI() {
-        Map<String, BookmarkDTO> bookmarkDTOs = ModuleLocator.getBookmarksModule().getBookmarkDTOs();
+        Map<String, BookmarkDTO> bookmarkDTOs = ControllerLoader.menuController.getBookmarkDTOs();
 
         circleCellsOnUI.forEach((id, circleCell) -> {
             if (bookmarkDTOs.containsKey(id)) {
@@ -368,6 +395,11 @@ public class CanvasController {
             canvas.getChildren().remove(edge);
         });
         edgesOnUI.clear();
+
+        highlightsOnUI.forEach((id, rectangleCell) -> {
+            canvas.getChildren().remove(rectangleCell);
+        });
+        highlightsOnUI.clear();
     }
 
     /**
@@ -377,6 +409,7 @@ public class CanvasController {
         canvas.getChildren().clear();
         circleCellsOnUI.clear();
         edgesOnUI.clear();
+        highlightsOnUI.clear();
     }
 
     public void clearAndUpdate() {
@@ -542,6 +575,23 @@ public class CanvasController {
         double scaledViewportHeight = scrollPane.getViewportBounds().getHeight(); // / scale;
 
         return yCoordinate / (scaledContentHeight - scaledViewportHeight);
+    }
+
+    public void stackRectangles() {
+
+        List<com.application.fxgraph.graph.RectangleCell> list = new ArrayList<>(highlightsOnUI.values());
+
+        // Sort the list of rectangles according to area.
+        list.sort((o1, o2) -> (int) (o1.getBoundsInParent().getWidth() * o1.getBoundsInParent().getHeight()
+                - o2.getBoundsInParent().getWidth() * o2.getBoundsInParent().getHeight()));
+        list.forEach(Node::toBack);
+
+        edgesOnUI.forEach((id, edge) -> edge.toFront());
+        circleCellsOnUI.forEach((id, circleCell) -> circleCell.toFront());
+    }
+
+    public void jumpTo(String cellId, String threadId, int collapsed) {
+        ControllerLoader.eventHandlers.jumpTo(cellId, threadId, collapsed);
     }
 
 }

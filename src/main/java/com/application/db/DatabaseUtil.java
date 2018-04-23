@@ -7,8 +7,6 @@ import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
-import static com.application.db.DAO.DAOImplementation.BookmarksDAOImpl.createTable;
-
 public class DatabaseUtil {
 
     private static File dataSourceDir;
@@ -41,35 +39,29 @@ public class DatabaseUtil {
     }
 
     private static Connection createDatabaseConnection() {
-        // System.out.println("DatabaseUtil.createDatabaseConnection: method started.");
         String driver = "org.apache.derby.jdbc.EmbeddedDriver";
         Connection conn = null;
+
         try {
             Class.forName(driver).newInstance();
             String url;
+
             if (dataSourceDir == null) {
                 // this is a fresh start, create a new DB.
                 java.util.Date date = new java.util.Date();
                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmsss");
                 String sDate = dateFormat.format(date);
-
-                // File file = new File(prefix + sDate);
-                // if (file.exists()) {
-                //
-                // }
-
                 url = "jdbc:derby:" + prefix + sDate + ";create=true";
-                // url = "jdbc:derby:DB;create=true";
                 dataSourceDir = new File(prefix + sDate);
-                // System.out.println("DatabaseUtil.createDatabaseConnection dataSourceDir == null: new url: " + url);
             } else {
                 url = "jdbc:derby:" + dataSourceDir.getPath() + ";create=true";
             }
+
             conn = DriverManager.getConnection(url);
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException | SQLException e) {
             e.printStackTrace();
         }
-        // System.out.println("DatabaseUtil.createDatabaseConnection: method ended");
+
         return conn;
     }
 
@@ -407,7 +399,7 @@ public class DatabaseUtil {
         System.out.println("DatabaseUtil.resetDB");
         shutdownDatabase();
         CallTraceDAOImpl.dropTable();
-        MethodDefnDAOImpl.dropTable();
+        MethodDefDAOImpl.dropTable();
         ElementDAOImpl.dropTable();
         ElementToChildDAOImpl.dropTable();
         EdgeDAOImpl.dropTable();
@@ -416,7 +408,7 @@ public class DatabaseUtil {
         BookmarksDAOImpl.dropTable();
 
         CallTraceDAOImpl.createTable();
-        MethodDefnDAOImpl.createTable();
+        MethodDefDAOImpl.createTable();
         // FilesDAOImpl.createTable();
     }
 

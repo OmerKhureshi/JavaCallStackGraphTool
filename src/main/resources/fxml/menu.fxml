@@ -5,31 +5,33 @@
 
 <?import javafx.scene.control.SeparatorMenuItem?>
 <MenuBar fx:controller="com.application.controller.MenuController"
-        xmlns:fx="http://javafx.com/fxml/1">
-    <menus>
-        <Menu fx:id="fileMenu" mnemonicParsing="false" text="File">
-            <items>
-                <MenuItem fx:id="chooseMethodDefMenuItem" mnemonicParsing="false" text="Select Method Definition log file" />
-                <MenuItem fx:id="chooseCallTraceMenuItem" mnemonicParsing="false" text="Select Call Trace log file" />
-                <SeparatorMenuItem mnemonicParsing="false" />
-                <MenuItem fx:id="openDBMenuItem" mnemonicParsing="false" text="Load existing database" />
-            </items>
-        </Menu>
-        <Menu fx:id="runMenu" mnemonicParsing="false" text="Run">
-            <MenuItem fx:id="runAnalysisMenuItem" mnemonicParsing="false" text="Run"/>
-            <MenuItem fx:id="resetMenuItem" mnemonicParsing="false" text="Reset"/>
-        </Menu>
-        <Menu mnemonicParsing="false" text="View">
-            <MenuItem mnemonicParsing="false" text="Save Image"/>
-        </Menu>
-        <Menu mnemonicParsing="false" text="Go To">
-            <MenuItem mnemonicParsing="false" text="About MyHelloApp"/>
-        </Menu>
-        <Menu fx:id="bookmarksMenu" text="_Bookmarks"> </Menu>
-        <Menu text="_Debug">
-            <items>
-                <MenuItem fx:id="printViewPortDimsMenuItem" text="Print _viewport dimensions" />
-            </items>
-        </Menu>
-    </menus>
+         xmlns:fx="http://javafx.com/fxml/1">
+
+    <Menu fx:id="fileMenu" text="File">
+        <MenuItem fx:id="chooseMethodDefMenuItem" mnemonicParsing="false" text="Select Method Definition log file"/>
+        <MenuItem fx:id="chooseCallTraceMenuItem" mnemonicParsing="false" text="Select Call Trace log file"/>
+        <SeparatorMenuItem mnemonicParsing="false"/>
+        <MenuItem fx:id="openDBMenuItem" mnemonicParsing="false" text="Load existing database"/>
+    </Menu>
+
+    <Menu fx:id="runMenu" mnemonicParsing="false" text="Run">
+        <MenuItem fx:id="runAnalysisMenuItem" mnemonicParsing="false" text="Run"/>
+        <MenuItem fx:id="resetMenuItem" mnemonicParsing="false" text="Reset"/>
+    </Menu>
+
+    <Menu text="View">
+        <MenuItem mnemonicParsing="false" text="Save Image"/>
+    </Menu>
+
+    <Menu fx:id="highlightMenu" text="_Highlights">
+        <MenuItem fx:id="addHighlights" text="_Add method highlights"/>
+    </Menu>
+
+    <Menu fx:id="bookmarksMenu" text="_Bookmarks"> </Menu>
+
+
+    <Menu text="_Debug">
+        <MenuItem fx:id="printViewPortDimsMenuItem" text="Print _viewport dimensions"/>
+    </Menu>
+
 </MenuBar>

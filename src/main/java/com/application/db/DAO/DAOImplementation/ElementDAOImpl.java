@@ -249,7 +249,6 @@ public class ElementDAOImpl {
         ElementDTO elementDTO = new ElementDTO();
 
         try {
-            elementDTO = new ElementDTO();
             elementDTO.setId(String.valueOf(rs.getInt("ID")));
             elementDTO.setParentId(rs.getInt("parent_id"));
             elementDTO.setIdEnterCallTrace(rs.getInt("id_enter_call_trace"));

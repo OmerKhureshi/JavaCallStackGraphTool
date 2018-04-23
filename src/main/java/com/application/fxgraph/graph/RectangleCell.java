@@ -5,12 +5,12 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
+// UI cell for highlights
+
 public class RectangleCell extends Cell {
     private Rectangle rectangle;
-    private Label idLabel;
 
     private int elementId;
-    private int id;
 
     public RectangleCell(int id, int elementId, float startX, float startY, float width, float height) {
         super(String.valueOf(elementId));
@@ -22,9 +22,11 @@ public class RectangleCell extends Cell {
         rectangle = new Rectangle(width, height);
         rectangle.setStroke(Color.BLACK);
 
-        idLabel = new Label(String.valueOf(elementId) + ",id:" + id);
+        // for debugging, show element id.
+        // Label idLabel = new Label(String.valueOf(elementId) + ");
+        // getChildren().addAll(rectangle, idLabel);
 
-        getChildren().addAll(rectangle, idLabel);
+        getChildren().add(rectangle);
         this.relocate(startX, startY);
     }
 

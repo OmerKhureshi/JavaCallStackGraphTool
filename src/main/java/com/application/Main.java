@@ -1181,7 +1181,7 @@ public class Main extends Application {
                 CheckFileIntegrity.checkFile(CallTraceLogFile.getFile(), bytesRead);
 
                 // Parse Log files.
-                new ParseCallTrace().readFile(MethodDefinitionLogFile.getFile(), bytesRead, MethodDefnDAOImpl::insert);
+                new ParseCallTrace().readFile(MethodDefinitionLogFile.getFile(), bytesRead, MethodDefDAOImpl::insert);
                 updateTitle("Parsing log files.");
                 new ParseCallTrace().readFile(CallTraceLogFile.getFile(), bytesRead,
                         parsedLineList -> {

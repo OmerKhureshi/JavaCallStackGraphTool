@@ -1,34 +1,27 @@
 package com.application.db.DAO.DAOImplementation;
 
+import com.application.db.DTO.ElementDTO;
+import com.application.db.DTO.MethodDefDTO;
 import com.application.db.DatabaseUtil;
 import com.application.db.TableNames;
 
+import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.application.db.TableNames.METHOD_DEFINITION_TABLE;
 
-public class MethodDefnDAOImpl {
-    // TODO: Create abstract classes for all these Impl classes. All common funtionality is implement by the default class. Rest of the methods are abstract.
-    // public static boolean isTableCreated = false;
+public class MethodDefDAOImpl {
 
     public static boolean isTableCreated() {
-        //        System.out.println("starting isTableCreated");
-        // if (!isTableCreated) {// No need to call DatabaseUtil method every time. Save time this way.
-        //            System.out.println("MethodDefnDAOImpl:isTableCreated: " + isTableCreated);
-        // isTableCreated = DatabaseUtil.isTableCreated(METHOD_DEFINITION_TABLE);
         return DatabaseUtil.isTableCreated(METHOD_DEFINITION_TABLE);
-        //            System.out.println("MethodDefnDAOImpl:isTableCreated: " + isTableCreated);
-        // }
-        //        System.out.println("ending isTableCreated");
-        // return isTableCreated;
     }
 
     public static void createTable() {
-        //        System.out.println("starting createTable");
         if (!isTableCreated()) {
             try (Connection c = DatabaseUtil.getConnection(); Statement ps = c.createStatement()) {
                 sql = "CREATE TABLE " + METHOD_DEFINITION_TABLE + " (" +
@@ -40,7 +33,7 @@ public class MethodDefnDAOImpl {
                 ps.execute(sql);
                 System.out.println("** Creating table " + TableNames.METHOD_DEFINITION_TABLE);
             } catch (SQLException e) {
-                System.err.println("MethodDefnDAOImpl::createTable: SQL Exception on create table");
+                System.err.println("MethodDefDAOImpl::createTable: SQL Exception on create table");
                 e.printStackTrace();
             }
         }
@@ -84,6 +77,60 @@ public class MethodDefnDAOImpl {
         }
         //        System.out.println("ending dropTable");
     }
+
+
+    public static List<String> getMethodPackageString() {
+        List<String> methodDefDTOs = new ArrayList<>();
+
+        String sql = "SELECT * FROM " + TableNames.METHOD_DEFINITION_TABLE;
+
+        try (ResultSet rs = DatabaseUtil.select(sql)) {
+            while (rs.next()) {
+                MethodDefDTO methodDefDTO = processMethodDefDTO(rs);
+                methodDefDTOs.add(methodDefDTO.getPackageName() + "." + methodDefDTO.getMethodName());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            DatabaseUtil.close();
+        }
+
+        return methodDefDTOs;
+    }
+
+    public static List<MethodDefDTO> getMethodDefDTOS() {
+        List<MethodDefDTO> methodDefDTOs = new ArrayList<>();
+
+        String sql = "SELECT * FROM " + TableNames.METHOD_DEFINITION_TABLE;
+
+        try (ResultSet rs = DatabaseUtil.select(sql)) {
+            while (rs.next()) {
+                methodDefDTOs.add(processMethodDefDTO(rs));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            DatabaseUtil.close();
+        }
+
+        return methodDefDTOs;
+    }
+
+    private static MethodDefDTO processMethodDefDTO(ResultSet rs) {
+        MethodDefDTO methodDefDTO = new MethodDefDTO();
+
+        try {
+            methodDefDTO.setId(String.valueOf(rs.getInt("ID")));
+            methodDefDTO.setMethodName(rs.getString("method_name"));
+            methodDefDTO.setPackageName(rs.getString("package_name"));
+            methodDefDTO.setParameterTypes(rs.getString("parameter_types"));
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return methodDefDTO;
+    }
+
 
     static Connection conn;
     static Statement ps;

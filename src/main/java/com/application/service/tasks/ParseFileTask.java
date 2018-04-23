@@ -1,10 +1,8 @@
 package com.application.service.tasks;
 
 import com.application.db.DAO.DAOImplementation.CallTraceDAOImpl;
-import com.application.db.DAO.DAOImplementation.MethodDefnDAOImpl;
+import com.application.db.DAO.DAOImplementation.MethodDefDAOImpl;
 import com.application.db.DatabaseUtil;
-import com.application.logs.fileHandler.CallTraceLogFile;
-import com.application.logs.fileHandler.MethodDefinitionLogFile;
 import com.application.logs.fileIntegrity.CheckFileIntegrity;
 import com.application.logs.parsers.ParseCallTrace;
 import com.application.logs.parsers.ParseMethodDefinition;
@@ -14,8 +12,6 @@ import com.application.service.modules.ModuleLocator;
 import javafx.concurrent.Task;
 
 import java.io.File;
-import java.io.FilenameFilter;
-import java.sql.SQLException;
 import java.util.List;
 
 public class ParseFileTask extends Task<Void> {
@@ -61,10 +57,10 @@ public class ParseFileTask extends Task<Void> {
                     updateProgress(bytesRead.readSoFar, bytesRead.total);
                 });
 
-        MethodDefnDAOImpl.insertList(parsedMDLineList);
+        MethodDefDAOImpl.insertList(parsedMDLineList);
 
         // new ParseMethodDefinition().readFile(MethodDefinitionLogFile.getFile(), bytesRead, parsedLineList -> {
-        //     MethodDefnDAOImpl.insert(parsedLineList);
+        //     MethodDefDAOImpl.insert(parsedLineList);
         //     updateMessage("Please wait... total Bytes: " + bytesRead.total + " bytes processed: " + bytesRead.readSoFar);
         //     updateProgress(bytesRead.readSoFar, bytesRead.total);
         // });

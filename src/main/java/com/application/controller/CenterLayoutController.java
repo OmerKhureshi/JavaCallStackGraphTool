@@ -1,7 +1,6 @@
 package com.application.controller;
 
 import com.application.db.DAO.DAOImplementation.CallTraceDAOImpl;
-import com.application.service.modules.ElementTreeModule;
 import com.application.service.modules.GraphLoaderModule;
 import com.application.service.modules.ModuleLocator;
 import javafx.animation.KeyFrame;
@@ -11,14 +10,10 @@ import javafx.beans.property.DoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.ToggleButton;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.text.Text;
 import javafx.util.Duration;
 
 import java.util.List;
@@ -27,7 +22,7 @@ import java.util.stream.Collectors;
 @SuppressWarnings("ALL")
 public class CenterLayoutController {
     @FXML
-    private ToggleButton settingsToggleButton;
+    private ToggleButton threadsToggleButton;
 
     // @FXML
     // private ToggleButton bookmarksToggleButton;
@@ -75,13 +70,13 @@ public class CenterLayoutController {
     }
 
     private void setUpPaneButtonsActions() {
-        settingsToggleButton.setSelected(false);
+        threadsToggleButton.setSelected(false);
         verticalSplitPanePosProperty = verticalSplitPane.getDividers().get(0).positionProperty();
         verticalSplitPanePosProperty.setValue(0);
 
         // horizontalSplitPanePosProperty = horizontalSplitPane.getDividers().get(0).positionProperty();
 
-        settingsToggleButton.setOnAction(event -> paneActionsForBookmarksButton());
+        threadsToggleButton.setOnAction(event -> paneActionsForBookmarksButton());
         // bookmarksToggleButton.setOnAction(event -> paneActions());
     }
 
@@ -114,7 +109,7 @@ public class CenterLayoutController {
     private void paneActionsForBookmarksButton() {
         KeyValue vSplitPaneKeyVal = null;
 
-         if (settingsToggleButton.isSelected()) {
+         if (threadsToggleButton.isSelected()) {
             vSplitPaneKeyVal = new KeyValue(verticalSplitPanePosProperty, 0.15);
         } else {
             vSplitPaneKeyVal = new KeyValue(verticalSplitPanePosProperty, 0);
@@ -143,6 +138,7 @@ public class CenterLayoutController {
             threadListView.getSelectionModel().select(0);
         }
 
+        // set width of threads pane based on text width.
         // Text text = new Text(String.valueOf(threadIds.get(threadIds.size() - 1)));
         // double maxWidth = text.getLayoutBounds().getWidth();
         //
@@ -155,31 +151,10 @@ public class CenterLayoutController {
             canvasController.saveScrollBarPos();
             currentThreadId = threadId;
             canvasController.onThreadSelect();
+            int ind = threadsObsList.indexOf("Thread: " + threadId);
+            threadListView.getSelectionModel().select(ind);
         }
     }
-
-
-    // public void setUpBookmarkListView() {
-    //
-    //     bookmarkListView.setCellFactory(bookmarkView -> new ListCell<String>() {
-    //
-    //         private ImageView imageView = new ImageView();
-    //
-    //         @Override
-    //         public void updateItem(String item, boolean empty) {
-    //             super.updateItem(item, empty);
-    //             if (empty) {
-    //                 setGraphic(null);
-    //             } else {
-    //                 // true makes this load in background
-    //                 // see other constructors if you want to control the size, etc
-    //                 Image image = new Image(item, true) ;
-    //                 imageView.setImage(image);
-    //                 setGraphic(imageView);
-    //             }
-    //         }
-    //     });
-    // }
 
     public String getCurrentThreadId() {
         return currentThreadId;

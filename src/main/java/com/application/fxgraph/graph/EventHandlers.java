@@ -150,7 +150,7 @@ public class EventHandlers {
                     collapsed = callTraceRS.getInt("COLLAPSED");
 
 
-                    try (ResultSet methodDefRS = MethodDefnDAOImpl.selectWhere("id = " + methodId)) {
+                    try (ResultSet methodDefRS = MethodDefDAOImpl.selectWhere("id = " + methodId)) {
                         if (methodDefRS.next()) {
                             packageName = methodDefRS.getString("package_name");
                             methodName = methodDefRS.getString("method_name");

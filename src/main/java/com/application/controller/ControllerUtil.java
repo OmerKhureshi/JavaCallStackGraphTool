@@ -2,10 +2,12 @@ package com.application.controller;
 
 import com.application.db.DTO.EdgeDTO;
 import com.application.db.DTO.ElementDTO;
+import com.application.db.DTO.HighlightDTO;
 import com.application.fxgraph.ElementHelpers.EdgeElement;
 import com.application.fxgraph.ElementHelpers.Element;
 import com.application.fxgraph.cells.CircleCell;
 import com.application.fxgraph.graph.Edge;
+import com.application.fxgraph.graph.RectangleCell;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -13,6 +15,7 @@ import javafx.stage.Stage;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ControllerUtil {
@@ -69,7 +72,7 @@ public class ControllerUtil {
                 .map((element) -> {
                     ElementDTO elementDTO = new ElementDTO();
                     elementDTO.setId(String.valueOf(element.getElementId()));
-                    elementDTO.setParentId(element.getParent() == null? -1 : element.getParent().getElementId());
+                    elementDTO.setParentId(element.getParent() == null ? -1 : element.getParent().getElementId());
                     elementDTO.setIdEnterCallTrace(element.getFkEnterCallTrace());
                     elementDTO.setIdExitCallTrace(element.getFkExitCallTrace());
                     elementDTO.setBoundBoxXTopLeft(element.getBoundBox().xTopLeft);
@@ -121,4 +124,22 @@ public class ControllerUtil {
                 .collect(Collectors.toList());
     }
 
+    public static List<RectangleCell> convertHighlightDTOsToHighlights(List<HighlightDTO> highlightDTOs) {
+        List<RectangleCell> rectangleCells = new ArrayList<>();
+
+        highlightDTOs.forEach(highlightDTO -> {
+            RectangleCell rect = new RectangleCell(highlightDTO.getId(),
+                    highlightDTO.getElementId(),
+                    highlightDTO.getStartX(), highlightDTO.getStartY(),
+                    highlightDTO.getWidth(), highlightDTO.getHeight());
+
+            rect.setColor(highlightDTO.getColor());
+            rect.setArcHeight(20);
+            rect.setArcWidth(20);
+            rectangleCells.add(rect);
+        });
+
+        return rectangleCells;
+
+    }
 }

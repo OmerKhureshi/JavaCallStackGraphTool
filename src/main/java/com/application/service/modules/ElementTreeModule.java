@@ -1,7 +1,6 @@
 package com.application.service.modules;
 
 import com.application.db.DAO.DAOImplementation.*;
-import com.application.db.DTO.EdgeDTO;
 import com.application.db.DatabaseUtil;
 import com.application.db.TableNames;
 import com.application.db.model.Bookmark;
@@ -436,7 +435,7 @@ public class ElementTreeModule {
                 if (methodId == 0) {
                     methodName = rs.getString("message");
                 } else {
-                    try (ResultSet rsMethod = MethodDefnDAOImpl.selectWhere("id = " + methodId)) {
+                    try (ResultSet rsMethod = MethodDefDAOImpl.selectWhere("id = " + methodId)) {
                         while (rsMethod.next()) {
                             methodName = rsMethod.getString("method_name");
                         }
