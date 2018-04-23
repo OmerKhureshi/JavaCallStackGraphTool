@@ -4,11 +4,12 @@
 <?import javafx.scene.control.MenuItem?>
 
 <?import javafx.scene.control.SeparatorMenuItem?>
-<MenuBar fx:controller="com.application.controller.MenuController"
+<MenuBar fx:id="menuBar"
+        fx:controller="com.application.controller.MenuController"
          xmlns:fx="http://javafx.com/fxml/1">
 
     <Menu fx:id="fileMenu" text="File">
-        <MenuItem fx:id="chooseMethodDefMenuItem" mnemonicParsing="false" text="Select Method Definition log file"/>
+        <MenuItem fx:id="chooseMethodDefMenuItem" text="Select Method Definition log file"/>
         <MenuItem fx:id="chooseCallTraceMenuItem" mnemonicParsing="false" text="Select Call Trace log file"/>
         <SeparatorMenuItem mnemonicParsing="false"/>
         <MenuItem fx:id="openDBMenuItem" mnemonicParsing="false" text="Load existing database"/>
@@ -19,12 +20,13 @@
         <MenuItem fx:id="resetMenuItem" mnemonicParsing="false" text="Reset"/>
     </Menu>
 
-    <Menu text="View">
-        <MenuItem mnemonicParsing="false" text="Save Image"/>
+    <Menu fx:id="viewMenu" text="View">
+        <MenuItem fx:id="saveImageMenuItem" text="Save Image"/>
+        <MenuItem fx:id="refreshMenuItem" text="Refresh"/>
     </Menu>
 
     <Menu fx:id="highlightMenu" text="_Highlights">
-        <MenuItem fx:id="addHighlights" text="_Add method highlights"/>
+        <MenuItem fx:id="addHighlightMenuItem" text="_Add method highlights"/>
     </Menu>
 
     <Menu fx:id="bookmarksMenu" text="_Bookmarks"> </Menu>
