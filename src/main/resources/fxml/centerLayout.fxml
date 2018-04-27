@@ -35,7 +35,6 @@
 
     <center>
         <AnchorPane>
-
             <SplitPane fx:id="verticalSplitPane" dividerPositions="0.23372781065088757" focusTraversable="true"
                        minHeight="0.0" minWidth="0.0"
                        AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">

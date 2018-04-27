@@ -63,6 +63,7 @@ public class CenterLayoutController {
     @FXML
     private void initialize() {
         ControllerLoader.register(this);
+
         setUpPaneButtonsActions();
         graphLoaderModule = ModuleLocator.getGraphLoaderModule();
         setUpThreadsListView();

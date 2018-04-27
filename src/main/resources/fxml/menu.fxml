@@ -12,7 +12,7 @@
         <MenuItem fx:id="chooseMethodDefMenuItem" text="Select Method Definition log file"/>
         <MenuItem fx:id="chooseCallTraceMenuItem" mnemonicParsing="false" text="Select Call Trace log file"/>
         <SeparatorMenuItem mnemonicParsing="false"/>
-        <MenuItem fx:id="openDBMenuItem" mnemonicParsing="false" text="Load existing database"/>
+        <MenuItem fx:id="chooseDBMenuItem" mnemonicParsing="false" text="Load existing database"/>
     </Menu>
 
     <Menu fx:id="runMenu" mnemonicParsing="false" text="Run">
@@ -32,7 +32,7 @@
     <Menu fx:id="bookmarksMenu" text="_Bookmarks"> </Menu>
 
 
-    <Menu text="_Debug">
+    <Menu fx:id="debugMenu" text="_Debug">
         <MenuItem fx:id="printViewPortDimsMenuItem" text="Print _viewport dimensions"/>
     </Menu>
 

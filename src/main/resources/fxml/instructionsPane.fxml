@@ -4,10 +4,14 @@
 <?import javafx.scene.layout.FlowPane?>
 
 
-<FlowPane alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" orientation="VERTICAL" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1">
-   <children>
-      <Label fx:id="methodDefnInfoLabel" text="Select Method Definition log file." />
-      <Label fx:id="callTraceInfoLabel" text="Select Call Trace log file." />
-      <Label fx:id="runInfoLabel" text="Click run." />
-   </children>
+<FlowPane fx:controller="com.application.controller.InstructionsPaneController"
+        alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
+          orientation="VERTICAL" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.141"
+          xmlns:fx="http://javafx.com/fxml/1">
+   <Label fx:id="methodDefInfoLabel" text="Select Method Definition log file."/>
+   <Label fx:id="callTraceInfoLabel" text="Select Call Trace log file."/>
+   <Label text="OR"/>
+   <Label fx:id="dbInfoLabel" text="Select a database where log files were previously stored"/>
+   <Label text="    "/>
+   <Label fx:id="runInfoLabel" text="Click run."/>
 </FlowPane>

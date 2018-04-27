@@ -1,7 +1,5 @@
 package com.application.controller;
 
-import com.application.Main;
-
 public class ControllerLoader {
     public static MainController mainController;
     public static CenterLayoutController centerLayoutController;
@@ -9,6 +7,7 @@ public class ControllerLoader {
     public static MenuController menuController;
     public static EventHandlers eventHandlers;
     public static StatusBarController statusBarController;
+    public static InstructionsPaneController instructionsPaneController;
 
     public static void register(MainController mainController) {
         ControllerLoader.mainController = mainController;
@@ -30,12 +29,15 @@ public class ControllerLoader {
         ControllerLoader.statusBarController = statusBarController;
     }
 
+    public static void register(InstructionsPaneController instructionsPaneController) {
+        ControllerLoader.instructionsPaneController = instructionsPaneController;
+    }
+
     public static EventHandlers getEventHandlers() {
         if (eventHandlers == null) {
             eventHandlers = new EventHandlers();
         }
         return eventHandlers;
     }
-
 
 }

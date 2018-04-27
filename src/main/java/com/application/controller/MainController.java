@@ -10,11 +10,12 @@ import java.io.IOException;
 public class MainController {
     @FXML private BorderPane borderPane;
 
-    @FXML private MenuController menuBarController;
-    @FXML private CenterLayoutController centerLayoutController;
+    // @FXML private CenterLayoutController centerLayoutController;
 
     @FXML protected void initialize() {
-        menuBarController.setParentController(this);
+        ControllerLoader.register(this);
+
+        showInstructionsPane();
     }
 
     void showInstructionsPane() {
@@ -35,7 +36,7 @@ public class MainController {
             Node content = fxmlLoader.load();
             borderPane.setCenter(content);
 
-            centerLayoutController = fxmlLoader.getController();
+            // centerLayoutController = fxmlLoader.getController();
 
         } catch (IOException e) {
             e.printStackTrace();

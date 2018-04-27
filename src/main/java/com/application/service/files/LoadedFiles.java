@@ -7,7 +7,7 @@ public class LoadedFiles {
     private static File callTraceLogFile;
     private static File dbFile;
 
-    private static boolean isFreshLoad = true;
+    private static boolean isloadedFromDB = false;
 
     public static void setFile(String name, File file) {
         if (name.equalsIgnoreCase(FileNames.METHOD_DEF.getFileName())) {
@@ -31,11 +31,11 @@ public class LoadedFiles {
         return null;
     }
 
-    public static boolean IsFreshLoad() {
-        return isFreshLoad;
+    public static boolean isLoadedFromDB() {
+        return isloadedFromDB;
     }
 
-    public static void setFreshLoad(boolean isFreshLoad) {
-        LoadedFiles.isFreshLoad = isFreshLoad;
+    public static void setLoadFromDB(boolean isloadedFromDB) {
+        LoadedFiles.isloadedFromDB = isloadedFromDB;
     }
 }

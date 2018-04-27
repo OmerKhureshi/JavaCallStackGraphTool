@@ -180,7 +180,7 @@ public class Main extends Application {
         primaryStage.show();
 
         ControllerUtil.setPrimaryStage(primaryStage);
-        chooseFreshStartOrReload();
+        // chooseFreshStartOrReload();
 
         // *****************
         // Display user confirmation window to reset or reload the application.

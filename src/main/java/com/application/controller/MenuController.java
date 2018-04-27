@@ -69,10 +69,10 @@ public class MenuController {
     @FXML
     private MenuItem chooseCallTraceMenuItem;
     @FXML
-    private MenuItem openDBMenuItem;
+    private MenuItem chooseDBMenuItem;
     private Glyph methodDefnGlyph;
     private Glyph callTraceGlyph;
-    private Glyph openDBGlyph;
+    private Glyph chooseDBGlyph;
 
     // Run Menu
     @FXML
@@ -107,6 +107,9 @@ public class MenuController {
 
     // Debug menu button
     @FXML
+    private Menu debugMenu;
+
+    @FXML
     private MenuItem printViewPortDimsMenuItem;
 
 
@@ -115,8 +118,6 @@ public class MenuController {
 
     @FXML
     private Menu bookmarksMenu;
-
-    private MainController mainController;
 
     /**
      * app start - file enabled. all else disabled.
@@ -132,6 +133,9 @@ public class MenuController {
         setUpBookmarksMenu();
         setUpHighlightsMenu();
         setUpDebugMenu();
+
+        initMenuGraphics();
+        setRemainingMenuGraphics(false);
 
         ControllerLoader.register(this);
     }
@@ -161,7 +165,7 @@ public class MenuController {
             try {
                 File methodDefLogFile = ControllerUtil.fileChooser("Choose method definition log fileMenu.", "Text Files", "*.txt");
                 LoadedFiles.setFile(FileNames.METHOD_DEF.getFileName(), methodDefLogFile);
-                System.out.println("MenuController.setUpFileMenu file: " + methodDefLogFile.getPath());
+                setFileMenuGraphics();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -171,36 +175,89 @@ public class MenuController {
             try {
                 File callTraceLogFile = ControllerUtil.fileChooser("Choose call trace log fileMenu.", "Text Files", "*.txt");
                 LoadedFiles.setFile(FileNames.Call_Trace.getFileName(), callTraceLogFile);
-                System.out.println("MenuController.setUpFileMenu file: " + callTraceLogFile);
+                setFileMenuGraphics();
             } catch (Exception e) {
                 e.printStackTrace();
             }
         });
 
-        openDBMenuItem.setOnAction(event -> {
+        chooseDBMenuItem.setOnAction(event -> {
             try {
                 File dbFile = ControllerUtil.directoryChooser("Choose an existing database.");
                 LoadedFiles.setFile("db", dbFile);
-                LoadedFiles.setFreshLoad(false);
-                System.out.println("MenuController.setUpFileMenu db: " + dbFile);
+                LoadedFiles.setLoadFromDB(false);
+
+                setChooseDBMenuItem(false);
+
+                setRunAnalysisMenuItemGraphics(true);
+                setResetMenuItemGraphics(true);
+
+                setChooseMethodDefMenuItemGraphics(false, false);
+                setChooseCallTraceMenuItemGraphics(false, false);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         });
+    }
+
+    private void setFileMenuGraphics() {
+        boolean methodDefFileSet = LoadedFiles.getFile(FileNames.METHOD_DEF.getFileName()) != null;
+        boolean callTraceFileSet = LoadedFiles.getFile(FileNames.Call_Trace.getFileName()) != null;
+
+        if (methodDefFileSet && callTraceFileSet) {
+            System.out.println("MenuController.setFileMenuGraphics 1");
+            setChooseMethodDefMenuItemGraphics(true, true);
+            setChooseCallTraceMenuItemGraphics(true, true);
+
+            setRunAnalysisMenuItemGraphics(true);
+            setResetMenuItemGraphics(true);
+
+            // runInfoGlyph.setIcon(FontAwesome.Glyph.ARROW_RIGHT);
+            // runInfoGlyph.setColor(ColorProp.ENABLED);
+        } else if (!methodDefFileSet && !callTraceFileSet) {
+            // on reset
+            System.out.println("MenuController.setFileMenuGraphics 2");
+            setChooseMethodDefMenuItemGraphics(true, false);
+            setChooseCallTraceMenuItemGraphics(true, false);
+        } else if (methodDefFileSet) {
+            System.out.println("MenuController.setFileMenuGraphics 3");
+            setChooseMethodDefMenuItemGraphics(true, true);
+        } else if (callTraceFileSet) {
+            System.out.println("MenuController.setFileMenuGraphics 4");
+            setChooseCallTraceMenuItemGraphics(true, true);
+        }
     }
 
     private void setUpRunMenu() {
         runAnalysisMenuItem.setOnAction(event -> {
             onRun();
+
+            setChooseDBMenuItem(false);
+            setChooseMethodDefMenuItemGraphics(false, !LoadedFiles.isLoadedFromDB());
+            setChooseCallTraceMenuItemGraphics(false, !LoadedFiles.isLoadedFromDB());
+
+            setRunAnalysisMenuItemGraphics(false);
+            setResetMenuItemGraphics(true);
+
+            setRemainingMenuGraphics(true);
         });
 
         resetMenuItem.setOnAction(event -> {
-            System.out.println("reset clicked.");
-            this.mainController.showInstructionsPane();
+            ControllerLoader.mainController.showInstructionsPane();
+
+            setChooseDBMenuItem(true);
+            setChooseMethodDefMenuItemGraphics(true, false);
+            setChooseCallTraceMenuItemGraphics(true, false);
+
+            setResetMenuItemGraphics(false);
+            setRunAnalysisMenuItemGraphics(false);
+
+            setRemainingMenuGraphics(false);
         });
     }
 
     private void setUpDebugMenu() {
+
         printViewPortDimsMenuItem.setOnAction(event -> {
             System.out.println("ScrollPane viewport dimensions");
             System.out.println(ControllerLoader.canvasController.scrollPane.getViewportBounds());
@@ -210,7 +267,7 @@ public class MenuController {
 
     private void onRun() {
         // No need to parse log file and compute graph if loading from DB.
-        if (!LoadedFiles.IsFreshLoad()) {
+        if (LoadedFiles.isLoadedFromDB()) {
             return;
         }
 
@@ -233,7 +290,7 @@ public class MenuController {
 
         constructTreeTask.setOnSucceeded((e) -> {
             customProgressBar.close();
-            this.mainController.loadGraphPane();
+            ControllerLoader.mainController.loadGraphPane();
         });
 
     }
@@ -299,11 +356,6 @@ public class MenuController {
 
         bookmarksMenu.getItems().add(clearBookmarksMenuItem);
     }
-
-    void setParentController(MainController mainController) {
-        this.mainController = mainController;
-    }
-
 
     private Stage mStage;
     private Button applyButton;
@@ -650,7 +702,7 @@ public class MenuController {
         }
     }
 
-    private void setMenuUp() {
+    private void initMenuGraphics() {
         String font = "FontAwesome";
         List<Glyph> glyphsStyling = new ArrayList<>();
         List<MenuItem> menuItemsStyling = new ArrayList<>();
@@ -669,15 +721,15 @@ public class MenuController {
         callTraceGlyph.setColor(Color.DIMGRAY);
         chooseCallTraceMenuItem.setGraphic(callTraceGlyph);
 
-        openDBGlyph = new Glyph(font, FontAwesome.Glyph.FOLDER_OPEN);
-        openDBGlyph.setColor(Color.DIMGRAY);
-        openDBMenuItem.setGraphic(openDBGlyph);
+        chooseDBGlyph = new Glyph(font, FontAwesome.Glyph.FOLDER_OPEN);
+        chooseDBGlyph.setColor(Color.DIMGRAY);
+        chooseDBMenuItem.setGraphic(chooseDBGlyph);
 
         SeparatorMenuItem separatorMenuItem = new SeparatorMenuItem();
 
         menuItemsStyling.add(chooseMethodDefMenuItem);
         menuItemsStyling.add(chooseCallTraceMenuItem);
-        menuItemsStyling.add(openDBMenuItem);
+        menuItemsStyling.add(chooseDBMenuItem);
 
         // *****************
         // Run Menu
@@ -728,14 +780,10 @@ public class MenuController {
         // *****************
         // Bookmarks Menu
         // *****************
-        bookmarksMenu = new Menu("Bookmarks");
         bookmarksMenu.setDisable(true);
         bookmarksGlyph = new Glyph(font, FontAwesome.Glyph.BOOKMARK);
         bookmarksGlyph.setColor(ColorProp.ENABLED);
-        bookmarksSubMenu = new Menu("Bookmarks", bookmarksGlyph);
 
-
-        bookmarksMenu.getItems().add(bookmarksSubMenu);
         // bookmarksMenu.setDisable(true);
         menuItemsStyling.add(bookmarksMenu);
         glyphsStyling.add(bookmarksGlyph);
@@ -743,24 +791,103 @@ public class MenuController {
         // *****************
         // Debug Menu
         // *****************
-        debugMenu = new Menu("Debug");
-        debugMenu.setDisable(true);
-        printCellsMenuItem = new MenuItem("Print circles on canvas to console");
-        printEdgesMenuItem = new MenuItem("Print edges on canvas to console");
-        printBarMarksItem = new MenuItem("Print bookmark marks to console");
-        printHighlightsMenuItem = new MenuItem("Print highlights on canvas to console");
+        // debugMenu.setDisable(true);
+        // printCellsMenuItem = new MenuItem("Print circles on canvas to console");
+        // printEdgesMenuItem = new MenuItem("Print edges on canvas to console");
+        // printBarMarksItem = new MenuItem("Print bookmark marks to console");
+        // printHighlightsMenuItem = new MenuItem("Print highlights on canvas to console");
 
-        debugMenu.getItems().addAll(printCellsMenuItem, printEdgesMenuItem, printHighlightsMenuItem, printBarMarksItem);
+        // debugMenu.getItems().addAll(printCellsMenuItem, printEdgesMenuItem, printHighlightsMenuItem, printBarMarksItem);
 
         // *****************
         // Main Menu
         // *****************
-        menuBar.getMenus().addAll(fileMenu, runMenu, viewMenu, saveImgMenu, goToMenu, bookmarksMenu, highlightMenu, debugMenu);
-        glyphsStyling.addAll(Arrays.asList(methodDefnGlyph, callTraceGlyph, openDBGlyph, resetGlyph, runAnalysisGlyph,
-                saveImageGlyph, recentsGlyph, clearHistoryGlyph, highlightItemsGlyph));
+        glyphsStyling.addAll(Arrays.asList(methodDefnGlyph, callTraceGlyph, chooseDBGlyph, resetGlyph, runAnalysisGlyph,
+                saveImageGlyph,
+                // recentsGlyph, clearHistoryGlyph,
+                highlightItemsGlyph));
 
         menuItemsStyling.forEach(menuItem -> menuItem.setStyle(SizeProp.PADDING_SUBMENU));
         glyphsStyling.forEach(glyph -> glyph.setStyle(SizeProp.PADDING_ICONS));
-        root.setTop(menuBar);
+    }
+
+    private void setChooseMethodDefMenuItemGraphics(boolean enabled, boolean isSet) {
+        if (enabled && isSet) {
+            chooseMethodDefMenuItem.setDisable(false);
+            methodDefnGlyph.setIcon(FontAwesome.Glyph.CHECK);
+            methodDefnGlyph.setColor(ColorProp.GREEN);
+        } else if (enabled && !isSet) {
+            chooseMethodDefMenuItem.setDisable(false);
+            methodDefnGlyph.setIcon(FontAwesome.Glyph.PLUS);
+            methodDefnGlyph.setColor(ColorProp.GREY);
+        } else if (!enabled && isSet) {
+            // after choosing files and clicking run analysis
+            chooseMethodDefMenuItem.setDisable(true);
+            methodDefnGlyph.setIcon(FontAwesome.Glyph.CHECK);
+            methodDefnGlyph.setColor(ColorProp.GREEN);
+        } else if (!enabled && !isSet) {
+            // after choosing db and clicking run analysis
+            chooseMethodDefMenuItem.setDisable(true);
+            methodDefnGlyph.setIcon(FontAwesome.Glyph.PLUS);
+            methodDefnGlyph.setColor(ColorProp.GREY);
+        }
+    }
+
+    private void setChooseCallTraceMenuItemGraphics(boolean enabled, boolean isSet) {
+        if (enabled && isSet) {
+            chooseCallTraceMenuItem.setDisable(false);
+            callTraceGlyph.setIcon(FontAwesome.Glyph.CHECK);
+            callTraceGlyph.setColor(ColorProp.GREEN);
+        } else if (enabled && !isSet) {
+            chooseCallTraceMenuItem.setDisable(false);
+            callTraceGlyph.setIcon(FontAwesome.Glyph.PLUS);
+            callTraceGlyph.setColor(ColorProp.GREY);
+        } else if (!enabled && isSet) {
+            // after choosing files and clicking run analysis
+            chooseCallTraceMenuItem.setDisable(true);
+            callTraceGlyph.setIcon(FontAwesome.Glyph.CHECK);
+            callTraceGlyph.setColor(ColorProp.GREEN);
+        } else if (!enabled && !isSet) {
+            // after choosing db and clicking run analysis
+            chooseCallTraceMenuItem.setDisable(true);
+            callTraceGlyph.setIcon(FontAwesome.Glyph.PLUS);
+            callTraceGlyph.setColor(ColorProp.GREY);
+        }
+    }
+
+    private void setChooseDBMenuItem(boolean enabled) {
+        chooseMethodDefMenuItem.setDisable(!enabled);
+        if (LoadedFiles.isLoadedFromDB()) {
+            chooseDBGlyph.setColor(ColorProp.GREEN);
+        } else {
+            chooseDBGlyph.setColor(ColorProp.GREY);
+        }
+    }
+
+    private void setRunAnalysisMenuItemGraphics(boolean enabled) {
+        if (enabled) {
+            runAnalysisMenuItem.setDisable(false);
+            runAnalysisGlyph.setColor(ColorProp.GREEN);
+        } else {
+            runAnalysisMenuItem.setDisable(true);
+            runAnalysisGlyph.setColor(ColorProp.GREY);
+        }
+    }
+
+    private void setResetMenuItemGraphics(boolean enabled) {
+        if (enabled) {
+            resetMenuItem.setDisable(false);
+            resetGlyph.setColor(ColorProp.RED);
+        } else {
+            resetMenuItem.setDisable(true);
+            resetGlyph.setColor(ColorProp.GREY);
+        }
+    }
+
+    private void setRemainingMenuGraphics(boolean enabled) {
+        highlightMenu.setDisable(!enabled);
+        bookmarksMenu.setDisable(!enabled);
+        viewMenu.setDisable(!enabled);
+        debugMenu.setDisable(!enabled);
     }
 }
