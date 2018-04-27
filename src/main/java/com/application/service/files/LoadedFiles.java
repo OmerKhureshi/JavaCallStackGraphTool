@@ -7,7 +7,7 @@ public class LoadedFiles {
     private static File callTraceLogFile;
     private static File dbFile;
 
-    private static boolean isloadedFromDB = false;
+    private static boolean loadedFromDB = false;
 
     public static void setFile(String name, File file) {
         if (name.equalsIgnoreCase(FileNames.METHOD_DEF.getFileName())) {
@@ -32,10 +32,18 @@ public class LoadedFiles {
     }
 
     public static boolean isLoadedFromDB() {
-        return isloadedFromDB;
+        return loadedFromDB;
     }
 
     public static void setLoadFromDB(boolean isloadedFromDB) {
-        LoadedFiles.isloadedFromDB = isloadedFromDB;
+        LoadedFiles.loadedFromDB = isloadedFromDB;
+    }
+
+    public static void resetFile() {
+        methodDefLogFile = null;
+        callTraceLogFile = null;
+        dbFile = null;
+
+        loadedFromDB = false;
     }
 }

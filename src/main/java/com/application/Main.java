@@ -168,7 +168,7 @@ public class Main extends Application {
             e.printStackTrace();
         }
 
-        Scene scene = new Scene(content, 1000, 300);
+        Scene scene = new Scene(content, 1000, 500);
 
         // URL url = getClass().getClassLoader().getResource("css/application.css");
         // String css = url.toExternalForm();

@@ -164,8 +164,10 @@ public class MenuController {
         chooseMethodDefMenuItem.setOnAction(event -> {
             try {
                 File methodDefLogFile = ControllerUtil.fileChooser("Choose method definition log fileMenu.", "Text Files", "*.txt");
-                LoadedFiles.setFile(FileNames.METHOD_DEF.getFileName(), methodDefLogFile);
-                setFileMenuGraphics();
+                if (methodDefLogFile != null) {
+                    LoadedFiles.setFile(FileNames.METHOD_DEF.getFileName(), methodDefLogFile);
+                    setFileRelatedGraphics();
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -174,8 +176,10 @@ public class MenuController {
         chooseCallTraceMenuItem.setOnAction(event -> {
             try {
                 File callTraceLogFile = ControllerUtil.fileChooser("Choose call trace log fileMenu.", "Text Files", "*.txt");
-                LoadedFiles.setFile(FileNames.Call_Trace.getFileName(), callTraceLogFile);
-                setFileMenuGraphics();
+                if (callTraceLogFile != null) {
+                    LoadedFiles.setFile(FileNames.Call_Trace.getFileName(), callTraceLogFile);
+                    setFileRelatedGraphics();
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -184,10 +188,14 @@ public class MenuController {
         chooseDBMenuItem.setOnAction(event -> {
             try {
                 File dbFile = ControllerUtil.directoryChooser("Choose an existing database.");
-                LoadedFiles.setFile("db", dbFile);
-                LoadedFiles.setLoadFromDB(false);
+                if (dbFile == null) {
+                    return;
+                }
 
-                setChooseDBMenuItem(false);
+                LoadedFiles.setFile("db", dbFile);
+                LoadedFiles.setLoadFromDB(true);
+
+                setDBRelatedGraphics(false);
 
                 setRunAnalysisMenuItemGraphics(true);
                 setResetMenuItemGraphics(true);
@@ -200,39 +208,36 @@ public class MenuController {
         });
     }
 
-    private void setFileMenuGraphics() {
+    private void setFileRelatedGraphics() {
         boolean methodDefFileSet = LoadedFiles.getFile(FileNames.METHOD_DEF.getFileName()) != null;
         boolean callTraceFileSet = LoadedFiles.getFile(FileNames.Call_Trace.getFileName()) != null;
 
         if (methodDefFileSet && callTraceFileSet) {
-            System.out.println("MenuController.setFileMenuGraphics 1");
+            // do not remove any statements in this loop.
             setChooseMethodDefMenuItemGraphics(true, true);
             setChooseCallTraceMenuItemGraphics(true, true);
 
             setRunAnalysisMenuItemGraphics(true);
             setResetMenuItemGraphics(true);
-
-            // runInfoGlyph.setIcon(FontAwesome.Glyph.ARROW_RIGHT);
-            // runInfoGlyph.setColor(ColorProp.ENABLED);
+            // ControllerLoader.instructionsPaneController.setMethodDefGraphics(true);
+            ControllerLoader.instructionsPaneController.setCallTraceGraphics(true);
+            ControllerLoader.instructionsPaneController.setFileRunInfoGraphics(true);
         } else if (!methodDefFileSet && !callTraceFileSet) {
-            // on reset
-            System.out.println("MenuController.setFileMenuGraphics 2");
+            // on reset.
             setChooseMethodDefMenuItemGraphics(true, false);
             setChooseCallTraceMenuItemGraphics(true, false);
         } else if (methodDefFileSet) {
-            System.out.println("MenuController.setFileMenuGraphics 3");
             setChooseMethodDefMenuItemGraphics(true, true);
+            ControllerLoader.instructionsPaneController.setMethodDefGraphics(true);
         } else if (callTraceFileSet) {
-            System.out.println("MenuController.setFileMenuGraphics 4");
             setChooseCallTraceMenuItemGraphics(true, true);
+            ControllerLoader.instructionsPaneController.setCallTraceGraphics(true);
         }
     }
 
     private void setUpRunMenu() {
         runAnalysisMenuItem.setOnAction(event -> {
-            onRun();
-
-            setChooseDBMenuItem(false);
+            setDBRelatedGraphics(false);
             setChooseMethodDefMenuItemGraphics(false, !LoadedFiles.isLoadedFromDB());
             setChooseCallTraceMenuItemGraphics(false, !LoadedFiles.isLoadedFromDB());
 
@@ -240,19 +245,26 @@ public class MenuController {
             setResetMenuItemGraphics(true);
 
             setRemainingMenuGraphics(true);
+
+            onRun();
         });
 
         resetMenuItem.setOnAction(event -> {
             ControllerLoader.mainController.showInstructionsPane();
 
-            setChooseDBMenuItem(true);
-            setChooseMethodDefMenuItemGraphics(true, false);
-            setChooseCallTraceMenuItemGraphics(true, false);
+            LoadedFiles.resetFile();
+
+            setDBRelatedGraphics(true);
+            setFileRelatedGraphics();
 
             setResetMenuItemGraphics(false);
             setRunAnalysisMenuItemGraphics(false);
 
             setRemainingMenuGraphics(false);
+
+            ControllerLoader.instructionsPaneController.setCallTraceGraphics(false);
+            ControllerLoader.instructionsPaneController.setMethodDefGraphics(false);
+            ControllerLoader.instructionsPaneController.setFileRunInfoGraphics(false);
         });
     }
 
@@ -268,6 +280,7 @@ public class MenuController {
     private void onRun() {
         // No need to parse log file and compute graph if loading from DB.
         if (LoadedFiles.isLoadedFromDB()) {
+            ControllerLoader.mainController.loadGraphPane();
             return;
         }
 
@@ -855,10 +868,14 @@ public class MenuController {
         }
     }
 
-    private void setChooseDBMenuItem(boolean enabled) {
-        chooseMethodDefMenuItem.setDisable(!enabled);
+    private void setDBRelatedGraphics(boolean enabled) {
+        chooseMethodDefMenuItem.setDisable(enabled);
+        chooseCallTraceMenuItem.setDisable(enabled);
+
         if (LoadedFiles.isLoadedFromDB()) {
             chooseDBGlyph.setColor(ColorProp.GREEN);
+            ControllerLoader.instructionsPaneController.setDBInfoGraphics(true);
+            ControllerLoader.instructionsPaneController.setDBRunInfoGraphics(true);
         } else {
             chooseDBGlyph.setColor(ColorProp.GREY);
         }

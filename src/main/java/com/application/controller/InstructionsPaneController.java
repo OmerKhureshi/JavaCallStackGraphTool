@@ -4,71 +4,105 @@ import com.application.fxgraph.graph.ColorProp;
 import com.application.service.files.FileNames;
 import com.application.service.files.LoadedFiles;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.scene.control.Label;
+import javafx.scene.layout.FlowPane;
 import org.controlsfx.glyphfont.FontAwesome;
 import org.controlsfx.glyphfont.Glyph;
 
 public class InstructionsPaneController {
 
     @FXML
+    private FlowPane flowPane;
+
+    @FXML
+    private Label fileHeaderLabel;
+    @FXML
     private Label methodDefInfoLabel;
     @FXML
     private Label callTraceInfoLabel;
     @FXML
-    private Label runInfoLabel;
+    private Label fileRunInfoLabel;
 
     @FXML
-    private Label dbInfoLabel;
+    private Label orLabel;
 
+    @FXML
+    private Label dbHeaderLabel;
+    @FXML
+    private Label dbInfoLabel;
+    @FXML
+    private Label dbRunInfoLabel;
+
+    private Glyph fileHeaderGlyph;
     private Glyph methodDefInfoGlyph;
     private Glyph callTraceInfoGlyph;
+    private Glyph fileRunInfoGlyph;
+
+    private Glyph dbHeaderGlyph;
     private Glyph dbInfoGlyph;
-    private Glyph runInfoGlyph;
+    private Glyph dbRunInfoGlyph;
 
 
     @FXML private void initialize() {
         ControllerLoader.register(this);
+
         initGraphics();
     }
 
     private void initGraphics() {
+        double leftInset = 20;
+
+        flowPane.setPadding(new Insets(40));
+        orLabel.setPadding(new Insets(10, 0, 10, 40));
+
+        fileHeaderGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.ARROW_CIRCLE_RIGHT);
+        fileHeaderLabel.setGraphic(fileHeaderGlyph);
+
         methodDefInfoGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.ARROW_RIGHT);
         methodDefInfoGlyph.setColor(ColorProp.GREY);
         methodDefInfoLabel.setGraphic(methodDefInfoGlyph);
+        methodDefInfoLabel.setPadding(new Insets(0, 0, 0, leftInset));
 
         callTraceInfoGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.ARROW_RIGHT);
         callTraceInfoGlyph.setColor(ColorProp.GREY);
         callTraceInfoLabel.setGraphic(callTraceInfoGlyph);
+        callTraceInfoLabel.setPadding(new Insets(0, 0, 0, leftInset));
+
+        fileRunInfoGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.ARROW_RIGHT);
+        fileRunInfoGlyph.setColor(ColorProp.GREY);
+        fileRunInfoLabel.setGraphic(fileRunInfoGlyph);
+        fileRunInfoLabel.setPadding(new Insets(0, 0, 0, leftInset));
+
+
+
+        dbHeaderGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.ARROW_CIRCLE_RIGHT);
+        dbHeaderLabel.setGraphic(dbHeaderGlyph);
 
         dbInfoGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.ARROW_RIGHT);
         dbInfoGlyph.setColor(ColorProp.GREY);
         dbInfoLabel.setGraphic(dbInfoGlyph);
+        dbInfoLabel.setPadding(new Insets(0, 0, 0, leftInset));
 
-        runInfoGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.ARROW_RIGHT);
-        runInfoGlyph.setColor(ColorProp.GREY);
-        runInfoLabel.setGraphic(runInfoGlyph);
+
+        dbRunInfoGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.ARROW_RIGHT);
+        dbRunInfoGlyph.setColor(ColorProp.GREY);
+        dbRunInfoLabel.setGraphic(dbRunInfoGlyph);
+        dbRunInfoLabel.setPadding(new Insets(0, 0, 0, leftInset));
+
     }
-
-    public void setMethodDefInfoLabel(String methodDefInfoLabel) {
-        this.methodDefInfoLabel.setText(methodDefInfoLabel);
-    }
-
-    public void setCallTraceInfoLabel(String callTraceInfoLabelString) {
-        this.callTraceInfoLabel.setText(callTraceInfoLabelString);
-    }
-
-    public void setRunInfoLabel(String runInfoLabelString) {
-        this.runInfoLabel.setText(runInfoLabelString);
-    }
-
 
     public void setMethodDefGraphics(boolean enabled) {
         if (enabled) {
-            methodDefInfoGlyph.setIcon(FontAwesome.Glyph.CHECK);
-            methodDefInfoGlyph.setColor(ColorProp.GREEN);
-
+            // methodDefInfoLabel.setWrapText(true);
+            // methodDefInfoLabel.setTextOverrun(OverrunStyle.CENTER_ELLIPSIS);
             methodDefInfoLabel.setText("Method definitions log file loaded successfully. File Name: "
                     + LoadedFiles.getFile(FileNames.METHOD_DEF.getFileName()).getName());
+
+            methodDefInfoGlyph.setIcon(FontAwesome.Glyph.CHECK);
+            methodDefInfoGlyph.setColor(ColorProp.GREEN);
+            methodDefInfoLabel.setGraphic(methodDefInfoGlyph);
+
         } else {
             methodDefInfoGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.ARROW_RIGHT);
             methodDefInfoGlyph.setColor(ColorProp.GREY);
@@ -82,9 +116,42 @@ public class InstructionsPaneController {
 
             callTraceInfoLabel.setText("Call trace log file loaded successfully. File Name: "
                     + LoadedFiles.getFile(FileNames.Call_Trace.getFileName()).getName());
+
         } else {
             callTraceInfoGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.ARROW_RIGHT);
-            callTraceInfoGlyph.setColor(ColorProp.GREY);
+            callTraceInfoGlyph.setColor(ColorProp.BLACK);
+        }
+    }
+
+    public void setFileRunInfoGraphics(boolean enabled) {
+        if (enabled) {
+            fileRunInfoGlyph.setColor(ColorProp.GREEN);
+        } else {
+            fileRunInfoGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.ARROW_RIGHT);
+            fileRunInfoGlyph.setColor(ColorProp.GREY);
+        }
+    }
+
+    public void setDBInfoGraphics(boolean enabled) {
+        if (enabled) {
+            dbInfoGlyph.setIcon(FontAwesome.Glyph.CHECK);
+            dbInfoGlyph.setColor(ColorProp.GREEN);
+
+            dbInfoLabel.setText("Database loaded successfully. DB Name: "
+                    + LoadedFiles.getFile(FileNames.DB.getFileName()).getName());
+
+        } else {
+            dbInfoGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.ARROW_RIGHT);
+            dbInfoGlyph.setColor(ColorProp.BLACK);
+        }
+    }
+
+    public void setDBRunInfoGraphics(boolean enabled) {
+        if (enabled) {
+            dbRunInfoGlyph.setColor(ColorProp.GREEN);
+        } else {
+            dbRunInfoGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.ARROW_RIGHT);
+            dbRunInfoGlyph.setColor(ColorProp.GREY);
         }
     }
 

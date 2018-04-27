@@ -11,6 +11,7 @@ public class ColorProp {
     public final static Color GREEN = Color.LIMEGREEN;
     public final static Color GREY = Color.DIMGRAY;
     public final static Color RED = Color.RED;
+    public final static Color BLACK = Color.BLACK;
 
 
 
