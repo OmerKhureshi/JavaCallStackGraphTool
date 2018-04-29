@@ -1,13 +1,13 @@
 package com.application.service.files;
 
+import com.application.db.DatabaseUtil;
+
 import java.io.File;
 
 public class LoadedFiles {
     private static File methodDefLogFile;
     private static File callTraceLogFile;
     private static File dbFile;
-
-    private static boolean loadedFromDB = false;
 
     public static void setFile(String name, File file) {
         if (name.equalsIgnoreCase(FileNames.METHOD_DEF.getFileName())) {
@@ -16,6 +16,7 @@ public class LoadedFiles {
             callTraceLogFile = file;
         } else if (name.equalsIgnoreCase(FileNames.DB.getFileName())) {
             dbFile = file;
+            DatabaseUtil.setDBDir(file);
         }
     }
 
@@ -32,18 +33,12 @@ public class LoadedFiles {
     }
 
     public static boolean isLoadedFromDB() {
-        return loadedFromDB;
-    }
-
-    public static void setLoadFromDB(boolean isloadedFromDB) {
-        LoadedFiles.loadedFromDB = isloadedFromDB;
+        return dbFile != null;
     }
 
     public static void resetFile() {
         methodDefLogFile = null;
         callTraceLogFile = null;
         dbFile = null;
-
-        loadedFromDB = false;
     }
 }

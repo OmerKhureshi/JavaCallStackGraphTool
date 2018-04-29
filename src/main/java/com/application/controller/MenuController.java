@@ -14,51 +14,38 @@ import com.application.service.files.LoadedFiles;
 import com.application.service.tasks.ConstructTreeTask;
 import com.application.service.tasks.ParseFileTask;
 import javafx.concurrent.Task;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
 import javafx.geometry.HPos;
 import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 import javafx.scene.Scene;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.control.*;
+import javafx.scene.image.WritableImage;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.scene.transform.Transform;
 import javafx.stage.Stage;
 import org.controlsfx.glyphfont.FontAwesome;
 import org.controlsfx.glyphfont.Glyph;
 
+import javax.imageio.ImageIO;
 import java.io.File;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MenuController {
-    // Information panel.
-    private boolean methodDefnFileSet;
-    private boolean callTraceFileSet;
-
-    private Glyph methodDefnInfoGlyph;
-    private String methodDefnInfoString = "Select Method Definition log file.";
-    private Label methodDefnInfoLabel;
-
-    private Glyph callTraceInfoGlyph;
-    private String callTraceInfoString = "Select Call Trace log file.";
-    private Label callTraceInfoLabel;
-
-    private Glyph dbInfoGlyph;
-    private String dbInfoString = "Select database to load.";
-    private Label dbInfoLabel;
-
-    private Glyph runInfoGlyph;
-
-    private FlowPane instructionsNode;
-
     // Menu bar
     @FXML
     private MenuBar menuBar;
@@ -79,26 +66,21 @@ public class MenuController {
     private MenuItem runAnalysisMenuItem;
     @FXML
     private MenuItem resetMenuItem;
-
     private Glyph runAnalysisGlyph;
     private Glyph resetGlyph;
 
     // View Menu
     private Glyph saveImageGlyph;
     private Glyph refreshGlyph;
-
     @FXML
     private Menu viewMenu;
-
     @FXML
     private MenuItem saveImageMenuItem;
-
     @FXML
     private MenuItem refreshMenuItem;
 
     // Highlights Menu
     private Glyph highlightItemsGlyph;
-
     @FXML
     private MenuItem highlightMenu;
     @FXML
@@ -108,23 +90,25 @@ public class MenuController {
     // Debug menu button
     @FXML
     private Menu debugMenu;
-
     @FXML
     private MenuItem printViewPortDimsMenuItem;
 
-
     // Bookmarks menu button
     private Glyph bookmarksGlyph;
-
     @FXML
     private Menu bookmarksMenu;
 
-    /**
-     * app start - file enabled. all else disabled.
-     * select file - run -> reset enabled. all else disabled.
-     * both files selected - > run -> run analysis enabled. all else disabled.
-     * run analysis -> enable everything.
-     */
+    private Stage mStage;
+    private Button applyButton;
+    private Button cancelButton;
+
+    private Map<String, CheckBox> firstCBMap;
+    private Map<String, CheckBox> secondCBMap;
+    private Map<String, Color> colorsMap;
+    private boolean anyColorChange = false;
+
+    private boolean firstTimeSetUpHighlightsWindowCall = true;
+
     @FXML
     private void initialize() {
         // autoRun();
@@ -132,6 +116,7 @@ public class MenuController {
         setUpRunMenu();
         setUpBookmarksMenu();
         setUpHighlightsMenu();
+        setUpViewMenu();
         setUpDebugMenu();
 
         initMenuGraphics();
@@ -143,8 +128,6 @@ public class MenuController {
     private void setUpHighlightsMenu() {
         addHighlightMenuItem.setOnAction(event -> showHighlightsWindow());
     }
-
-
 
     private void autoRun() {
         setFiles();
@@ -164,10 +147,12 @@ public class MenuController {
         chooseMethodDefMenuItem.setOnAction(event -> {
             try {
                 File methodDefLogFile = ControllerUtil.fileChooser("Choose method definition log fileMenu.", "Text Files", "*.txt");
-                if (methodDefLogFile != null) {
-                    LoadedFiles.setFile(FileNames.METHOD_DEF.getFileName(), methodDefLogFile);
-                    setFileRelatedGraphics();
+                if (methodDefLogFile == null) {
+                    return;
                 }
+
+                LoadedFiles.setFile(FileNames.METHOD_DEF.getFileName(), methodDefLogFile);
+                setFileRelatedGraphics();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -176,10 +161,12 @@ public class MenuController {
         chooseCallTraceMenuItem.setOnAction(event -> {
             try {
                 File callTraceLogFile = ControllerUtil.fileChooser("Choose call trace log fileMenu.", "Text Files", "*.txt");
-                if (callTraceLogFile != null) {
-                    LoadedFiles.setFile(FileNames.Call_Trace.getFileName(), callTraceLogFile);
-                    setFileRelatedGraphics();
+                if (callTraceLogFile == null) {
+                    return;
                 }
+
+                LoadedFiles.setFile(FileNames.Call_Trace.getFileName(), callTraceLogFile);
+                setFileRelatedGraphics();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -193,9 +180,8 @@ public class MenuController {
                 }
 
                 LoadedFiles.setFile("db", dbFile);
-                LoadedFiles.setLoadFromDB(true);
 
-                setDBRelatedGraphics(false);
+                setDBRelatedGraphics(true);
 
                 setRunAnalysisMenuItemGraphics(true);
                 setResetMenuItemGraphics(true);
@@ -237,39 +223,21 @@ public class MenuController {
 
     private void setUpRunMenu() {
         runAnalysisMenuItem.setOnAction(event -> {
-            setDBRelatedGraphics(false);
-            setChooseMethodDefMenuItemGraphics(false, !LoadedFiles.isLoadedFromDB());
-            setChooseCallTraceMenuItemGraphics(false, !LoadedFiles.isLoadedFromDB());
-
-            setRunAnalysisMenuItemGraphics(false);
-            setResetMenuItemGraphics(true);
-
-            setRemainingMenuGraphics(true);
-
             onRun();
         });
 
         resetMenuItem.setOnAction(event -> {
-            ControllerLoader.mainController.showInstructionsPane();
-
-            LoadedFiles.resetFile();
-
-            setDBRelatedGraphics(true);
-            setFileRelatedGraphics();
-
-            setResetMenuItemGraphics(false);
-            setRunAnalysisMenuItemGraphics(false);
-
-            setRemainingMenuGraphics(false);
-
-            ControllerLoader.instructionsPaneController.setCallTraceGraphics(false);
-            ControllerLoader.instructionsPaneController.setMethodDefGraphics(false);
-            ControllerLoader.instructionsPaneController.setFileRunInfoGraphics(false);
+            onReset();
         });
     }
 
-    private void setUpDebugMenu() {
+    private void setUpViewMenu() {
+        saveImageMenuItem.setOnAction(event -> saveUIImage());
 
+        refreshMenuItem.setOnAction(event -> ControllerLoader.canvasController.clearAndUpdate());
+    }
+
+    private void setUpDebugMenu() {
         printViewPortDimsMenuItem.setOnAction(event -> {
             System.out.println("ScrollPane viewport dimensions");
             System.out.println(ControllerLoader.canvasController.scrollPane.getViewportBounds());
@@ -278,6 +246,15 @@ public class MenuController {
     }
 
     private void onRun() {
+        setDBRelatedGraphics(false);
+        setChooseMethodDefMenuItemGraphics(false, !LoadedFiles.isLoadedFromDB());
+        setChooseCallTraceMenuItemGraphics(false, !LoadedFiles.isLoadedFromDB());
+
+        setRunAnalysisMenuItemGraphics(false);
+        setResetMenuItemGraphics(true);
+
+        setRemainingMenuGraphics(true);
+
         // No need to parse log file and compute graph if loading from DB.
         if (LoadedFiles.isLoadedFromDB()) {
             ControllerLoader.mainController.loadGraphPane();
@@ -306,6 +283,27 @@ public class MenuController {
             ControllerLoader.mainController.loadGraphPane();
         });
 
+    }
+
+    public void onReset() {
+        ControllerLoader.mainController.showInstructionsPane();
+
+        LoadedFiles.resetFile();
+
+
+        setDBRelatedGraphics(true);
+        setFileRelatedGraphics();
+
+        setResetMenuItemGraphics(false);
+        setRunAnalysisMenuItemGraphics(false);
+
+        setRemainingMenuGraphics(false);
+
+        ControllerLoader.instructionsPaneController.setCallTraceGraphics(false);
+        ControllerLoader.instructionsPaneController.setMethodDefGraphics(false);
+        ControllerLoader.instructionsPaneController.setFileRunInfoGraphics(false);
+
+        ControllerLoader.mainController.alertShown = false;
     }
 
     private void setUpBookmarksMenu() {
@@ -370,17 +368,6 @@ public class MenuController {
         bookmarksMenu.getItems().add(clearBookmarksMenuItem);
     }
 
-    private Stage mStage;
-    private Button applyButton;
-    private Button cancelButton;
-    private VBox vBox;
-
-    private boolean firstTimeSetUpHighlightsWindowCall = true;
-
-    public Map<String, CheckBox> firstCBMap;
-    public Map<String, CheckBox> secondCBMap;
-    private Map<String, Color> colorsMap;
-    private boolean anyColorChange = false;
 
     private void firstTimeSetUpHighlightsWindow() {
         if (!firstTimeSetUpHighlightsWindowCall)
@@ -455,7 +442,7 @@ public class MenuController {
         hBox.setSpacing(20);
         hBox.setAlignment(Pos.BOTTOM_CENTER);
 
-        vBox = new VBox(SizeProp.SPACING);
+        VBox vBox = new VBox(SizeProp.SPACING);
         vBox.setPrefHeight(VBox.USE_PREF_SIZE);
         vBox.setPadding(SizeProp.INSETS);
 
@@ -680,12 +667,6 @@ public class MenuController {
         });
     }
 
-    // private void resetHighlights() {
-    //     // firstTimeSetUpMethodsWindowCall = true;
-    //     firstTimeSetUpHighlightsWindowCall = true;
-    //     highlightMenu.setDisable(true);
-    // }
-
     public Map<String, BookmarkDTO> getBookmarkDTOs() {
         return BookmarksDAOImpl.getBookmarkDTOs();
     }
@@ -708,12 +689,29 @@ public class MenuController {
         BookmarksDAOImpl.deleteBookmarks();
     }
 
-    public void updateUIOnEvent(String eventType) {
-        switch (eventType) {
-            case "reset":
+    private void saveUIImage() {
+        SnapshotParameters sp = new SnapshotParameters();
+        sp.setTransform(Transform.scale(5, 5));
 
+        // WritableImage image = ControllerLoader.canvasController.canvas.snapshot(sp, null);
+        WritableImage image = ControllerLoader.canvasController.scrollPane.snapshot(sp, null);
+
+        // Create screenshots folder if id doesn't exist.
+        File dir = new File("Screenshots");
+        if (!dir.exists()) {
+            dir.mkdir();
+        }
+
+        String imgPath = "Screenshots" + File.separator + "screenshot-" + dir.list().length + ".png";
+        File file = new File(imgPath);
+        System.out.println("MenuController.saveUIImage image path: " + file.getPath());
+        try {
+            ImageIO.write(SwingFXUtils.fromFXImage(image, null), "png", file);
+        } catch (IOException e) {
+            System.out.println("saveUIImage exception");
         }
     }
+
 
     private void initMenuGraphics() {
         String font = "FontAwesome";
@@ -770,7 +768,6 @@ public class MenuController {
         saveImageGlyph.setColor(ColorProp.ENABLED);
         saveImageMenuItem.setGraphic(saveImageGlyph);
 
-        saveImageMenuItem.setDisable(true);
         menuItemsStyling.add(saveImageMenuItem);
 
         refreshGlyph = new Glyph(font, FontAwesome.Glyph.REFRESH);
@@ -871,6 +868,7 @@ public class MenuController {
     private void setDBRelatedGraphics(boolean enabled) {
         chooseMethodDefMenuItem.setDisable(enabled);
         chooseCallTraceMenuItem.setDisable(enabled);
+        chooseDBMenuItem.setDisable(!enabled);
 
         if (LoadedFiles.isLoadedFromDB()) {
             chooseDBGlyph.setColor(ColorProp.GREEN);

@@ -15,7 +15,6 @@
 
    <!--Main content-->
    <center>
-      <!--<fx:include source="fxml/centerLayout.fxml"/>-->
-      <!--<fx:include source="fxml/instructionsPane.fxml"/>-->
+      <!--will be loaded dynamically with instructions pane first and centerLayout after clicking run analysis.-->
    </center>
 </BorderPane>

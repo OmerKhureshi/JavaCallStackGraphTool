@@ -1,6 +1,7 @@
 package com.application.logs.fileIntegrity;
 
 import com.application.Main;
+import com.application.controller.ControllerLoader;
 import com.application.logs.parsers.Command;
 import com.application.service.tasks.ParseFileTask;
 import javafx.application.Platform;
@@ -66,37 +67,15 @@ public class CheckFileIntegrity {
         } catch (IOException e) {
             e.printStackTrace();
         } catch (NoSuchElementException e) {
-            int finalLinesRead = linesRead;
-            String finalLine = line;
+            String title = "Problem with the call trace log file.";
+            String header = "An error occurred while reading the " + file.getName() + " file.";
+            String message = "This usually happens either due to the log files not conforming to the syntax rules " +
+                    "or due to a mismatch in the count of ENTER and EXIT statements. Please load a different set of log files.";
 
-            Platform.runLater(() -> {
+            ControllerLoader.mainController.showErrorPopup(title, header, message);
 
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Problem with the call trace log file.");
-                alert.setHeaderText("An error occurred while reading the " + file.getName() + " file.");
-                alert.setContentText("This usually happens either due to the log files not conforming to the syntax rules " +
-                        "or due to a mismatch in the count of ENTER and EXIT statements. Please load a different set of log files.");
-                ButtonType resetButtonType = new ButtonType("Reset");
-                alert.getButtonTypes().setAll(resetButtonType);
-
-                alert.getDialogPane().setMinWidth(Region.USE_PREF_SIZE);
-                alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
-
-                Optional<ButtonType> res = alert.showAndWait();
-
-
-                if (res.get() == resetButtonType) {
-                    main.resetFromOutside();
-                }
-
-                e.printStackTrace();
-                throw new NoSuchElementException("Error occurred in line due to mismatch in count of enters and exits. " +
-                        "Error at line: " + finalLinesRead + "; Line is: " + finalLine);
-            });
-
-            // e.printStackTrace();
-            // throw new NoSuchElementException("Error occurred in line due to mismatch in count of enters and exits. " +
-            //         "Error at line: " + linesRead + "; Line is: " + line);
+            System.out.println("Error occurred in line due to mismatch in count of enters and exits. " +
+                    "Error at line: " + linesRead + "; Line is: " + line);
         } finally {
             System.out.println("Log file integrity check completed. If no exceptions were thrown, then log file format is valid.");
         }

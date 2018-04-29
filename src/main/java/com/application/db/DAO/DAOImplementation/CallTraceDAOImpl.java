@@ -163,14 +163,15 @@ public class CallTraceDAOImpl {
     }
     public static List<Integer> getThreadIdsWhere(String where) {
         List<Integer> threadList = new ArrayList<>();
-        try (Connection conn = DatabaseUtil.getConnection()) {
-            String query = "SELECT DISTINCT(THREAD_ID) FROM " + TableNames.CALL_TRACE_TABLE + " where " + where;
-            ResultSet rs = DatabaseUtil.executeQuery(conn, query);
-            while (rs.next()) {
+        String query = "SELECT DISTINCT(THREAD_ID) FROM " + TableNames.CALL_TRACE_TABLE + " where " + where;
+        try (ResultSet rs = DatabaseUtil.select(query)) {
+            while (rs != null && rs.next()) {
                 threadList.add(rs.getInt("thread_id"));
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            DatabaseUtil.close();
         }
 
         return threadList;
@@ -178,15 +179,28 @@ public class CallTraceDAOImpl {
 
     public static List<Integer> getDistinctThreadIds() {
         List<Integer> threadList = new ArrayList<>();
-        try (Connection conn = DatabaseUtil.getConnection()) {
-            String query = "SELECT DISTINCT(THREAD_ID) FROM " + TableNames.CALL_TRACE_TABLE + " order by THREAD_ID";
-            ResultSet rs = DatabaseUtil.executeQuery(conn, query);
-            while (rs.next()) {
+        String query = "SELECT DISTINCT(THREAD_ID) FROM " + TableNames.CALL_TRACE_TABLE + " order by THREAD_ID";
+
+        try (ResultSet rs = DatabaseUtil.select(query)) {
+            while (rs != null && rs.next()) {
                 threadList.add(rs.getInt("thread_id"));
             }
         } catch (SQLException e) {
+            System.out.println("CallTraceDAOImpl.getDistinctThreadIds: ");
             e.printStackTrace();
+        } finally {
+            DatabaseUtil.close();
         }
+
+        // try (Connection conn = DatabaseUtil.getConnection()) {
+        //     ResultSet rs = DatabaseUtil.executeQuery(conn, query);
+        //     while (rs.next()) {
+        //         threadList.add(rs.getInt("thread_id"));
+        //     }
+        // } catch (SQLException e) {
+        //     System.out.println("CallTraceDAOImpl.getDistinctThreadIds: ");
+        //     e.printStackTrace();
+        // }
 
         return threadList;
     }
@@ -201,13 +215,14 @@ public class CallTraceDAOImpl {
                 "AND " + TableNames.METHOD_DEFINITION_TABLE + ".METHOD_NAME = '" + methodName + "' " +
                 "AND " + TableNames.METHOD_DEFINITION_TABLE + ".PACKAGE_NAME = '" + packageName + "'";
 
-        try (Connection conn = DatabaseUtil.getConnection()) {
-            ResultSet rs = DatabaseUtil.executeQuery(conn, query);
+        try (ResultSet rs = DatabaseUtil.select(query);) {
             if (rs.next()) {
                 return rs.getInt("thread_id");
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            DatabaseUtil.close();
         }
 
         return 0;

@@ -76,8 +76,6 @@ public class CanvasController {
 
     private void setUpCenterLayout() {
         canvas = new Pane();
-        // Group canvasContainer = new Group();
-        // canvasContainer.getChildren().add(canvas);
         scrollPane = new ZoomableScrollPane(canvas);
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(true);
@@ -95,7 +93,8 @@ public class CanvasController {
         drawPlaceHolderLines();
         setListeners();
 
-        // canvas.setStyle("-fx-background-color: blue;");
+
+        scrollPane.setStyle("-fx-background: WHITE;");
     }
 
 
@@ -117,6 +116,9 @@ public class CanvasController {
     }
 
     private void addUIComponents() {
+        if (ControllerLoader.centerLayoutController.getCurrentThreadId() == null) {
+            return;
+        }
         addCirclesToUI();
         addEdgesToUI();
         addHighlightsToUI();
@@ -131,6 +133,10 @@ public class CanvasController {
         removeHighlightsFromUI();
     }
 
+
+    /**
+     * Determines all the element nodes that should be drawn in the current viewport and draws them if not already present.
+     */
     private void addCirclesToUI() {
         BoundingBox viewPort = getPrefetchViewPortDims();
 
@@ -142,6 +148,11 @@ public class CanvasController {
         circleCells.forEach(this::addNewCellToUI);
     }
 
+    /**
+     * Draws a new element node on UI if not already present.
+     *
+     * @param circleCell
+     */
     private void addNewCellToUI(CircleCell circleCell) {
         if (!circleCellsOnUI.containsKey(circleCell.getCellId())) {
             circleCellsOnUI.put(circleCell.getCellId(), circleCell);
@@ -532,6 +543,10 @@ public class CanvasController {
 
     private void drawPlaceHolderLines() {
         String currentThreadId = ControllerLoader.centerLayoutController.getCurrentThreadId();
+        if (currentThreadId == null) {
+            System.out.println("CanvasController.drawPlaceHolderLines. currentThreadId is null. Returning without loading.");
+            return;
+        }
         int height = graphLoaderModule.computePlaceHolderHeight(currentThreadId);
         int width = graphLoaderModule.computePlaceHolderWidth(currentThreadId);
 

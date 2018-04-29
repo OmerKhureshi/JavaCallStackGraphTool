@@ -72,6 +72,10 @@ public class CenterLayoutController {
 
     private void setUpPaneButtonsActions() {
         threadsToggleButton.setSelected(false);
+        threadsToggleButton.setStyle("-fx-focus-color: transparent; " +
+                "-fx-background-color: -fx-outer-border, -fx-inner-border, -fx-body-color; " +
+                "-fx-background-insets: 0, 1, 2; " +
+                "-fx-background-radius: 5, 4, 3;");
         verticalSplitPanePosProperty = verticalSplitPane.getDividers().get(0).positionProperty();
         verticalSplitPanePosProperty.setValue(0);
 
@@ -124,6 +128,9 @@ public class CenterLayoutController {
         threadListView.setItems(threadsObsList);
 
         threadListView.setOnMouseClicked((e) -> {
+            if (threadsObsList.size() == 0) {
+                return;
+            }
             String threadId = threadListView.getSelectionModel().getSelectedItem().split(" ")[1];
             switchCurrentThread(threadId);
         });

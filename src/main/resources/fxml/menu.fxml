@@ -8,21 +8,21 @@
         fx:controller="com.application.controller.MenuController"
          xmlns:fx="http://javafx.com/fxml/1">
 
-    <Menu fx:id="fileMenu" text="File">
-        <MenuItem fx:id="chooseMethodDefMenuItem" text="Select Method Definition log file"/>
-        <MenuItem fx:id="chooseCallTraceMenuItem" mnemonicParsing="false" text="Select Call Trace log file"/>
-        <SeparatorMenuItem mnemonicParsing="false"/>
-        <MenuItem fx:id="chooseDBMenuItem" mnemonicParsing="false" text="Load existing database"/>
+    <Menu fx:id="fileMenu" text="_File">
+        <MenuItem fx:id="chooseMethodDefMenuItem" text="_Select Method Definition log file"/>
+        <MenuItem fx:id="chooseCallTraceMenuItem" text="_Select Call Trace log file"/>
+        <SeparatorMenuItem/>
+        <MenuItem fx:id="chooseDBMenuItem" text="_Load existing database"/>
     </Menu>
 
-    <Menu fx:id="runMenu" mnemonicParsing="false" text="Run">
-        <MenuItem fx:id="runAnalysisMenuItem" mnemonicParsing="false" text="Run"/>
-        <MenuItem fx:id="resetMenuItem" mnemonicParsing="false" text="Reset"/>
+    <Menu fx:id="runMenu" text="_Run">
+        <MenuItem fx:id="runAnalysisMenuItem" text="_Run"/>
+        <MenuItem fx:id="resetMenuItem" text="_Reset"/>
     </Menu>
 
-    <Menu fx:id="viewMenu" text="View">
-        <MenuItem fx:id="saveImageMenuItem" text="Save Image"/>
-        <MenuItem fx:id="refreshMenuItem" text="Refresh"/>
+    <Menu fx:id="viewMenu" text="_View">
+        <MenuItem fx:id="saveImageMenuItem" text="_Save Image"/>
+        <MenuItem fx:id="refreshMenuItem" text="_Refresh"/>
     </Menu>
 
     <Menu fx:id="highlightMenu" text="_Highlights">

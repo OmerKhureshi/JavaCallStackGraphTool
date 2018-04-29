@@ -104,7 +104,7 @@ public class InstructionsPaneController {
             methodDefInfoLabel.setGraphic(methodDefInfoGlyph);
 
         } else {
-            methodDefInfoGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.ARROW_RIGHT);
+            methodDefInfoGlyph.setIcon(FontAwesome.Glyph.ARROW_RIGHT);
             methodDefInfoGlyph.setColor(ColorProp.GREY);
         }
     }
@@ -118,7 +118,7 @@ public class InstructionsPaneController {
                     + LoadedFiles.getFile(FileNames.Call_Trace.getFileName()).getName());
 
         } else {
-            callTraceInfoGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.ARROW_RIGHT);
+            callTraceInfoGlyph.setIcon(FontAwesome.Glyph.ARROW_RIGHT);
             callTraceInfoGlyph.setColor(ColorProp.BLACK);
         }
     }
@@ -141,7 +141,7 @@ public class InstructionsPaneController {
                     + LoadedFiles.getFile(FileNames.DB.getFileName()).getName());
 
         } else {
-            dbInfoGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.ARROW_RIGHT);
+            dbInfoGlyph.setIcon(FontAwesome.Glyph.ARROW_RIGHT);
             dbInfoGlyph.setColor(ColorProp.BLACK);
         }
     }

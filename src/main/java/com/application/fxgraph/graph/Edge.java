@@ -2,6 +2,8 @@ package com.application.fxgraph.graph;
 
 import javafx.scene.Group;
 import javafx.scene.control.Label;
+import javafx.scene.effect.Glow;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 
 public class Edge extends Group {
@@ -66,6 +68,13 @@ public class Edge extends Group {
         line.setStartY(startY + Cell.prefHeight * .5 );
         line.setEndX(endX + Cell.prefWidth * .5 );
         line.setEndY(endY + Cell.prefHeight * .5 );
+
+        Glow glow = new Glow();
+        glow.setLevel(0.4);
+        // line.setEffect(glow);
+
+        line.setFill(Color.valueOf("#bab2f0"));
+        line.setStroke(Color.valueOf("#dab2f0"));
 
         // line.startXProperty().bind( source.layoutXProperty().add(source.getLayoutX()));
         // line.startYProperty().bind( source.layoutYProperty().add(source.getLayoutY()));

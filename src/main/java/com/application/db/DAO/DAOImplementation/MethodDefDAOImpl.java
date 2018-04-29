@@ -1,11 +1,9 @@
 package com.application.db.DAO.DAOImplementation;
 
-import com.application.db.DTO.ElementDTO;
 import com.application.db.DTO.MethodDefDTO;
 import com.application.db.DatabaseUtil;
 import com.application.db.TableNames;
 
-import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -70,7 +68,6 @@ public class MethodDefDAOImpl {
                 System.out.println(">> Dropping table " + TableNames.METHOD_DEFINITION_TABLE);
 
                 ps.execute(sql);
-                ps.close();
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -98,24 +95,6 @@ public class MethodDefDAOImpl {
         return methodDefDTOs;
     }
 
-    public static List<MethodDefDTO> getMethodDefDTOS() {
-        List<MethodDefDTO> methodDefDTOs = new ArrayList<>();
-
-        String sql = "SELECT * FROM " + TableNames.METHOD_DEFINITION_TABLE;
-
-        try (ResultSet rs = DatabaseUtil.select(sql)) {
-            while (rs.next()) {
-                methodDefDTOs.add(processMethodDefDTO(rs));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            DatabaseUtil.close();
-        }
-
-        return methodDefDTOs;
-    }
-
     private static MethodDefDTO processMethodDefDTO(ResultSet rs) {
         MethodDefDTO methodDefDTO = new MethodDefDTO();
 
@@ -132,18 +111,15 @@ public class MethodDefDAOImpl {
     }
 
 
-    static Connection conn;
-    static Statement ps;
-    static String sql;
+    private static Connection conn;
+    private static Statement ps;
+    private static String sql;
     public static ResultSet selectWhere(String where) {
         if (isTableCreated()) try {
             conn = DatabaseUtil.getConnection();
             ps = conn.createStatement();
             sql = "SELECT * FROM " + METHOD_DEFINITION_TABLE + " WHERE " + where;
-            ResultSet resultSet = ps.executeQuery(sql);
-            //                resultSet.next();
-            //                System.out.println(resultSet.getInt("id"));
-            return resultSet;
+            return ps.executeQuery(sql);
         } catch (SQLException e) {
             System.out.println("Line that threw error: " + sql);
             e.printStackTrace();

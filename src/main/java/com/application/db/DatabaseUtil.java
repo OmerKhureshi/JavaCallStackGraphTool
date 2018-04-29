@@ -1,6 +1,8 @@
 package com.application.db;
 
+import com.application.controller.ControllerLoader;
 import com.application.db.DAO.DAOImplementation.*;
+import com.application.fxgraph.ElementHelpers.Element;
 
 import java.io.File;
 import java.sql.*;
@@ -18,10 +20,13 @@ public class DatabaseUtil {
 
     private static String prefix = "Databases" + File.separator + "DB_";
 
-      //Todo  Use apache connection pool to get database connection instance link: http://stackoverflow.com/a/6507820/3690248
-
     public static boolean isTableCreated(String tableName) {
         try(Connection c = DatabaseUtil.getConnection()) {
+            if (c == null) {
+                System.out.println("DatabaseUtil.isTableCreated. connection is null.");
+                return false;
+            }
+
             return c.getMetaData().getTables(null, null, tableName, null).next();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -52,13 +57,19 @@ public class DatabaseUtil {
                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmsss");
                 String sDate = dateFormat.format(date);
                 url = "jdbc:derby:" + prefix + sDate + ";create=true";
+                System.out.println("DatabaseUtil.createDatabaseConnection. new db. url: " + url);
                 dataSourceDir = new File(prefix + sDate);
             } else {
                 url = "jdbc:derby:" + dataSourceDir.getPath() + ";create=true";
+                // System.out.println("DatabaseUtil.createDatabaseConnection. use existing db. url: " + url);
             }
 
             conn = DriverManager.getConnection(url);
-        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException | SQLException e) {
+
+        } catch (SQLException se) {
+            System.out.println("DatabaseUtil.createDatabaseConnection. Handling sql exception. ");
+            handleSQLException(se);
+        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
             e.printStackTrace();
         }
 
@@ -316,13 +327,17 @@ public class DatabaseUtil {
     public static ResultSet select(String query ) {
         try {
             conn = getConnection();
-            ps = conn.createStatement();
-            return ps.executeQuery(query);
-        } catch (SQLException e) {
+            if (conn != null) {
+                ps = conn.createStatement();
+                return ps.executeQuery(query);
+            }
+        } catch ( IllegalStateException | SQLException e) {
             System.out.println("Exception caused by: " + query);
             e.printStackTrace();
         }
-        throw new IllegalStateException("Table does not exist. Hence cannot fetch any rows from it.");
+
+        // throw new IllegalStateException("Table does not exist. Hence cannot fetch any rows from it.");
+        return null;
     }
 
     public static void close() {
@@ -342,7 +357,7 @@ public class DatabaseUtil {
     public static int executeSelectForInt(String query) {
         int res = 0;
         try(ResultSet rs = DatabaseUtil.select(query)) {
-            if (rs.next()) {
+            if (rs != null && rs.next()) {
                 res = rs.getInt(1);
             }
         } catch (SQLException e) {
@@ -447,10 +462,10 @@ public class DatabaseUtil {
     }
 
 
-    public static ResultSet executeQuery(Connection conn, String query) throws SQLException {
-        Statement statement = conn.createStatement();
-        return statement.executeQuery(query);
-    }
+    // public static ResultSet executeQuery(Connection conn, String query) throws SQLException {
+    //     Statement statement = conn.createStatement();
+    //     return statement.executeQuery(query);
+    // }
 
     public static void addAndExecuteBatch(List<String> queryList) {
         try(Statement statement = DatabaseUtil.createStatement()) {
@@ -480,6 +495,66 @@ public class DatabaseUtil {
             e.printStackTrace();
         }
 
+    }
+
+    public static void handleSQLException(SQLException se) {
+        System.out.println("DatabaseUtil.handleSQLException: parent exception sql state: " + se.getSQLState());
+
+        String causeSQLState = null;
+
+        Throwable t = se.getCause();
+        while (t != null) {
+            causeSQLState = se.getNextException().getSQLState();
+            t = t.getCause();
+        }
+
+        String title = null, header = null, message = null;
+
+        System.out.println("DatabaseUtil.handleSQLException: causeSQLState: " + causeSQLState);
+
+        switch (causeSQLState) {
+            case "XSDB6":
+                title = "Problem occurred with database.";
+                header = "An error occurred while loading or reading the database.";
+                message = "Looks like Database is already in use. " +
+                        "Ensure no other application is connected to the database. " +
+                        "Application has been reset. Please start again. " +
+                        "SQL ERROR STATE: XSDB6";
+
+                break;
+        }
+        System.out.println("DatabaseUtil.handleSQLException: title: " + title);
+
+        ControllerLoader.mainController.showErrorPopup(title, header, message);
+        ControllerLoader.menuController.onReset();
+
+        // String title = "Problem with database.";
+        // String header = "An error occurred while loading or reading the database.";
+        // String message = "It seems like the database loaded does not contain tables" +
+        //         " necessary for this appliation to run. Make sure you load databases that are generated" +
+        //         " by this application only. " +
+        //         "Application has been reset. Please start again.";
+        //
+        // ControllerLoader.mainController.showErrorPopup(title, header, message);
+
+        // String title = "Problem with database.";
+        // String header = "An error occurred while loading or reading the database.";
+        // String message = "Sorry, all we know is that tables couldn't be create due to some " +
+        //         "issue while loading or reading." +
+        //         "Application has been reset. Please start again.";
+        //
+        // ControllerLoader.mainController.showErrorPopup(title, header, message);
+
+
+    }
+
+    public static boolean isDBValid() {
+        // DB is valid if it can be successfully connected.
+        // Connection conn = getConnection();
+        // boolean isTableCreated = ElementDAOImpl.isTableCreated();
+        // System.out.println("DatabaseUtil.isDBValid: isTableCreate: " + isTableCreated);
+        // System.out.println("DatabaseUtil.isDBValid. conn == null: " + (conn == null));
+        return getConnection() != null;
     }
 }
 

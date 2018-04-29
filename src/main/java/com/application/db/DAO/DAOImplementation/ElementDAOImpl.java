@@ -20,25 +20,14 @@ import java.util.stream.Collectors;
 import static com.application.db.TableNames.ELEMENT_TABLE;
 
 public class ElementDAOImpl {
-    // public static boolean isTableCreated = false;
 
     private  static Map<String, Integer> lowestCellInThreadMap = new HashMap<>();
 
     public static boolean isTableCreated() {
-        //        System.out.println("starting isTableCreated");
-        // if (!isTableCreated) {// No need to call DatabaseUtil method every time. Save time this way.
-        //            System.out.println("ElementDAOImpl:isTableCreated: " + isTableCreated);
-        // isTableCreated = DatabaseUtil.isTableCreated(ELEMENT_TABLE);
-        //            System.out.println("ElementDAOImpl:isTableCreated: " + isTableCreated);
-        // }
-        //        System.out.println("ending isTableCreated");
-        // return isTableCreated;
         return DatabaseUtil.isTableCreated(ELEMENT_TABLE);
     }
 
     public static void createTable() {
-        //        System.out.println("starting createTable");
-        //        System.out.println("ElementDAOImpl:createTable: " + isTableCreated());
         if (!isTableCreated()) {
             try (Connection c = DatabaseUtil.getConnection(); Statement ps = c.createStatement()) {
                 String sql = "CREATE TABLE " + ELEMENT_TABLE + " (" +
@@ -69,7 +58,6 @@ public class ElementDAOImpl {
                 e.printStackTrace();
             }
         }
-        //        System.out.println("ending createTable");
     }
 
     public static void insert(Element element) {
@@ -317,7 +305,7 @@ public class ElementDAOImpl {
         // System.out.println();
         // System.out.println("ElementDAOImpl.getElementDTOsInViewport query: " + sql);
         try (ResultSet rs = DatabaseUtil.select(sql)) {
-            while (rs.next()) {
+            while (rs != null && rs.next()) {
                 // System.out.println("ElementDAOImpl.getElementDTOsInViewport: while in loop : "  + rs.getInt("EID"));
                 ElementDTO elementDTO = new ElementDTO();
                 elementDTO.setId(String.valueOf(rs.getInt("EID")));
