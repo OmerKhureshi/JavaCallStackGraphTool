@@ -13,8 +13,8 @@ public class BoundBox {
     public float xBottomLeft;
     public float yBottomLeft;
 
-    public static final int unitWidthFactor = 100;  // The width of the rectangular space that contains a single element on UI
-    public static final int unitHeightFactor = 100;  // The height of the rectangular space that contains a single element on UI
+    public static final int unitWidthFactor = 120;  // The width of the rectangular space that contains a single element on UI
+    public static final int unitHeightFactor = 70;  // The height of the rectangular space that contains a single element on UI
 
     public float xCoordinate;
     public float yCoordinate;

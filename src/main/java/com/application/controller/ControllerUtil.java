@@ -59,7 +59,7 @@ public class ControllerUtil {
         // System.out.println();
         // System.out.println("ControllerUtil.convertElementDTOTOCell ");
         elementDTOList.forEach(elementDTO -> {
-            CircleCell circleCell = new CircleCell(elementDTO.getId(), elementDTO.getBoundBoxXCoordinate(), elementDTO.getBoundBoxYCoordinate(), elementDTO.getMethodName());
+            CircleCell circleCell = new CircleCell(elementDTO.getId(), elementDTO.getBoundBoxXCoordinate(), elementDTO.getBoundBoxYCoordinate(), elementDTO.getMethodName(), elementDTO.getCollapsed());
             circleCellList.add(circleCell);
             // System.out.print(circleCell.getCellId() + ", ");
         });

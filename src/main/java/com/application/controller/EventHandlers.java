@@ -448,6 +448,7 @@ public class EventHandlers {
     private EventHandler<MouseEvent> minMaxButtonOnClickEventHandler = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {
+            System.out.println("EventHandlers.handle. minMaxButtonOnClickEventHandler   ");
             CircleCell cell = ((CircleCell) ((Node) event.getSource()).getParent());
             minMaxButtonOnClick(cell, ControllerLoader.centerLayoutController.getCurrentThreadId());
         }
@@ -492,7 +493,7 @@ public class EventHandlers {
                 //             .setFill(Color.BLUE);
                 // cell.getChildren().get(0).setStyle("-fx-background-color: blue");
                 // cell.setStyle("-fx-background-color: blue");
-
+                //
                 int nextCellId = ElementDAOImpl.getNextLowerSiblingOrAncestorNode(clickedElementDTO, threadId);
                 int lastCellId = ElementDAOImpl.getLowestCellInThread(threadId);
                 // delta is only meaningful for a node when minimizing the tree at that node.
@@ -515,6 +516,7 @@ public class EventHandlers {
 
                 updateDBInBackgroundThread(clickedElementDTO, true, nextCellId, Integer.valueOf(threadId), lastCellId);
 
+                clickedCell.setCollapsed(2);
             } else if (collapsed == 2) {
                 System.out.println();
                 System.out.println("EventHandlers.minMaxButtonOnClick: clicked on : " + clickedCellID);
@@ -525,6 +527,7 @@ public class EventHandlers {
                 // all other cells: <0 -> ++1
 
                 expandTreeAt(clickedElementDTO, threadId);
+                clickedCell.setCollapsed(0);
             }
         }
     }

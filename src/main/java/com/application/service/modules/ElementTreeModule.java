@@ -457,7 +457,7 @@ public class ElementTreeModule {
                 // Add circle cell to model and UI only if they are not already present on UI and if collapsed value is 0 or 2
                 if (!mapCircleCellsOnUI.containsKey(id) && (collapsed == 0 || collapsed == 2)) {
                     // System.out.println("ElementTreeModule::addCircleCells: adding new cells to UI: cell id: " + id);
-                    curCircleCell = new CircleCell(id, xCoordinate, yCoordinate);
+                    curCircleCell = new CircleCell(id, xCoordinate, yCoordinate, collapsed);
                     curCircleCell.setMethodNameLabel(methodName);
                     model.addCell(curCircleCell);
                     // SimplifiedElement ele = new SimplifiedElement(id, methodName);
@@ -485,7 +485,8 @@ public class ElementTreeModule {
                             if (rsTemp.next() && rsTemp.getInt("LEVEL_COUNT") > 1) {
                                 float xCoordinateTemp = rsTemp.getFloat("bound_box_x_coordinate");
                                 float yCoordinateTemp = rsTemp.getFloat("bound_box_y_coordinate");
-                                parentCircleCell = new CircleCell(parentId, xCoordinateTemp, yCoordinateTemp);
+                                int parentCollapsed = rsTemp.getInt("collapsed");
+                                parentCircleCell = new CircleCell(parentId, xCoordinateTemp, yCoordinateTemp, parentCollapsed);
                                 // System.out.println("ElementTreeModule::addCircleCells: adding new parent cells to UI: cell id: " + parentId);
                                 model.addCell(parentCircleCell);
                             }

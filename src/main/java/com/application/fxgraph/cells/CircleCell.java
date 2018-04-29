@@ -3,6 +3,7 @@ package com.application.fxgraph.cells;
 import com.application.fxgraph.graph.Cell;
 import com.application.fxgraph.graph.CustomColors;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.StackPane;
@@ -21,129 +22,125 @@ public class CircleCell extends Cell {
     private Shape nodeShape;
 
     private StackPane minMaxStackPane;
+    Glyph minMaxGlyph;
+
     private StackPane infoStackPane;
+
 
     private StackPane rootStackPane;
 
     private double bookmarkStrokeWidth = 3;
-    private double firstPortion = 0.7;
-    private double secondPortion = 1 - firstPortion;
+    // private double firstPortion = 0.7;
+    // private double secondPortion = 1 - firstPortion;
 
-    private double rectWidth = 70;
-    private double rectHeight = 70;
+    private double rectWidth = 100;
+    private double rectHeight = 35;
 
     private Rectangle bookmarkBar;
+
+    private boolean collapsed = false;
 
     public CircleCell(String id) {
         super(id);
 
-        // Uncomment to see a colored background on the whole circle cell stack pane.
-        // setStyle("-fx-background-smallButtonsColor: mediumslateblue");
 
-        nodeShape = createRectangle();
-
-        label = new Label("This is a long string");
-
-
-        setUpIdLabel(id);
-        setUpMethodName();
-        setUpButtons();
-        setUpDropShadow();
-        setFill();
-        setUpBookmark();
-
-        // rootStackPane = new StackPane(nodeShape, methodNameLabel, idBubble, minMaxStackPane, infoStackPane);
-        // getChildren().addAll(rootStackPane);
-
-        getChildren().addAll(nodeShape, methodNameLabel, idBubble, minMaxStackPane, infoStackPane, bookmarkBar);
-        idBubble.toFront();
-
-        // setView(group);
-        this.toFront();
     }
 
     private void setUpBookmark() {
-        bookmarkBar = new Rectangle(rectWidth, 4);
-        bookmarkBar.relocate(0, 0);
+        bookmarkBar = new Rectangle(rectWidth - 2, 30);
+        bookmarkBar.relocate(1, -3);
         bookmarkBar.setFill(Color.TRANSPARENT);
+        bookmarkBar.setStroke(Color.TRANSPARENT);
+        bookmarkBar.setStrokeWidth(0.1);
         bookmarkBar.setArcWidth(20);
         bookmarkBar.setArcHeight(20);
     }
-
-
 
     private void setUpButtons() {
         setUpMinMaxButton();
         setUpInfoButton();
     }
 
-
     private void setUpMinMaxButton() {
-        // Min-Max button
-        Arc minMaxArc = new Arc();
-        minMaxArc.setCenterX(20.5);
-        minMaxArc.setCenterY(20.5);
-        minMaxArc.setRadiusX(20);
-        minMaxArc.setRadiusY(20);
-        minMaxArc.setStartAngle(270);
-        minMaxArc.setLength(180);
-        minMaxArc.setType(ArcType.ROUND);
-        minMaxArc.setFill(Color.TRANSPARENT);
+        setMinMaxIcon();
 
-        Rectangle minMaxButton = new Rectangle();
-        minMaxButton.setWidth(((Rectangle) nodeShape).getWidth() * 0.5);
-        minMaxButton.setHeight(((Rectangle) nodeShape).getHeight() * secondPortion);
-        minMaxButton.setArcHeight(10);
-        minMaxButton.setArcWidth(10);
-        minMaxButton.setFill(CustomColors.TRANSPARENT.getPaint());
-
-        // minMaxButton.setStroke(CustomColors.DARK_GREY.getPaint());
-
-        Glyph minMaxGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.EXPAND);
-        minMaxGlyph.setColor(smallButtonsColor);
-
-        minMaxStackPane = new StackPane(minMaxButton, minMaxGlyph);
-        minMaxStackPane.relocate(((Rectangle) nodeShape).getWidth() * 0.5 - 3, ((Rectangle) nodeShape).getHeight() * firstPortion);
-
+        minMaxStackPane = new StackPane(minMaxGlyph);
+        minMaxStackPane.relocate(rectWidth - 8, -8);
+        minMaxStackPane.setVisible(false);
     }
 
     private void setUpInfoButton() {
-        Arc infoArc = new Arc();
-        infoArc.setCenterX(20.5);
-        infoArc.setCenterY(20.5);
-        infoArc.setRadiusX(20);
-        infoArc.setRadiusY(20);
-        infoArc.setStartAngle(90);
-        infoArc.setLength(180);
-        infoArc.setType(ArcType.ROUND);
-        infoArc.setFill(Color.TRANSPARENT);
-
-        // info button
-        Rectangle infoButton = new Rectangle();
-        infoButton.setWidth(((Rectangle) nodeShape).getWidth() * 0.5);
-        infoButton.setHeight(((Rectangle) nodeShape).getHeight() * secondPortion);
-        infoButton.setArcHeight(10);
-        infoButton.setArcWidth(10);
-        infoButton.setFill(CustomColors.TRANSPARENT.getPaint());
-        // infoButton.setStroke(CustomColors.DARK_GREY.getPaint());
-
         Glyph infoGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.INFO_CIRCLE);
-        infoGlyph.setColor(smallButtonsColor);
+        infoGlyph.setColor(infoButtonColor);
 
-        infoStackPane = new StackPane(infoButton, infoGlyph);
-        infoStackPane.relocate(((Rectangle) nodeShape).getWidth() * 0 + 3, ((Rectangle) nodeShape).getHeight() * firstPortion );
+        infoStackPane = new StackPane(infoGlyph);
+        infoStackPane.relocate(rectWidth - 8, (rectHeight - 8));
+        infoStackPane.setVisible(false);
     }
 
 
-    public CircleCell (String id, float xCoordinate, float yCoordinate) {
+    public CircleCell (String id, float xCoordinate, float yCoordinate, int collapsed) {
         this(id);
-        this.relocate(xCoordinate , yCoordinate);
+
+        // Uncomment to see a colored background on the whole circle cell stack pane.
+        // setStyle("-fx-background-smallButtonsColor: mediumslateblue");
+
+        nodeShape = createRectangle();
+
+        this.collapsed = collapsed != 0;
+        label = new Label("");
+
+        setUpDropShadow();
+        setUpIdLabel(id);
+        setUpMethodName();
+        setUpButtons();
+        setFill();
+        setUpBookmark();
+
+        getChildren().addAll(nodeShape, methodNameLabel, idBubble, minMaxStackPane, infoStackPane, bookmarkBar);
+
+        idBubble.toFront();
+        bookmarkBar.toBack();
         this.toFront();
+        // guess is, drop shadows block the mouse events. set pick on bounds to false to make mouse events work.
+        this.setPickOnBounds(false);
+
+        this.setOnMouseEntered(event -> {
+            infoStackPane.setVisible(true);
+            minMaxStackPane.setVisible(true);
+        });
+
+        this.setOnMouseExited(event -> {
+            infoStackPane.setVisible(false);
+            minMaxStackPane.setVisible(false);
+        });
+
+        this.relocate(xCoordinate , yCoordinate);
     }
 
-    public CircleCell(String id, float xCoordinate, float yCoordinate, String methodName) {
-        this(id, xCoordinate, yCoordinate);
+    public CircleCell(String id, float xCoordinate, float yCoordinate, String methodName, int collapsed) {
+        this(id, xCoordinate, yCoordinate, collapsed);
         this.methodNameLabel.setText(methodName);
+    }
+
+    public void setCollapsed(int collapsed) {
+        System.out.println("CircleCell.setCollapsed: collapsed: " + collapsed);
+        this.collapsed = collapsed != 0;
+        setMinMaxIcon();
+    }
+
+    private void setMinMaxIcon() {
+        if (minMaxGlyph == null) {
+            minMaxGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.MINUS_SQUARE);
+        }
+
+        if (collapsed) {
+            minMaxGlyph.setIcon(FontAwesome.Glyph.PLUS_SQUARE);
+        } else {
+            minMaxGlyph.setIcon(FontAwesome.Glyph.MINUS_SQUARE);
+        }
+
+        minMaxGlyph.setColor(minMaxButtonColor);
     }
 
     public void setLabel(String text) {
@@ -161,8 +158,10 @@ public class CircleCell extends Cell {
         methodNameLabel.setFont(Font.font(12));
         methodNameLabel.setMaxWidth(((Rectangle) nodeShape).getWidth() - 5);
         methodNameLabel.setMinWidth(((Rectangle) nodeShape).getWidth() - 5);
-        methodNameLabel.setMaxHeight(((Rectangle) nodeShape).getHeight() * firstPortion);
-        methodNameLabel.setMinHeight(((Rectangle) nodeShape).getHeight() * firstPortion);
+        // methodNameLabel.setMaxHeight(((Rectangle) nodeShape).getHeight() * firstPortion);
+        // methodNameLabel.setMinHeight(((Rectangle) nodeShape).getHeight() * firstPortion);
+        methodNameLabel.setMaxHeight(((Rectangle) nodeShape).getHeight());
+        methodNameLabel.setMinHeight(((Rectangle) nodeShape).getHeight());
 
         // align the method name to top of the square.
         methodNameLabel.relocate(2.5, 0);//-this.methodNameLabel.getMinHeight()/2);
@@ -175,11 +174,6 @@ public class CircleCell extends Cell {
     public void setMethodNameLabel(String methodName) {
         this.methodNameLabel.setText(methodName);
     }
-/*
-    // Used?
-    public void setColor(Color smallButtonsColor) {
-        circle.setFill(smallButtonsColor);
-    }*/
 
     public StackPane getMinMaxStackPane() {
         return minMaxStackPane;
@@ -190,17 +184,14 @@ public class CircleCell extends Cell {
     }
 
     public void bookmarkCell(String color) {
-        // nodeShape.setStroke(Paint.valueOf(color));
-        // nodeShape.setStrokeWidth(bookmarkStrokeWidth);
-
         bookmarkBar.setFill(Paint.valueOf(color));
+        bookmarkBar.setStroke(Color.BLACK);
+        bookmarkBar.setStrokeWidth(0.1);
     }
 
     public void removeBookmark() {
-        // nodeShape.setStroke(CustomColors.LIGHT_TURQUOISE.getPaint());
-        // nodeShape.setStrokeWidth(1);
-
         bookmarkBar.setFill(Color.TRANSPARENT);
+        bookmarkBar.setStroke(Color.TRANSPARENT);
     }
 
     @Override
@@ -220,8 +211,6 @@ public class CircleCell extends Cell {
 
     private Shape createRectangle() {
         Shape rect = new Rectangle(rectWidth, rectHeight);
-        // rect.setStroke(CustomColors.LIGHT_TURQUOISE.getPaint());
-        // rect.setFill(CustomColors.DARK_GREY.getPaint());
         ((Rectangle) rect).setArcWidth(20);
         ((Rectangle) rect).setArcHeight(20);
         rect.relocate(0,0);
@@ -230,9 +219,7 @@ public class CircleCell extends Cell {
     }
 
     private void setFill() {
-        // Stop[] stops = new Stop[] { new Stop(0, Color.valueOf("#04b3e3")), new Stop(1, Color.valueOf("#04cabe"))};
         Stop[] stops = new Stop[] { new Stop(0, cell1Color), new Stop(1, cell2Color)};
-        // Stop[] stops = new Stop[] { new Stop(0, Color.valueOf("#b2f0d9")), new Stop(1, Color.valueOf("#b2e9f0"))};
         LinearGradient linearGradient = new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE, stops);
         nodeShape.setFill(linearGradient);
     }
@@ -278,10 +265,12 @@ public class CircleCell extends Cell {
         dropShadow.setOffsetY(12);
         dropShadow.setRadius(40);
         dropShadow.setColor(cellShadowColor);
-        nodeShape.setEffect(dropShadow);
+        this.setEffect(dropShadow);
     }
+
     // Color smallButtonsColor = Color.valueOf("#e5a2d0");
-    Color smallButtonsColor = Color.WHITE;
+    Color minMaxButtonColor = Color.valueOf("#FF4136");
+    Color infoButtonColor = Color.valueOf("#001f3f");
     Color idBubbleBackgroundColor = Color.valueOf("#f6dfef");
     Color cell1Color = Color.valueOf("#b2baf0");
     Color cell2Color = Color.valueOf("#bab2f0");

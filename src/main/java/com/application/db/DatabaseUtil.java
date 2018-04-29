@@ -341,17 +341,17 @@ public class DatabaseUtil {
     }
 
     public static void close() {
-        try {
-            if (conn != null) {
-                conn.close();
-            }
-
-            if (ps != null) {
-                ps.close();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        // try {
+        //     if (conn != null) {
+        //         conn.close();
+        //     }
+        //
+        //     if (ps != null) {
+        //         ps.close();
+        //     }
+        // } catch (SQLException e) {
+        //     e.printStackTrace();
+        // }
     }
 
     public static int executeSelectForInt(String query) {
