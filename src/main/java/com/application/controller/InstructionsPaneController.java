@@ -14,6 +14,8 @@ public class InstructionsPaneController {
 
     @FXML
     private FlowPane flowPane;
+    @FXML
+    private Label headerLabel;
 
     @FXML
     private Label fileHeaderLabel;
@@ -56,8 +58,16 @@ public class InstructionsPaneController {
         flowPane.setPadding(new Insets(40));
         orLabel.setPadding(new Insets(10, 0, 10, 40));
 
+        double headerFontSize = headerLabel.getFont().getSize();
+        headerLabel.setStyle("-fx-font-size: " + (headerFontSize + 10));
+        headerLabel.setTextFill(ColorProp.GREY);
+
         fileHeaderGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.ARROW_CIRCLE_RIGHT);
+        fileHeaderGlyph.setColor(ColorProp.GREY);
         fileHeaderLabel.setGraphic(fileHeaderGlyph);
+        fileHeaderLabel.setTextFill(ColorProp.GREY);
+        double fileHeaderFontSize = fileHeaderLabel.getFont().getSize();
+        fileHeaderLabel.setStyle("-fx-font-size: " + (fileHeaderFontSize + 5));
 
         methodDefInfoGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.ARROW_RIGHT);
         methodDefInfoGlyph.setColor(ColorProp.GREY);
@@ -75,9 +85,13 @@ public class InstructionsPaneController {
         fileRunInfoLabel.setPadding(new Insets(0, 0, 0, leftInset));
 
 
-
         dbHeaderGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.ARROW_CIRCLE_RIGHT);
+        dbHeaderGlyph.setColor(ColorProp.GREY);
         dbHeaderLabel.setGraphic(dbHeaderGlyph);
+        dbHeaderLabel.setTextFill(ColorProp.GREY);
+        double dbHeaderFontSize = dbHeaderLabel.getFont().getSize();
+        dbHeaderLabel.setStyle("-fx-font-size: " + (dbHeaderFontSize + 5));
+
 
         dbInfoGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.ARROW_RIGHT);
         dbInfoGlyph.setColor(ColorProp.GREY);

@@ -1,5 +1,6 @@
 package com.application.fxgraph.cells;
 
+import com.application.controller.ControllerLoader;
 import com.application.fxgraph.graph.Cell;
 import com.application.fxgraph.graph.CustomColors;
 import javafx.geometry.Pos;
@@ -65,7 +66,7 @@ public class CircleCell extends Cell {
         setMinMaxIcon();
 
         minMaxStackPane = new StackPane(minMaxGlyph);
-        minMaxStackPane.relocate(rectWidth - 8, -8);
+        minMaxStackPane.relocate(rectWidth - 6, -8);
         minMaxStackPane.setVisible(false);
     }
 
@@ -74,7 +75,7 @@ public class CircleCell extends Cell {
         infoGlyph.setColor(infoButtonColor);
 
         infoStackPane = new StackPane(infoGlyph);
-        infoStackPane.relocate(rectWidth - 8, (rectHeight - 8));
+        infoStackPane.relocate(rectWidth - 6, (rectHeight - 8));
         infoStackPane.setVisible(false);
     }
 
@@ -106,13 +107,17 @@ public class CircleCell extends Cell {
         this.setPickOnBounds(false);
 
         this.setOnMouseEntered(event -> {
-            infoStackPane.setVisible(true);
-            minMaxStackPane.setVisible(true);
+            if (!ControllerLoader.eventHandlers.popOver.isShowing()) {
+                infoStackPane.setVisible(true);
+                minMaxStackPane.setVisible(true);
+            }
         });
 
         this.setOnMouseExited(event -> {
-            infoStackPane.setVisible(false);
-            minMaxStackPane.setVisible(false);
+            if (!ControllerLoader.eventHandlers.popOver.isShowing()) {
+                infoStackPane.setVisible(false);
+                minMaxStackPane.setVisible(false);
+            }
         });
 
         this.relocate(xCoordinate , yCoordinate);
@@ -269,8 +274,9 @@ public class CircleCell extends Cell {
     }
 
     // Color smallButtonsColor = Color.valueOf("#e5a2d0");
-    Color minMaxButtonColor = Color.valueOf("#FF4136");
-    Color infoButtonColor = Color.valueOf("#001f3f");
+    Color minMaxButtonColor = Color.valueOf("#FF4C4C");
+    Color infoButtonColor = Color.valueOf("#262626");
+    // Color infoButtonColor = Color.valueOf("#001f3f");
     Color idBubbleBackgroundColor = Color.valueOf("#f6dfef");
     Color cell1Color = Color.valueOf("#b2baf0");
     Color cell2Color = Color.valueOf("#bab2f0");

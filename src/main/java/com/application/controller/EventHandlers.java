@@ -45,13 +45,24 @@ public class EventHandlers {
     private static ElementTreeModule elementTreeModule;
     final DragContext dragContext = new DragContext();
     private boolean allowClicks = true;
+    public PopOver popOver = new PopOver();
 
     public void setCustomMouseEventHandlers(final Node node) {
         ((CircleCell)node).getInfoStackPane().setOnMousePressed(infoButtonOnClickEventHandler);
         ((CircleCell)node).getMinMaxStackPane().setOnMousePressed(minMaxButtonOnClickEventHandler);
+
+        // popOver.setOnHidden(event -> {
+        //     System.out.println("EventHandlers.setCustomMouseEventHandlers. popover hidden");
+        //     popOver = null;
+        // });
+        //
+        //
+        // popOver.setOnShown(event -> {
+        //     System.out.println("EventHandlers.setCustomMouseEventHandlers. popover shown");
+        // });
+
     }
 
-    private PopOver popOver;
 
     private EventHandler<MouseEvent> infoButtonOnClickEventHandler = new EventHandler<MouseEvent>() {
 
@@ -369,8 +380,10 @@ public class EventHandlers {
                     popOver = new PopOver(gridPane);
                     popOver.setAnimated(true);
                     // popOver.detach();
-                    popOver.setAutoHide(true);
+                    // popOver.setAutoHide(true);
+                    popOver.setConsumeAutoHidingEvents(false);
                     popOver.show(node);
+
                 }
             } catch (SQLException e) {
                 System.out.println("Line that threw exception: " + sql);

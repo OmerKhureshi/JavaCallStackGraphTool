@@ -4,13 +4,13 @@
 <?import javafx.scene.layout.FlowPane?>
 
 
-<?import javafx.scene.layout.Pane?>
-<?import javafx.scene.control.Pagination?>
 <FlowPane fx:id="flowPane"
           fx:controller="com.application.controller.InstructionsPaneController"
           alignment="CENTER" vgap="5"
           orientation="VERTICAL" xmlns="http://javafx.com/javafx/8.0.141"
           xmlns:fx="http://javafx.com/fxml/1">
+    <Label fx:id="headerLabel" text="What would you like to do?">
+    </Label>
     <Label fx:id="fileHeaderLabel" text="Start a new project by selecting log files."/>
     <Label fx:id="methodDefInfoLabel" text="Select Method Definition log file."/>
     <Label fx:id="callTraceInfoLabel" text="Select Call Trace log file."/>
