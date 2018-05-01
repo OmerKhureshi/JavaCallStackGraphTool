@@ -615,21 +615,16 @@ public class MenuController {
     }
 
     private void addInsertQueryToStatement(String fullName, Statement statement, String highlightType) {
-        // System.out.println("Main.addInsertQueryToStatement: crafting query for " + fullName);
-        double startXOffset = 30;
-        double widthOffset = 0;
-        double startYOffset = -10;
-        double heightOffset = -20;
+        double startXOffset = 50;
+        double widthOffset = -5;
+        double startYOffset = -12;
+        double heightOffset = -15;
 
         String[] arr = fullName.split("\\.");
         String methodName = arr[arr.length - 1];
         String packageName = fullName.substring(0, fullName.length() - methodName.length() - 1);
 
         HighlightDAOImpl.insert(startXOffset, startYOffset, widthOffset, heightOffset, methodName, packageName, highlightType, colorsMap, fullName, statement);
-
-
-        // System.out.println("Main::addInsertQueryToStatement: sql : " + sql);
-
     }
 
     private void addDeleteQueryToStatement(String fullNames, Statement statement, String highlightType) {

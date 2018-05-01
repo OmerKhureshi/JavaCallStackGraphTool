@@ -337,10 +337,9 @@ public class CanvasController {
         BoundingBox viewPort = getPrefetchViewPortDims();
 
         List<HighlightDTO> highlightDTOs = HighlightDAOImpl.getHighlightDTOsInViewPort(viewPort);
-        List<RectangleCell> highlightRects = ControllerUtil.convertHighlightDTOsToHighlights(highlightDTOs);
+        List<RectangleCell> highlightRectList = ControllerUtil.convertHighlightDTOsToHighlights(highlightDTOs);
 
-
-        highlightRects.forEach(this::addNewHighlightsToUI);
+        highlightRectList.forEach(this::addNewHighlightsToUI);
     }
 
     private void addNewHighlightsToUI(RectangleCell rectangleCell) {
@@ -525,12 +524,10 @@ public class CanvasController {
     }
 
     private ChangeListener valuePropListener = (observable, oldValue, newValue) -> {
-        // System.out.println("CanvasController.valuePropListener listener calling update");
         updateIfNeeded();
     };
 
     private ChangeListener viewportChangeListener = (observable, oldValue, newValue) -> {
-        // System.out.println("CanvasController.viewportChangeListener listener calling update");
         addCanvasComponentsFromDB();
     };
 

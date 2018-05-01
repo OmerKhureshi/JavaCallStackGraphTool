@@ -50,19 +50,7 @@ public class EventHandlers {
     public void setCustomMouseEventHandlers(final Node node) {
         ((CircleCell)node).getInfoStackPane().setOnMousePressed(infoButtonOnClickEventHandler);
         ((CircleCell)node).getMinMaxStackPane().setOnMousePressed(minMaxButtonOnClickEventHandler);
-
-        // popOver.setOnHidden(event -> {
-        //     System.out.println("EventHandlers.setCustomMouseEventHandlers. popover hidden");
-        //     popOver = null;
-        // });
-        //
-        //
-        // popOver.setOnShown(event -> {
-        //     System.out.println("EventHandlers.setCustomMouseEventHandlers. popover shown");
-        // });
-
     }
-
 
     private EventHandler<MouseEvent> infoButtonOnClickEventHandler = new EventHandler<MouseEvent>() {
 
@@ -85,6 +73,8 @@ public class EventHandlers {
                     "MESSAGE, LOCKOBJID, BOUND_BOX_X_COORDINATE, BOUND_BOX_Y_COORDINATE from " + TableNames.ELEMENT_TABLE + " AS E " +
                     "JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT ON CT.id = E.ID_ENTER_CALL_TRACE " +
                     "WHERE E.ID = " + cell.getCellId();
+
+            System.out.println("EventHandlers.handle first sql: " + sql);
 
             try (ResultSet callTraceRS = DatabaseUtil.select(sql)) {
                 if (callTraceRS.next()) {
@@ -115,6 +105,7 @@ public class EventHandlers {
                             parameters = "N/A";
                         }
                     } catch (SQLException e) {
+                        e.printStackTrace();
                     }
 
                     // Save the clicked element into recent menu.
@@ -164,7 +155,7 @@ public class EventHandlers {
                      *
                      * object lock flow:
                      * wait-enter -> notify-enter / notify-exit -> wait-exit
-                     * */
+                     **/
 
                     List<Integer> ctIdList = new ArrayList<>();
                     List<Integer> eleIdList = new ArrayList<>();
@@ -174,6 +165,7 @@ public class EventHandlers {
                                 " AND (message = 'NOTIFY-ENTER' OR message = 'NOTIFYALL-ENTER')" +
                                 " AND time_instant >= " + "'" + timeStamp + "'";
 
+                        // get thread ids of nodes that may acquire the lock that was just released.
                         CallTraceDAOImpl.getThreadIdsWhere(sql).stream().forEach(id -> {
                             ctIdList.add(id);
                         });
@@ -313,15 +305,6 @@ public class EventHandlers {
                         gridPane.add(button, 1, rowIndex++);
                     }
 
-                    // Collapse and Expand subtree button
-                   /* Button minMaxButton = new Button("min / max");
-                    minMaxButton.setOnMouseClicked(event1 -> {
-                                minMaxButtonOnClick(cell, threadId);
-                            }
-                    );
-
-                    gridPane.add(minMaxButton, 1, rowIndex++);*/
-
                     // Add Bookmark button
                     // Group bookmarkGroup = new Group();
                     final Color[] bookmarkColor = new Color[1];
@@ -391,6 +374,330 @@ public class EventHandlers {
             }
         }
     };
+
+
+// backup if i mess up the above method.
+    // private EventHandler<MouseEvent> infoButtonOnClickEventHandler = new EventHandler<MouseEvent>() {
+    //
+    //     @Override
+    //     public void handle(MouseEvent event) {
+    //         if (popOver != null) {
+    //             popOver.hide();
+    //         }
+    //
+    //         Node node = (Node) event.getSource();
+    //         CircleCell cell = (CircleCell) node.getParent();
+    //
+    //         String timeStamp;
+    //         int elementId, methodId, processId, threadId, collapsed;
+    //         String parameters, packageName = "", methodName = "", parameterTypes = "", eventType, lockObjectId;
+    //         double xCord, yCord;
+    //
+    //
+    //         String sql = "Select E.ID as EID, TIME_INSTANT, METHOD_ID, PROCESS_ID, THREAD_ID, PARAMETERS, COLLAPSED, " +
+    //                 "MESSAGE, LOCKOBJID, BOUND_BOX_X_COORDINATE, BOUND_BOX_Y_COORDINATE from " + TableNames.ELEMENT_TABLE + " AS E " +
+    //                 "JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT ON CT.id = E.ID_ENTER_CALL_TRACE " +
+    //                 "WHERE E.ID = " + cell.getCellId();
+    //
+    //         System.out.println("EventHandlers.handle first sql: " + sql);
+    //
+    //         try (ResultSet callTraceRS = DatabaseUtil.select(sql)) {
+    //             if (callTraceRS.next()) {
+    //                 elementId = callTraceRS.getInt("EID");
+    //                 timeStamp = callTraceRS.getString("time_instant");
+    //                 methodId = callTraceRS.getInt("method_id");
+    //                 processId = callTraceRS.getInt("process_id");
+    //                 threadId = callTraceRS.getInt("thread_id");
+    //                 parameters = callTraceRS.getString("parameters");
+    //                 eventType = callTraceRS.getString("message");
+    //                 lockObjectId = callTraceRS.getString("lockobjid");
+    //                 xCord = callTraceRS.getFloat("bound_box_x_coordinate");
+    //                 yCord = callTraceRS.getFloat("bound_box_y_coordinate");
+    //                 collapsed = callTraceRS.getInt("COLLAPSED");
+    //
+    //
+    //                 try (ResultSet methodDefRS = MethodDefDAOImpl.selectWhere("id = " + methodId)) {
+    //                     if (methodDefRS.next()) {
+    //                         packageName = methodDefRS.getString("package_name");
+    //                         methodName = methodDefRS.getString("method_name");
+    //                         parameterTypes = methodDefRS.getString("parameter_types");
+    //                     }
+    //
+    //                     if (methodId == 0) {
+    //                         methodName = eventType;
+    //                         packageName = "N/A";
+    //                         parameterTypes = "N/A";
+    //                         parameters = "N/A";
+    //                     }
+    //                 } catch (SQLException e) {
+    //                     e.printStackTrace();
+    //                 }
+    //
+    //                 // Save the clicked element into recent menu.
+    //                 // graph.addToRecent(packageName + "." + methodName, new XYCoordinate(xCord, yCord, threadId));
+    //
+    //
+    //                 Label lMethodName = new Label(methodName);
+    //                 Label lPackageName = new Label(packageName);
+    //                 Label lParameterTypes = new Label(parameterTypes);
+    //                 Label lParameters = new Label(parameters);
+    //                 Label lProcessId = new Label(String.valueOf(processId));
+    //                 Label lThreadId = new Label(String.valueOf(threadId));
+    //                 Label lTimeInstant = new Label(timeStamp);
+    //
+    //                 GridPane gridPane = new GridPane();
+    //                 gridPane.setPadding(new Insets(10, 10, 10, 10));
+    //                 gridPane.setVgap(10);
+    //                 gridPane.setHgap(20);
+    //                 gridPane.add(new Label("Method Name: "), 0, 0);
+    //                 gridPane.add(lMethodName, 1, 0);
+    //
+    //                 gridPane.add(new Label("Package Name: "), 0, 1);
+    //                 gridPane.add(lPackageName, 1, 1);
+    //
+    //                 gridPane.add(new Label("Parameter Types: "), 0, 2);
+    //                 gridPane.add(lParameterTypes, 1, 2);
+    //
+    //                 gridPane.add(new Label("Parameters: "), 0, 3);
+    //                 gridPane.add(lParameters, 1, 3);
+    //
+    //                 gridPane.add(new Label("Process ID: "), 0, 4);
+    //                 gridPane.add(lProcessId, 1, 4);
+    //
+    //                 gridPane.add(new Label("Thread ID: "), 0, 5);
+    //                 gridPane.add(lThreadId, 1, 5);
+    //
+    //                 gridPane.add(new Label("Time of Invocation: "), 0, 6);
+    //                 gridPane.add(lTimeInstant, 1, 6);
+    //
+    //
+    //                 /*
+    //                  * wait-enter -> lock released.
+    //                  *       Get all elements with same lock id and notify-enter
+    //                  * wait-exit -> lock reacquired.
+    //                  *
+    //                  * notify-enter / notify-exit -> lock released
+    //                  *
+    //                  * object lock flow:
+    //                  * wait-enter -> notify-enter / notify-exit -> wait-exit
+    //                  **/
+    //
+    //                 List<Integer> ctIdList = new ArrayList<>();
+    //                 List<Integer> eleIdList = new ArrayList<>();
+    //                 if (eventType.equalsIgnoreCase("WAIT-ENTER")) {
+    //                     int ctId = -2;  // Will throw exception if value not changed. Which is what we want.
+    //                     sql = "lockobjid = '" + lockObjectId + "'" +
+    //                             " AND (message = 'NOTIFY-ENTER' OR message = 'NOTIFYALL-ENTER')" +
+    //                             " AND time_instant >= " + "'" + timeStamp + "'";
+    //
+    //                     CallTraceDAOImpl.getThreadIdsWhere(sql).stream().forEach(id -> {
+    //                         ctIdList.add(id);
+    //                     });
+    //
+    //                     try (ResultSet elementRS = ElementDAOImpl.selectWhere("id_enter_call_trace = " + ctId)) {
+    //                         // Expecting to see a single row.
+    //                         if (elementRS.next()) {
+    //                             int eId = elementRS.getInt("id");
+    //                             eleIdList.add(eId);
+    //                         }
+    //                     }
+    //                 } else if (eventType.equalsIgnoreCase("NOTIFY-ENTER")) {
+    //
+    //                     try (Connection conn = DatabaseUtil.getConnection(); Statement ps = conn.createStatement()) {
+    //                         sql = "SELECT * FROM " + TableNames.CALL_TRACE_TABLE + " AS parent\n" +
+    //                                 "WHERE MESSAGE = 'WAIT-EXIT' \n" +
+    //                                 "AND LOCKOBJID = '" + lockObjectId + "' " +
+    //                                 "AND TIME_INSTANT >= '" + timeStamp + "' \n" +
+    //                                 "AND (SELECT count(*) \n" +
+    //                                 "FROM " + TableNames.CALL_TRACE_TABLE + " AS child \n" +
+    //                                 "WHERE child.message = 'WAIT-ENTER' \n" +
+    //                                 "AND LOCKOBJID = '" + lockObjectId + "' " +
+    //                                 "AND child.TIME_INSTANT >=  '" + timeStamp + "' \n" +
+    //                                 "AND child.TIME_INSTANT <= parent.time_instant\n" +
+    //                                 ")\n" +
+    //                                 "= 0\n";
+    //
+    //                         // System.out.println("Sql: " + sql);
+    //                         int ctId = -2;
+    //                         try (ResultSet resultSet = ps.executeQuery(sql)) {
+    //                             if (resultSet.next()) {
+    //                                 ctId = resultSet.getInt("id");
+    //                                 ctIdList.add(ctId);
+    //                             }
+    //                         }
+    //
+    //                         try (ResultSet elementRS = ElementDAOImpl.selectWhere("id_exit_call_trace = " + ctId)) {
+    //                             // Expecting to see a single row.
+    //                             if (elementRS.next()) {
+    //                                 int eId = elementRS.getInt("id");
+    //                                 eleIdList.add(eId);
+    //                             }
+    //                         }
+    //                     }
+    //
+    //                 } else if (eventType.equalsIgnoreCase("NOTIFYALL-ENTER")) {
+    //                     try (Connection conn = DatabaseUtil.getConnection();
+    //                          Statement ps = conn.createStatement()) {
+    //
+    //
+    //                         sql = "SELECT * FROM " + TableNames.CALL_TRACE_TABLE + " AS parent WHERE MESSAGE = 'WAIT-EXIT' " +
+    //                                 "AND LOCKOBJID = '" + lockObjectId + "' " +
+    //                                 "AND TIME_INSTANT >= '" + timeStamp + "' " +
+    //                                 "AND (SELECT count(*) FROM " + TableNames.CALL_TRACE_TABLE + " AS child " +
+    //                                 "WHERE child.message = 'WAIT-ENTER' " +
+    //                                 "AND LOCKOBJID = '" + lockObjectId + "' " +
+    //                                 "AND child.TIME_INSTANT >= '" + timeStamp + "' " +
+    //                                 "AND child.TIME_INSTANT <= parent.time_instant ) = 0";
+    //
+    //                         int ctId = -2;
+    //
+    //                         try (ResultSet resultSet = ps.executeQuery(sql)) {
+    //                             while (resultSet.next()) {
+    //                                 ctId = resultSet.getInt("id");
+    //                                 ctIdList.add(ctId);
+    //                             }
+    //                         }
+    //
+    //                         ctIdList.stream().forEach(id -> {
+    //                             try (ResultSet elementRS = ElementDAOImpl.selectWhere("id_exit_call_trace = " + id)) {
+    //                                 // Can be more than a single row.
+    //                                 while (elementRS.next()) {
+    //                                     int eId = elementRS.getInt("id");
+    //                                     eleIdList.add(eId);
+    //                                 }
+    //                             } catch (SQLException e) {
+    //                             }
+    //                         });
+    //                     }
+    //                 }
+    //
+    //                 List<Button> buttonList = new ArrayList<>();
+    //                 String finalPackageName = packageName;
+    //                 String finalMethodName = methodName;
+    //                 eleIdList.stream().forEach(eId -> {
+    //                     String query = "SELECT E.ID AS EID, bound_box_x_coordinate, bound_box_y_coordinate, THREAD_ID " +
+    //                             "FROM CALL_TRACE AS CT " +
+    //                             "JOIN ELEMENT AS E ON CT.ID = E.ID_ENTER_CALL_TRACE " +
+    //                             "WHERE E.ID = " + eId;
+    //                     try (ResultSet elementRS = DatabaseUtil.select(query)) {
+    //                         // try (ResultSet elementRS = ElementDAOImpl.getWhere("id = " + eId)){
+    //                         if (elementRS.next()) {
+    //                             int id = elementRS.getInt("EID");
+    //                             String targetThreadId = String.valueOf(elementRS.getInt("thread_id"));
+    //                             float xCoordinate = elementRS.getFloat("bound_box_x_coordinate");
+    //                             float yCoordinate = elementRS.getFloat("bound_box_y_coordinate");
+    //
+    //                             // go to location.
+    //                             Button jumpToButton = new Button();
+    //                             jumpToButton.setOnMouseClicked(event1 -> {
+    //                                 System.out.println("EventHandlers.handle: jumpToButton Clicked. for eleId: " + eId);
+    //                                 jumpTo(String.valueOf(eId), targetThreadId, collapsed);
+    //                             });
+    //                             buttonList.add(jumpToButton);
+    //                         }
+    //                     } catch (SQLException e) {
+    //                         e.printStackTrace();
+    //                     }
+    //                 });
+    //
+    //                 String message = "", actionMsg = "";
+    //                 switch (eventType.toUpperCase()) {
+    //                     case "WAIT-ENTER":
+    //                         message = "Wait method was invoked and therefore, \nthe lock on object ( object id = " + lockObjectId + ") \nwas released and reaquired here.";
+    //                         actionMsg = "Go to Notify or NotifyAll \nmethods invocations.";
+    //                         break;
+    //
+    //                     case "NOTIFY-ENTER":
+    //                         message = "Notify method was invoked and therefore, \nthe lock on object ( object id = " + lockObjectId + ") \nwas released here.";
+    //                         actionMsg = "Go to wait \nmethods invocations.";
+    //                         break;
+    //                     case "NOTIFYALL-ENTER":
+    //                         message = "NotifyAll method was invoked and therefore, \nthe lock on object ( object id = " + lockObjectId + ") \nwas released here.";
+    //                         actionMsg = "Go to wait \nmethods invocations.";
+    //                         break;
+    //                 }
+    //                 Label labelMessage = new Label(message);
+    //                 labelMessage.setWrapText(true);
+    //
+    //                 Label labelActionMsg = new Label(actionMsg);
+    //
+    //                 gridPane.add(labelMessage, 0, 7);
+    //                 gridPane.add(labelActionMsg, 0, 8);
+    //                 int rowIndex = 8;
+    //                 for (Button button : buttonList) {
+    //                     button.setText("Goto node");
+    //                     gridPane.add(button, 1, rowIndex++);
+    //                 }
+    //
+    //                 // Add Bookmark button
+    //                 // Group bookmarkGroup = new Group();
+    //                 final Color[] bookmarkColor = new Color[1];
+    //                 bookmarkColor[0] = Color.INDIANRED;
+    //
+    //                 ColorPicker bookmarkColorPicker = new ColorPicker(Color.INDIANRED);
+    //                 bookmarkColorPicker.getStyleClass().add("button");
+    //                 bookmarkColorPicker.setStyle(
+    //                         "-fx-color-label-visible: false; " +
+    //                                 "-fx-background-radius: 15 15 15 15;");
+    //                 bookmarkColorPicker.setOnAction(e -> {
+    //                     bookmarkColor[0] = bookmarkColorPicker.getValue();
+    //                 });
+    //                 // bookmarkColorPicker.getStyleClass().add("button");
+    //                 // bookmarkColorPicker.setStyle(
+    //                 //         "-fx-color-label-visible: false; " +
+    //                 //                 "-fx-background-radius: 15 15 15 15;");
+    //
+    //                 Button addBookmarkButton = new Button("Add Bookmark");
+    //                 Button removeBookmarkButton = new Button("Remove bookmark");
+    //
+    //                 String finalMethodNameTemp = methodName;
+    //                 addBookmarkButton.setOnMouseClicked(event1 -> {
+    //                     BookmarkDTO bookmarkDTO = new BookmarkDTO(
+    //                             String.valueOf(elementId),
+    //                             String.valueOf(threadId),
+    //                             finalMethodNameTemp,
+    //                             bookmarkColor[0].toString(),
+    //                             xCord,
+    //                             yCord,
+    //                             collapsed);
+    //
+    //                     ControllerLoader.menuController.insertBookmark(bookmarkDTO);
+    //
+    //                     removeBookmarkButton.setDisable(false);
+    //                     addBookmarkButton.setDisable(true);
+    //                 });
+    //
+    //                 boolean contains = ControllerLoader.menuController.getBookmarkDTOs().containsKey(String.valueOf(elementId));
+    //                 addBookmarkButton.setDisable(contains);
+    //                 removeBookmarkButton.setDisable(!contains);
+    //
+    //                 removeBookmarkButton.setOnMouseClicked(eve -> {
+    //                     ControllerLoader.menuController.deleteBookmark(String.valueOf(elementId));
+    //                     addBookmarkButton.setDisable(false);
+    //                 });
+    //
+    //                 HBox hBox = new HBox();
+    //                 hBox.getChildren().addAll(bookmarkColorPicker, addBookmarkButton, removeBookmarkButton);
+    //
+    //                 gridPane.add(hBox, 1, rowIndex++);
+    //                 // gridPane.add(bookmarkColorPicker, 1, rowIndex++);
+    //                 // gridPane.add(addBookmarkButton, 1, rowIndex++);
+    //                 // gridPane.add(removeBookmarkButton, 1, rowIndex++);
+    //
+    //                 popOver = new PopOver(gridPane);
+    //                 popOver.setAnimated(true);
+    //                 // popOver.detach();
+    //                 // popOver.setAutoHide(true);
+    //                 popOver.setConsumeAutoHidingEvents(false);
+    //                 popOver.show(node);
+    //
+    //             }
+    //         } catch (SQLException e) {
+    //             System.out.println("Line that threw exception: " + sql);
+    //             e.printStackTrace();
+    //         }
+    //     }
+    // };
 
     EventHandler<MouseEvent> onMouseExitToDismissPopover = new EventHandler<MouseEvent>() {
         @Override

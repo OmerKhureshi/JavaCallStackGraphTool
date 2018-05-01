@@ -17,7 +17,7 @@ public class RectangleCell extends Cell {
         this.elementId = elementId;
 
         // Uncomment to see yellow background on the whole rectangle pane.
-        setStyle("-fx-background-color: yellow");
+        // setStyle("-fx-background-color: yellow");
 
         rectangle = new Rectangle(width, height);
         rectangle.setStroke(Color.BLACK);

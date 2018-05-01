@@ -161,6 +161,7 @@ public class CallTraceDAOImpl {
         }
         throw new IllegalStateException("Table does not exist. Hence cannot fetch any rows from it.");
     }
+
     public static List<Integer> getThreadIdsWhere(String where) {
         List<Integer> threadList = new ArrayList<>();
         String query = "SELECT DISTINCT(THREAD_ID) FROM " + TableNames.CALL_TRACE_TABLE + " where " + where;
