@@ -165,10 +165,17 @@ public class EventHandlers {
                                 " AND (message = 'NOTIFY-ENTER' OR message = 'NOTIFYALL-ENTER')" +
                                 " AND time_instant >= " + "'" + timeStamp + "'";
 
-                        // get thread ids of nodes that may acquire the lock that was just released.
-                        CallTraceDAOImpl.getThreadIdsWhere(sql).stream().forEach(id -> {
-                            ctIdList.add(id);
-                        });
+                        // // get thread ids of nodes that may acquire the lock that was just released.
+                        // CallTraceDAOImpl.getThreadIdsWhere(sql).stream().forEach(id -> {
+                        //     ctIdList.add(id);
+                        // });
+
+                        try (ResultSet rs = CallTraceDAOImpl.getWhere(sql)) {
+                            if (rs.next()) {
+                                ctId = rs.getInt("id");
+                                ctIdList.add(ctId);
+                            }
+                        }
 
                         try (ResultSet elementRS = ElementDAOImpl.selectWhere("id_enter_call_trace = " + ctId)) {
                             // Expecting to see a single row.
@@ -353,6 +360,7 @@ public class EventHandlers {
                     });
 
                     HBox hBox = new HBox();
+                    hBox.setSpacing(5);
                     hBox.getChildren().addAll(bookmarkColorPicker, addBookmarkButton, removeBookmarkButton);
 
                     gridPane.add(hBox, 1, rowIndex++);

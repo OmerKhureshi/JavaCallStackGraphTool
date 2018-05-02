@@ -292,7 +292,7 @@ public class ElementDAOImpl {
                 "END) AS method_name " +
                 "FROM " + TableNames.CALL_TRACE_TABLE + " AS CT " +
                 "JOIN " + TableNames.ELEMENT_TABLE + " AS E ON CT.ID = E.ID_ENTER_CALL_TRACE " +
-                "INNER JOIN " + TableNames.METHOD_DEFINITION_TABLE + " AS M ON CT.METHOD_ID = M.ID " +
+                "LEFT JOIN " + TableNames.METHOD_DEFINITION_TABLE + " AS M ON CT.METHOD_ID = M.ID " +
                 "WHERE CT.THREAD_ID = " + ControllerLoader.centerLayoutController.getCurrentThreadId() +
                 " AND E.bound_box_x_coordinate >= " + (viewPort.getMinX()) +
                 " AND E.bound_box_x_coordinate <= " + (viewPort.getMaxX()) +
