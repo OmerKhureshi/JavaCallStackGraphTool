@@ -314,7 +314,7 @@ public class EventHandlers {
                     String finalPackageName = packageName;
                     String finalMethodName = methodName;
                     eleIdList.stream().forEach(eId -> {
-                        String query = "SELECT E.ID AS EID, bound_box_x_coordinate, bound_box_y_coordinate, THREAD_ID " +
+                        String query = "SELECT E.ID AS EID, bound_box_x_coordinate, bound_box_y_coordinate, THREAD_ID, collapsed " +
                                 "FROM CALL_TRACE AS CT " +
                                 "JOIN ELEMENT AS E ON CT.ID = E.ID_ENTER_CALL_TRACE " +
                                 "WHERE E.ID = " + eId;
@@ -325,7 +325,7 @@ public class EventHandlers {
                                 String targetThreadId = String.valueOf(elementRS.getInt("thread_id"));
                                 float xCoordinate = elementRS.getFloat("bound_box_x_coordinate");
                                 float yCoordinate = elementRS.getFloat("bound_box_y_coordinate");
-
+                                int targetCellCollapsed = elementRS.getInt("collapsed");
                                 double width = graph.getScrollPane().getContent().getBoundsInLocal().getWidth();
                                 double height = graph.getScrollPane().getContent().getBoundsInLocal().getHeight();
 
@@ -333,7 +333,7 @@ public class EventHandlers {
                                 Button jumpToButton = new Button();
                                 jumpToButton.setOnMouseClicked(event1 -> {
                                     System.out.println("EventHandlers.handle: jumpToButton Clicked. for eleId: " + eId);
-                                    jumpTo(eId, targetThreadId, collapsed);
+                                    jumpTo(eId, targetThreadId, targetCellCollapsed);
                                 });
                                 buttonList.add(jumpToButton);
                             }
