@@ -61,7 +61,7 @@ public class DatabaseUtil {
                 dataSourceDir = new File(prefix + sDate);
             } else {
                 url = "jdbc:derby:" + dataSourceDir.getPath() + ";create=true";
-                // System.out.println("DatabaseUtil.createDatabaseConnection. use existing db. url: " + url);
+                System.out.println("DatabaseUtil.createDatabaseConnection. use existing db. url: " + url);
             }
 
             conn = DriverManager.getConnection(url);

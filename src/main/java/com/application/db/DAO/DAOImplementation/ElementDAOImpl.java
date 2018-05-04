@@ -452,7 +452,7 @@ public class ElementDAOImpl {
     public static List<ElementDTO> getAllParentElementDTOs(ElementDTO elementDTO, String threadId) {
         List<ElementDTO> elementDTOs = new ArrayList<>();
 
-        String getAllParentIDsQuery = "SELECT MAX(ID) AS IDS " +
+        String getAllParentIDsQuery = "SELECT MAX(ID) AS ID " +
                 "FROM " + TableNames.ELEMENT_TABLE + " AS E " +
                 "WHERE E.ID < " + elementDTO.getId() + " " +
                 "AND E.BOUND_BOX_X_COORDINATE < (SELECT BOUND_BOX_X_COORDINATE " +
@@ -464,7 +464,7 @@ public class ElementDAOImpl {
                 "AND E.PARENT_ID > 1 " +
                 "AND E.COLLAPSED <> 0 " +
                 "GROUP BY E.BOUND_BOX_X_COORDINATE " +
-                "ORDER BY IDS ASC ";
+                "ORDER BY ID ASC ";
 
         try (ResultSet rs = DatabaseUtil.select(getAllParentIDsQuery)) {
             while (rs.next()) {

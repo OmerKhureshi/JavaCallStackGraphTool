@@ -91,6 +91,13 @@ public class BookmarksDAOImpl {
         if (!isTableCreated())
             createTable();
 
+        if (!ElementDAOImpl.isTableCreated()) {
+            ElementDAOImpl.createTable();
+        }
+        if (!CallTraceDAOImpl.isTableCreated()) {
+            CallTraceDAOImpl.createTable();
+        }
+
         Map<String, BookmarkDTO> result = new HashMap<>();
         String query = "SELECT E.ID as EID, CT.THREAD_ID, CT.MESSAGE, B.COLOR, E.BOUND_BOX_X_COORDINATE, E.BOUND_BOX_Y_COORDINATE, E.COLLAPSED " +
                 "FROM " + TableNames.BOOKMARKS + " AS B " +

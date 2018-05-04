@@ -603,7 +603,10 @@ public class CanvasController {
     }
 
     public void jumpTo(String cellId, String threadId, int collapsed) {
-        ControllerLoader.eventHandlers.jumpTo(cellId, threadId, collapsed);
+        // collapsed value might have changes since the last time event handlers were set on the the bookmarks buttons.
+        // get new collapsed value.
+        ElementDTO elementDTO = ElementDAOImpl.getElementDTO(cellId);
+        ControllerLoader.eventHandlers.jumpTo(cellId, threadId, elementDTO.getCollapsed());
     }
 
 }

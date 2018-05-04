@@ -258,7 +258,7 @@ public class EventHandlers {
                     String finalPackageName = packageName;
                     String finalMethodName = methodName;
                     eleIdList.stream().forEach(eId -> {
-                        String query = "SELECT E.ID AS EID, bound_box_x_coordinate, bound_box_y_coordinate, THREAD_ID " +
+                        String query = "SELECT E.ID AS EID, bound_box_x_coordinate, bound_box_y_coordinate, THREAD_ID, collapsed " +
                                 "FROM CALL_TRACE AS CT " +
                                 "JOIN ELEMENT AS E ON CT.ID = E.ID_ENTER_CALL_TRACE " +
                                 "WHERE E.ID = " + eId;
@@ -269,12 +269,13 @@ public class EventHandlers {
                                 String targetThreadId = String.valueOf(elementRS.getInt("thread_id"));
                                 float xCoordinate = elementRS.getFloat("bound_box_x_coordinate");
                                 float yCoordinate = elementRS.getFloat("bound_box_y_coordinate");
+                                int targetElementCollapsed = elementRS.getInt("collapsed");
 
                                 // go to location.
                                 Button jumpToButton = new Button();
                                 jumpToButton.setOnMouseClicked(event1 -> {
                                     System.out.println("EventHandlers.handle: jumpToButton Clicked. for eleId: " + eId);
-                                    jumpTo(String.valueOf(eId), targetThreadId, collapsed);
+                                    jumpTo(String.valueOf(eId), targetThreadId, targetElementCollapsed);
                                 });
                                 buttonList.add(jumpToButton);
                             }
@@ -900,7 +901,6 @@ public class EventHandlers {
     }
 
     public void jumpTo(String cellId, String threadId, int collapsed) {
-
         // make changes in DB if needed
         if (collapsed != 0) {
             ElementDTO elementDTO = ElementDAOImpl.getElementDTO(cellId);
