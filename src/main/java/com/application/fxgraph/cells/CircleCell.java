@@ -2,6 +2,7 @@ package com.application.fxgraph.cells;
 
 import com.application.controller.ControllerLoader;
 import com.application.fxgraph.graph.Cell;
+import com.application.fxgraph.graph.ColorProp;
 import com.application.fxgraph.graph.CustomColors;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -43,8 +44,50 @@ public class CircleCell extends Cell {
 
     public CircleCell(String id) {
         super(id);
+    }
 
+    public CircleCell (String id, float xCoordinate, float yCoordinate, int collapsed) {
+        this(id);
+        boolean isLite = ControllerLoader.menuController.isLiteModeEnabled;
 
+        // Uncomment to see a colored background on the whole circle cell stack pane.
+        // setStyle("-fx-background-smallButtonsColor: mediumslateblue");
+
+        nodeShape = createRectangle();
+
+        this.collapsed = collapsed != 0;
+        label = new Label("");
+
+        setUpDropShadow(isLite);
+        setUpIdLabel(id, isLite);
+        setUpMethodName();
+        setUpButtons();
+        setFill(isLite);
+        setUpBookmark();
+
+        getChildren().addAll(nodeShape, methodNameLabel, idBubble, minMaxStackPane, infoStackPane, bookmarkBar);
+
+        idBubble.toFront();
+        bookmarkBar.toBack();
+        this.toFront();
+        // guess is, drop shadows block the mouse events. set pick on bounds to false to make mouse events work.
+        this.setPickOnBounds(false);
+
+        this.setOnMouseEntered(event -> {
+            if (!ControllerLoader.eventHandlers.popOver.isShowing()) {
+                infoStackPane.setVisible(true);
+                minMaxStackPane.setVisible(true);
+            }
+        });
+
+        this.setOnMouseExited(event -> {
+            if (!ControllerLoader.eventHandlers.popOver.isShowing()) {
+                infoStackPane.setVisible(false);
+                minMaxStackPane.setVisible(false);
+            }
+        });
+
+        this.relocate(xCoordinate , yCoordinate);
     }
 
     private void setUpBookmark() {
@@ -79,49 +122,6 @@ public class CircleCell extends Cell {
         infoStackPane.setVisible(false);
     }
 
-
-    public CircleCell (String id, float xCoordinate, float yCoordinate, int collapsed) {
-        this(id);
-
-        // Uncomment to see a colored background on the whole circle cell stack pane.
-        // setStyle("-fx-background-smallButtonsColor: mediumslateblue");
-
-        nodeShape = createRectangle();
-
-        this.collapsed = collapsed != 0;
-        label = new Label("");
-
-        setUpDropShadow();
-        setUpIdLabel(id);
-        setUpMethodName();
-        setUpButtons();
-        setFill();
-        setUpBookmark();
-
-        getChildren().addAll(nodeShape, methodNameLabel, idBubble, minMaxStackPane, infoStackPane, bookmarkBar);
-
-        idBubble.toFront();
-        bookmarkBar.toBack();
-        this.toFront();
-        // guess is, drop shadows block the mouse events. set pick on bounds to false to make mouse events work.
-        this.setPickOnBounds(false);
-
-        this.setOnMouseEntered(event -> {
-            if (!ControllerLoader.eventHandlers.popOver.isShowing()) {
-                infoStackPane.setVisible(true);
-                minMaxStackPane.setVisible(true);
-            }
-        });
-
-        this.setOnMouseExited(event -> {
-            if (!ControllerLoader.eventHandlers.popOver.isShowing()) {
-                infoStackPane.setVisible(false);
-                minMaxStackPane.setVisible(false);
-            }
-        });
-
-        this.relocate(xCoordinate , yCoordinate);
-    }
 
     public CircleCell(String id, float xCoordinate, float yCoordinate, String methodName, int collapsed) {
         this(id, xCoordinate, yCoordinate, collapsed);
@@ -222,13 +222,20 @@ public class CircleCell extends Cell {
         return rect;
     }
 
-    private void setFill() {
-        Stop[] stops = new Stop[] { new Stop(0, cell1Color), new Stop(1, cell2Color)};
-        LinearGradient linearGradient = new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE, stops);
-        nodeShape.setFill(linearGradient);
+    private void setFill(boolean isLite) {
+        if (isLite) {
+            nodeShape.setFill(Color.WHITE);
+            nodeShape.setStroke(Color.GREY);
+            nodeShape.setStrokeWidth(0.5);
+        } else {
+            Stop[] stops = new Stop[] { new Stop(0, cell1Color), new Stop(1, cell2Color)};
+            LinearGradient linearGradient = new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE, stops);
+            nodeShape.setFill(linearGradient);
+        }
+
     }
 
-    private void setUpIdLabel(String id) {
+    private void setUpIdLabel(String id, boolean isLite) {
         double x = 0, y = 0;
         Label idLabel = new Label(id);
         idLabel.setFont(Font.font(10));
@@ -242,17 +249,22 @@ public class CircleCell extends Cell {
         ((Rectangle) background).setHeight(height);
         ((Rectangle) background).setArcHeight(10);
         ((Rectangle) background).setArcWidth(10);
-        background.setFill(idBubbleBackgroundColor);
+            background.setFill(idBubbleBackgroundColor);
 
-        DropShadow dropShadow = new DropShadow();
-        dropShadow.setWidth(width);
-        dropShadow.setHeight(width);
-        dropShadow.setOffsetX(2);
-        dropShadow.setOffsetY(2);
-        dropShadow.setRadius(5);
-        dropShadow.setColor(idBubbleShadowColor);
-        background.setEffect(dropShadow);
-
+        if (isLite) {
+            // background.setFill(Color.WHITE);
+            // background.setStroke(ColorProp.GREY);
+            // background.setStrokeWidth(.5);
+        } else {
+            DropShadow dropShadow = new DropShadow();
+            dropShadow.setWidth(width);
+            dropShadow.setHeight(width);
+            dropShadow.setOffsetX(2);
+            dropShadow.setOffsetY(2);
+            dropShadow.setRadius(5);
+            dropShadow.setColor(idBubbleShadowColor);
+            background.setEffect(dropShadow);
+        }
 
         // background.setStroke(CustomColors.DARK_GREY.getPaint());
 
@@ -261,15 +273,17 @@ public class CircleCell extends Cell {
         idBubble.relocate(-((Rectangle) background).getWidth() * 0.5, -((Rectangle) background).getHeight() * 0.5);
     }
 
-    private void setUpDropShadow() {
-        DropShadow dropShadow = new DropShadow();
-        dropShadow.setWidth(rectWidth);
-        dropShadow.setHeight(rectHeight);
-        dropShadow.setOffsetX(12);
-        dropShadow.setOffsetY(12);
-        dropShadow.setRadius(40);
-        dropShadow.setColor(cellShadowColor);
-        this.setEffect(dropShadow);
+    private void setUpDropShadow(boolean isLite) {
+        if (!isLite) {
+            DropShadow dropShadow = new DropShadow();
+            dropShadow.setWidth(rectWidth);
+            dropShadow.setHeight(rectHeight);
+            dropShadow.setOffsetX(12);
+            dropShadow.setOffsetY(12);
+            dropShadow.setRadius(40);
+            dropShadow.setColor(cellShadowColor);
+            this.setEffect(dropShadow);
+        }
     }
 
     // Color smallButtonsColor = Color.valueOf("#e5a2d0");

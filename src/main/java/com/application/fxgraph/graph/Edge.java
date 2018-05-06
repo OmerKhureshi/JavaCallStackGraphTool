@@ -1,5 +1,6 @@
 package com.application.fxgraph.graph;
 
+import com.application.controller.ControllerLoader;
 import javafx.scene.Group;
 import javafx.scene.control.Label;
 import javafx.scene.effect.Glow;
@@ -55,6 +56,8 @@ public class Edge extends Group {
 
     public Edge(String edgeId, double startX, double endX, double startY, double endY) {
         this.edgeId = edgeId;
+        boolean isLite = ControllerLoader.menuController.isLiteModeEnabled;
+
         // this.source = source;
         // this.target = target;
         //
@@ -69,12 +72,19 @@ public class Edge extends Group {
         line.setEndX(endX + Cell.prefWidth * .5 );
         line.setEndY(endY + Cell.prefHeight * .5 );
 
-        Glow glow = new Glow();
-        glow.setLevel(0.4);
-        // line.setEffect(glow);
 
-        line.setFill(Color.valueOf("#bab2f0"));
-        line.setStroke(Color.valueOf("#dab2f0"));
+        if (isLite) {
+            line.setStroke(Color.valueOf("#bab2f0"));
+            line.setStrokeWidth(0.8);
+            // line.setFill(Color.valueOf("#bab2f0"));
+        } else {
+            // line.setFill(Color.valueOf("#bab2f0"));
+            line.setStroke(Color.valueOf("#dab2f0"));
+
+            Glow glow = new Glow();
+            glow.setLevel(0.5);
+            line.setEffect(glow);
+        }
 
         // line.startXProperty().bind( source.layoutXProperty().add(source.getLayoutX()));
         // line.startYProperty().bind( source.layoutYProperty().add(source.getLayoutY()));

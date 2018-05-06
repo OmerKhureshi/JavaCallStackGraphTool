@@ -14,6 +14,9 @@ import com.application.service.files.LoadedFiles;
 import com.application.service.modules.ModuleLocator;
 import com.application.service.tasks.ConstructTreeTask;
 import com.application.service.tasks.ParseFileTask;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.concurrent.Task;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
@@ -39,6 +42,7 @@ import org.controlsfx.glyphfont.FontAwesome;
 import org.controlsfx.glyphfont.Glyph;
 
 import javax.imageio.ImageIO;
+import javax.naming.Binding;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -89,6 +93,10 @@ public class MenuController {
     @FXML
     private MenuItem addHighlightMenuItem;
 
+    // Settings Menu
+    @FXML
+    private CheckMenuItem liteModeCheckMenuItem;
+    public Boolean isLiteModeEnabled = false;
 
     // Debug menu button
     @FXML
@@ -122,6 +130,7 @@ public class MenuController {
         setUpBookmarksMenu();
         setUpHighlightsMenu();
         setUpViewMenu();
+        setUpSettingMenu();
         setUpDebugMenu();
 
         initMenuGraphics();
@@ -248,6 +257,12 @@ public class MenuController {
         saveImageMenuItem.setOnAction(event -> saveUIImage());
 
         refreshMenuItem.setOnAction(event -> ControllerLoader.canvasController.clearAndUpdate());
+    }
+
+    private void setUpSettingMenu() {
+        liteModeCheckMenuItem.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            isLiteModeEnabled = newValue;
+        });
     }
 
     private void setUpDebugMenu() {

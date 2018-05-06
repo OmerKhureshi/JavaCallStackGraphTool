@@ -4,8 +4,9 @@
 <?import javafx.scene.control.MenuItem?>
 
 <?import javafx.scene.control.SeparatorMenuItem?>
+<?import javafx.scene.control.CheckMenuItem?>
 <MenuBar fx:id="menuBar"
-        fx:controller="com.application.controller.MenuController"
+         fx:controller="com.application.controller.MenuController"
          xmlns:fx="http://javafx.com/fxml/1">
 
     <Menu fx:id="fileMenu" text="_File">
@@ -31,9 +32,12 @@
 
     <Menu fx:id="bookmarksMenu" text="_Bookmarks"> </Menu>
 
-
     <Menu fx:id="debugMenu" text="_Debug">
         <MenuItem fx:id="printViewPortDimsMenuItem" text="Print _viewport dimensions"/>
+    </Menu>
+
+    <Menu fx:id="settingMenu" text="_Settings">
+        <CheckMenuItem fx:id="liteModeCheckMenuItem" text="Enable lite mode"/>
     </Menu>
 
 </MenuBar>
