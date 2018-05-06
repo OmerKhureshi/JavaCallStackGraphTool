@@ -6,6 +6,7 @@ import com.application.db.DatabaseUtil;
 import com.application.logs.fileIntegrity.CheckFileIntegrity;
 import com.application.logs.parsers.ParseCallTrace;
 import com.application.logs.parsers.ParseMethodDefinition;
+import com.application.presentation.CustomProgressBar;
 import com.application.service.files.FileNames;
 import com.application.service.files.LoadedFiles;
 import com.application.service.modules.ModuleLocator;
@@ -19,6 +20,7 @@ public class ParseFileTask extends Task<Void> {
     private File methodDefinitionLogFile;
     private File callTraceLogFile;
 
+
     public ParseFileTask() {
         this.methodDefinitionLogFile = LoadedFiles.getFile(FileNames.METHOD_DEF.getFileName());
         this.callTraceLogFile = LoadedFiles.getFile(FileNames.Call_Trace.getFileName());
@@ -27,7 +29,7 @@ public class ParseFileTask extends Task<Void> {
     @Override
     protected Void call() {
         // Reset Database
-        updateTitle("Resetting the Database.");
+        // updateTitle("Resetting the Database.");
         DatabaseUtil.resetDB();
 
         BytesRead bytesRead = new BytesRead(
@@ -35,7 +37,7 @@ public class ParseFileTask extends Task<Void> {
                 methodDefinitionLogFile.length() + 2 * callTraceLogFile.length()
         );
         // Method Definition log file integrity check.
-        updateTitle("Checking integrity of Method Definition log file.");
+        updateTitle("Checking integrity of Call Trace Log file.");
         updateMessage("Please wait... total Bytes: " + bytesRead.total + " bytes processed: " + bytesRead.readSoFar);
         updateProgress(bytesRead.readSoFar, bytesRead.total);
 

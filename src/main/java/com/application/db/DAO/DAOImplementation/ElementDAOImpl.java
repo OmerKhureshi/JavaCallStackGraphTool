@@ -11,10 +11,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.application.db.TableNames.ELEMENT_TABLE;
@@ -231,6 +228,28 @@ public class ElementDAOImpl {
         }
 
         return elementDTO;
+    }
+
+    public static List<ElementDTO> getElementDTOs(List<String> ids) {
+        List<ElementDTO> elementDTOs = new ArrayList<>();
+
+        StringJoiner stringJoiner = new StringJoiner(",", "(", ")");
+        ids.forEach(id -> stringJoiner.add(id));
+
+        String sql = "SELECT * FROM " + TableNames.ELEMENT_TABLE + " WHERE ID in " + stringJoiner.toString();
+        System.out.println("ElementDAOImpl.getElementDTOsInViewport query: " + sql);
+
+        try (ResultSet rs = DatabaseUtil.select(sql)) {
+            while (rs.next()) {
+                elementDTOs.add(processElementDTO(rs));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            DatabaseUtil.close();
+        }
+
+        return elementDTOs;
     }
 
     private static ElementDTO processElementDTO(ResultSet rs) {
@@ -450,14 +469,22 @@ public class ElementDAOImpl {
     }
 
     public static List<ElementDTO> getAllParentElementDTOs(ElementDTO elementDTO, String threadId) {
-        List<ElementDTO> elementDTOs = new ArrayList<>();
+        List<String> ids = getParentIDs(elementDTO.getId(), threadId);
+        List<ElementDTO> elementDTOs = getElementDTOs(ids);
 
+        return elementDTOs;
+    }
+
+    private static List<String> getParentIDs(String id, String threadId) {
+        List<String> ids = new ArrayList<>();
+
+        // get element ids of parents.
         String getAllParentIDsQuery = "SELECT MAX(ID) AS ID " +
                 "FROM " + TableNames.ELEMENT_TABLE + " AS E " +
-                "WHERE E.ID < " + elementDTO.getId() + " " +
+                "WHERE E.ID < " + id + " " +
                 "AND E.BOUND_BOX_X_COORDINATE < (SELECT BOUND_BOX_X_COORDINATE " +
                 "FROM " + TableNames.ELEMENT_TABLE + " AS E1 " +
-                "WHERE E1.ID = " + elementDTO.getId() + ") " +
+                "WHERE E1.ID = " + id + ") " +
                 "AND EXISTS (SELECT * FROM " + TableNames.CALL_TRACE_TABLE + " AS CT " +
                 "WHERE CT.ID = E.ID_ENTER_CALL_TRACE AND " +
                 "CT.THREAD_ID = " + threadId + ")" +
@@ -466,9 +493,13 @@ public class ElementDAOImpl {
                 "GROUP BY E.BOUND_BOX_X_COORDINATE " +
                 "ORDER BY ID ASC ";
 
+
+        // get element dtos for parent elements.
+        // System.out.println("ElementDAOImpl.getAllParentElementDTOs query: " + getAllParentIDsQuery);
         try (ResultSet rs = DatabaseUtil.select(getAllParentIDsQuery)) {
             while (rs.next()) {
-                elementDTOs.add(processElementDTO(rs));
+                ids.add(String.valueOf(rs.getInt("ID")));
+                // elementDTOs.add(processElementDTO(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -476,8 +507,9 @@ public class ElementDAOImpl {
             DatabaseUtil.close();
         }
 
-        return elementDTOs;
+        return ids;
     }
+
 
     public static String getUpdateElementQueryAfterCollapse(double y, double delta, int nextCellId, int lastCellId) {
         return "UPDATE " + TableNames.ELEMENT_TABLE + " " +

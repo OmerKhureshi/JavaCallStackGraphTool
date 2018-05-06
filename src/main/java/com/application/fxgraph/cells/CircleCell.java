@@ -129,7 +129,6 @@ public class CircleCell extends Cell {
     }
 
     public void setCollapsed(int collapsed) {
-        System.out.println("CircleCell.setCollapsed: collapsed: " + collapsed);
         this.collapsed = collapsed != 0;
         setMinMaxIcon();
     }

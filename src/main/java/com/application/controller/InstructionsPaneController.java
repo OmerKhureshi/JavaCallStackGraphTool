@@ -7,6 +7,7 @@ import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.paint.Paint;
 import org.controlsfx.glyphfont.FontAwesome;
 import org.controlsfx.glyphfont.Glyph;
 
@@ -36,6 +37,11 @@ public class InstructionsPaneController {
     @FXML
     private Label dbRunInfoLabel;
 
+    @FXML
+    private Label errorHeaderLabel;
+    @FXML
+    private Label errorInfoLabel;
+
     private Glyph fileHeaderGlyph;
     private Glyph methodDefInfoGlyph;
     private Glyph callTraceInfoGlyph;
@@ -44,6 +50,10 @@ public class InstructionsPaneController {
     private Glyph dbHeaderGlyph;
     private Glyph dbInfoGlyph;
     private Glyph dbRunInfoGlyph;
+
+    private Glyph errorHeaderGlyph;
+    private Glyph errorInfoGlyph;
+
 
 
     @FXML private void initialize() {
@@ -104,6 +114,20 @@ public class InstructionsPaneController {
         dbRunInfoLabel.setGraphic(dbRunInfoGlyph);
         dbRunInfoLabel.setPadding(new Insets(0, 0, 0, leftInset));
 
+        errorHeaderGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.ARROW_CIRCLE_RIGHT);
+        errorHeaderGlyph.setColor(ColorProp.GREY);
+        errorHeaderLabel.setGraphic(errorHeaderGlyph);
+        errorHeaderLabel.setTextFill(ColorProp.GREY);
+        double errorHeaderFontSize = errorHeaderLabel.getFont().getSize();
+        errorHeaderLabel.setStyle("-fx-font-size: " + (errorHeaderFontSize + 5));
+
+        errorInfoGlyph = new Glyph("FontAwesome", FontAwesome.Glyph.ARROW_RIGHT);
+        errorInfoGlyph.setColor(ColorProp.GREY);
+        errorInfoLabel.setGraphic(errorInfoGlyph);
+        errorInfoLabel.setPadding(new Insets(0, 0, 0, leftInset));
+
+        setErrorGraphics(false);
+        setVisibilityBinding();
     }
 
     public void setMethodDefGraphics(boolean enabled) {
@@ -133,7 +157,7 @@ public class InstructionsPaneController {
 
         } else {
             callTraceInfoGlyph.setIcon(FontAwesome.Glyph.ARROW_RIGHT);
-            callTraceInfoGlyph.setColor(ColorProp.BLACK);
+            callTraceInfoGlyph.setColor(ColorProp.GREY);
         }
     }
 
@@ -156,7 +180,7 @@ public class InstructionsPaneController {
 
         } else {
             dbInfoGlyph.setIcon(FontAwesome.Glyph.ARROW_RIGHT);
-            dbInfoGlyph.setColor(ColorProp.BLACK);
+            dbInfoGlyph.setColor(ColorProp.GREY);
         }
     }
 
@@ -169,4 +193,57 @@ public class InstructionsPaneController {
         }
     }
 
+    public void setErrorGraphics(boolean enabled) {
+        if (enabled) {
+            headerLabel.setVisible(false);
+
+            fileHeaderLabel.setVisible(false);
+            methodDefInfoLabel.setVisible(false);
+            callTraceInfoLabel.setVisible(false);
+            fileRunInfoLabel.setVisible(false);
+
+            orLabel.setVisible(false);
+
+            dbHeaderLabel.setVisible(false);
+            dbInfoLabel.setVisible(false);
+            dbRunInfoLabel.setVisible(false);
+
+            errorHeaderLabel.setVisible(true);
+            errorInfoLabel.setVisible(true);
+        } else {
+            headerLabel.setVisible(true);
+
+            fileHeaderLabel.setVisible(true);
+            methodDefInfoLabel.setVisible(true);
+            callTraceInfoLabel.setVisible(true);
+            fileRunInfoLabel.setVisible(true);
+
+            orLabel.setVisible(true);
+
+            dbHeaderLabel.setVisible(true);
+            dbInfoLabel.setVisible(true);
+            dbRunInfoLabel.setVisible(true);
+
+            errorHeaderLabel.setVisible(false);
+            errorInfoLabel.setVisible(false);
+        }
+    }
+
+    private void setVisibilityBinding() {
+        headerLabel.managedProperty().bind(headerLabel.visibleProperty());
+
+        fileHeaderLabel.managedProperty().bind(fileHeaderLabel.visibleProperty());
+        methodDefInfoLabel.managedProperty().bind(methodDefInfoLabel.visibleProperty());
+        callTraceInfoLabel.managedProperty().bind(callTraceInfoLabel.visibleProperty());
+        fileRunInfoLabel.managedProperty().bind(fileRunInfoLabel.visibleProperty());
+
+        orLabel.managedProperty().bind(orLabel.visibleProperty());
+
+        dbHeaderLabel.managedProperty().bind(dbHeaderLabel.visibleProperty());
+        dbInfoLabel.managedProperty().bind(dbInfoLabel.visibleProperty());
+        dbRunInfoLabel.managedProperty().bind(dbRunInfoLabel.visibleProperty());
+
+        errorHeaderLabel.managedProperty().bind(errorHeaderLabel.visibleProperty());
+        errorInfoLabel.managedProperty().bind(errorInfoLabel.visibleProperty());
+    }
 }

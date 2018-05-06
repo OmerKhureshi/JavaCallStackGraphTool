@@ -24,7 +24,7 @@ public class CustomProgressBar {
 
     private static final int PROGRESS_BAR_WIDTH = 676;
 
-    public CustomProgressBar(String titleText, String progressText, List<Task<Void>> taskList) {
+    public CustomProgressBar(String titleText, String progressText) {
         progressBar = new ProgressBar();
         progressBar.setPrefWidth(PROGRESS_BAR_WIDTH);
 
@@ -60,4 +60,5 @@ public class CustomProgressBar {
         titleLabel.textProperty().bind(task.titleProperty());
         progressLabel.textProperty().bind(task.messageProperty());
     }
+
 }

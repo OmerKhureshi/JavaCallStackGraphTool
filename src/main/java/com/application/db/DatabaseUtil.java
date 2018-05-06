@@ -27,10 +27,14 @@ public class DatabaseUtil {
                 return false;
             }
 
-            return c.getMetaData().getTables(null, null, tableName, null).next();
+            boolean isCreated = c.getMetaData().getTables(null, null, tableName, null).next();
+            // System.out.println("DatabaseUtil.isTableCreated: table is created? " + isCreated + " table name: " + tableName);
+
+            return isCreated;
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        System.out.println("DatabaseUtil.isTableCreated: table not created tableName: " + tableName);
         return false;
     }
 
@@ -57,11 +61,11 @@ public class DatabaseUtil {
                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmsss");
                 String sDate = dateFormat.format(date);
                 url = "jdbc:derby:" + prefix + sDate + ";create=true";
-                System.out.println("DatabaseUtil.createDatabaseConnection. new db. url: " + url);
+                // System.out.println("DatabaseUtil.createDatabaseConnection. new db. url: " + url);
                 dataSourceDir = new File(prefix + sDate);
             } else {
                 url = "jdbc:derby:" + dataSourceDir.getPath() + ";create=true";
-                System.out.println("DatabaseUtil.createDatabaseConnection. use existing db. url: " + url);
+                // System.out.println("DatabaseUtil.createDatabaseConnection. use existing db. url: " + url);
             }
 
             conn = DriverManager.getConnection(url);
@@ -499,6 +503,7 @@ public class DatabaseUtil {
 
     public static void handleSQLException(SQLException se) {
         System.out.println("DatabaseUtil.handleSQLException: parent exception sql state: " + se.getSQLState());
+        System.out.println("DatabaseUtil.handleSQLException: parent exception sql message: " + se.getMessage());
 
         String causeSQLState = null;
 

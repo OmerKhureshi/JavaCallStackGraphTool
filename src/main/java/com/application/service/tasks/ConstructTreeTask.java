@@ -10,6 +10,7 @@ import com.application.db.DTO.ElementToChildDTO;
 import com.application.fxgraph.ElementHelpers.EdgeElement;
 import com.application.fxgraph.ElementHelpers.Element;
 import com.application.logs.parsers.ParseCallTrace;
+import com.application.presentation.CustomProgressBar;
 import com.application.service.files.FileNames;
 import com.application.service.files.LoadedFiles;
 import com.application.service.modules.ElementTreeModule;
@@ -28,15 +29,13 @@ public class ConstructTreeTask extends Task<Void> {
     private File callTraceLogFile;
     ElementTreeModule elementTreeModule;
 
-    Consumer<Void> onSuccess;
-
     public ConstructTreeTask() {
         this.callTraceLogFile = LoadedFiles.getFile(FileNames.Call_Trace.getFileName());
         elementTreeModule = ModuleLocator.getElementTreeModule();
     }
 
     @Override
-    protected Void call() throws Exception {
+    protected Void call() {
         computeAndInsertElements();
         computeAndInsertEdges();
 

@@ -51,25 +51,28 @@ public class MainController {
     }
 
     public void showErrorPopup(String title, String header, String message) {
-        System.out.println("MainController.showErrorPopup.");
+        Platform.runLater(() -> {
+            System.out.println("MainController.showErrorPopup.");
 
-        if (alertShown) {
-            System.out.println("MainController.showErrorPopup. alert shown.");
-            return;
-        }
-        alertShown = true;
+            if (alertShown) {
+                System.out.println("MainController.showErrorPopup. alert shown.");
+                return;
+            }
 
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setHeaderText(header);
-        alert.setContentText(message);
-        ButtonType resetButtonType = new ButtonType("Close");
-        alert.getButtonTypes().setAll(resetButtonType);
 
-        alert.getDialogPane().setMinWidth(Region.USE_PREF_SIZE);
-        alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle(title);
+            alert.setHeaderText(header);
+            alert.setContentText(message);
+            ButtonType resetButtonType = new ButtonType("Close");
+            alert.getButtonTypes().setAll(resetButtonType);
 
-        alert.show();
+            alert.getDialogPane().setMinWidth(Region.USE_PREF_SIZE);
+            alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+
+            alertShown = true;
+            alert.show();
+        });
     }
 
 }

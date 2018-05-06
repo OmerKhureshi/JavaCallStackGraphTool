@@ -128,18 +128,16 @@ public class MethodDefDAOImpl {
     }
 
     public static void insertList(List<List<String>> parsedLineList) {
-
+        String query = null;
         try (Statement statement = DatabaseUtil.getConnection().createStatement()) {
-            parsedLineList.forEach(parsedLine -> {
-                try {
-                    statement.addBatch(getInsertSQL(parsedLine));
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            });
+            for (List<String> parsedLine : parsedLineList) {
+                query = getInsertSQL(parsedLine);
+                statement.addBatch(query);
+            }
 
             statement.executeBatch();
         } catch (SQLException e) {
+            System.out.println("MethodDefDAOImpl.insertList exception caused by query: " + query);
             e.printStackTrace();
         }
 

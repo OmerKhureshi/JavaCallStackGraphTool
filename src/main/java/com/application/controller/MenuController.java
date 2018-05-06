@@ -23,6 +23,9 @@ import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.*;
 import javafx.scene.image.WritableImage;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
@@ -42,7 +45,6 @@ import java.sql.Statement;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MenuController {
@@ -109,6 +111,8 @@ public class MenuController {
 
     private boolean firstTimeSetUpHighlightsWindowCall = true;
 
+    CustomProgressBar customProgressBar;
+
     @FXML
     private void initialize() {
         // autoRun();
@@ -144,6 +148,8 @@ public class MenuController {
     }
 
     private void setUpFileMenu() {
+        chooseMethodDefMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.F, KeyCombination.ALT_DOWN));
+
         chooseMethodDefMenuItem.setOnAction(event -> {
             try {
                 File methodDefLogFile = ControllerUtil.fileChooser("Choose method definition log fileMenu.", "Text Files", "*.txt");
@@ -158,6 +164,8 @@ public class MenuController {
             }
         });
 
+        chooseCallTraceMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.C, KeyCombination.ALT_DOWN));
+
         chooseCallTraceMenuItem.setOnAction(event -> {
             try {
                 File callTraceLogFile = ControllerUtil.fileChooser("Choose call trace log fileMenu.", "Text Files", "*.txt");
@@ -171,6 +179,8 @@ public class MenuController {
                 e.printStackTrace();
             }
         });
+
+        chooseDBMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.D, KeyCombination.ALT_DOWN));
 
         chooseDBMenuItem.setOnAction(event -> {
             try {
@@ -222,10 +232,12 @@ public class MenuController {
     }
 
     private void setUpRunMenu() {
+        runAnalysisMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.R, KeyCombination.ALT_DOWN));
         runAnalysisMenuItem.setOnAction(event -> {
             onRun();
         });
 
+        resetMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.R, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN));
         resetMenuItem.setOnAction(event -> {
             onReset();
         });
@@ -258,31 +270,38 @@ public class MenuController {
         // No need to parse log file and compute graph if loading from DB.
         if (LoadedFiles.isLoadedFromDB()) {
             ControllerLoader.mainController.loadGraphPane();
-            return;
+            postGraphLoadProcess();
+        } else {
+            customProgressBar = new CustomProgressBar("", "");
+
+            Task<Void> parseTask = new ParseFileTask();
+            Task<Void> constructTreeTask = new ConstructTreeTask();
+
+
+            ExecutorService es = Executors.newSingleThreadExecutor();
+            es.submit(parseTask);
+            es.submit(constructTreeTask);
+            es.shutdown();
+
+            customProgressBar.bind(parseTask);
+
+            parseTask.setOnSucceeded((e) -> {
+                customProgressBar.bind(constructTreeTask);
+            });
+
+            constructTreeTask.setOnSucceeded((e) -> {
+                customProgressBar.close();
+                ControllerLoader.mainController.loadGraphPane();
+                postGraphLoadProcess();
+            });
         }
 
-        Task<Void> parseTask = new ParseFileTask();
-        Task<Void> constructTreeTask = new ConstructTreeTask();
+    }
 
-        CustomProgressBar customProgressBar = new CustomProgressBar("", "",
-                Arrays.asList(parseTask, constructTreeTask));
-
-        ExecutorService es = Executors.newSingleThreadExecutor();
-        es.submit(parseTask);
-        es.submit(constructTreeTask);
-        es.shutdown();
-
-        customProgressBar.bind(parseTask);
-
-        parseTask.setOnSucceeded((e) -> {
-            customProgressBar.bind(constructTreeTask);
-        });
-
-        constructTreeTask.setOnSucceeded((e) -> {
+    public void closeProgressBar() {
+        if (customProgressBar != null) {
             customProgressBar.close();
-            ControllerLoader.mainController.loadGraphPane();
-        });
-
+        }
     }
 
     public void onReset() {
@@ -302,6 +321,7 @@ public class MenuController {
         ControllerLoader.instructionsPaneController.setCallTraceGraphics(false);
         ControllerLoader.instructionsPaneController.setMethodDefGraphics(false);
         ControllerLoader.instructionsPaneController.setFileRunInfoGraphics(false);
+        ControllerLoader.instructionsPaneController.setErrorGraphics(false);
 
         ControllerLoader.mainController.alertShown = false;
     }
@@ -310,9 +330,11 @@ public class MenuController {
         MenuItem noBookmarksMenuItem = new MenuItem("No bookmarks");
         noBookmarksMenuItem.setDisable(true);
         bookmarksMenu.getItems().add(noBookmarksMenuItem);
+        // updateBookmarksMenu();
     }
 
     public void updateBookmarksMenu() {
+        System.out.println("MenuController.updateBookmarksMenu");
         bookmarksMenu.getItems().clear();
 
         Map<String, BookmarkDTO> bookmarkDTOs = getBookmarkDTOs();
@@ -327,10 +349,10 @@ public class MenuController {
         }
 
         bookmarkDTOs.forEach((id, bookmarkDTO) -> {
-            Rectangle icon = new Rectangle(15, 15);
-            icon.setFill(Color.web("#6699CC"));
-            icon.setStrokeWidth(3);
-            icon.setStroke(Paint.valueOf(bookmarkDTO.getColor()));
+            Rectangle icon = new Rectangle(10, 30);
+            icon.setFill(Paint.valueOf(bookmarkDTO.getColor()));
+            icon.setStrokeWidth(1);
+            icon.setStroke(ColorProp.GREY);
             icon.setArcWidth(3);
             icon.setArcHeight(3);
 
@@ -899,5 +921,9 @@ public class MenuController {
         bookmarksMenu.setDisable(!enabled);
         viewMenu.setDisable(!enabled);
         debugMenu.setDisable(!enabled);
+    }
+
+    public void postGraphLoadProcess() {
+        updateBookmarksMenu();
     }
 }
