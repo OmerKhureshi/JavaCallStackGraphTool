@@ -49,7 +49,6 @@ public class CenterLayoutController {
     private ObservableList<String> threadsObsList;
     private ObservableList<String> bookmarkObsList;
 
-    private GraphLoaderModule graphLoaderModule;
 
     public void setCurrentThreadId(String currentThreadId) {
         CenterLayoutController.currentThreadId = currentThreadId;
@@ -65,7 +64,6 @@ public class CenterLayoutController {
         ControllerLoader.register(this);
 
         setUpPaneButtonsActions();
-        graphLoaderModule = ModuleLocator.getGraphLoaderModule();
         setUpThreadsListView();
         canvasController.setUp();
     }

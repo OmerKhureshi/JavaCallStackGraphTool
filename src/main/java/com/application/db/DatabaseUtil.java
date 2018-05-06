@@ -451,20 +451,6 @@ public class DatabaseUtil {
         FilesDAOImpl.insert("DB", dataSourceDir.getPath());
     }
 
-    public static void setDbPath() {
-        ResultSet rs = FilesDAOImpl.selectWhere("FILE_TYPE = 'DB'");
-        try {
-            if (rs.next()) {
-                String sPath = rs.getString("FILE_PATH");
-                dataSourceDir = new File(sPath);
-                System.out.println("DatabaseUtil.setDbPath: new path: " + dataSourceDir);
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
 
     // public static ResultSet executeQuery(Connection conn, String query) throws SQLException {
     //     Statement statement = conn.createStatement();

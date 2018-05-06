@@ -2,11 +2,9 @@
 
 <?import javafx.scene.layout.AnchorPane?>
 
-<?import javafx.scene.control.Label?>
 <AnchorPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.application.controller.CanvasController"
             fx:id="canvasAnchorPane">
-    <Label fx:id="blum" text="shit test."/>
 </AnchorPane>
 

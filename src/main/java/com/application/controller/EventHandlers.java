@@ -963,7 +963,6 @@ public class EventHandlers {
 
                 // get queries to update collapse values for cells, edges and highlights.
                 queryList.addAll(getSubTreeUpdateQueries(clickedEleDTO, isCollapsed, nextCellId, threadId));
-                addCurrentNodeHighlightResizeQuery();
 
                 // No upate required for single line children
                 if (deltaY == 0) {
@@ -1200,14 +1199,6 @@ public class EventHandlers {
 
         queryList.addAll(HighlightDAOImpl.getChildrenHighlightResizeQueries(clickedEleDTO, isCollapsed, nextCellId, threadId));
     }
-
-    private void addCurrentNodeHighlightResizeQuery(ElementDTO clickedEleDTO, boolean isCollapsed, List<String> queryList) {
-        if (isCollapsed) {
-
-        }
-    }
-
-
 
     private void addParentHighlightResizeQueries(ElementDTO clickedEleDTO, List<String> queryList, int threadId){
         int cellId = Integer.valueOf(clickedEleDTO.getId());

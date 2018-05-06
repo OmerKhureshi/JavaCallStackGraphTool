@@ -21,7 +21,7 @@ public class ParseFileTask extends Task<Void> {
     private File callTraceLogFile;
 
 
-    public ParseFileTask() {
+    public  ParseFileTask() {
         this.methodDefinitionLogFile = LoadedFiles.getFile(FileNames.METHOD_DEF.getFileName());
         this.callTraceLogFile = LoadedFiles.getFile(FileNames.Call_Trace.getFileName());
     }

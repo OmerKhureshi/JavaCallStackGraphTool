@@ -35,24 +35,10 @@ public class CanvasController {
 
     private GraphLoaderModule graphLoaderModule;
     public Pane canvas;
+
     public ZoomableScrollPane scrollPane;
-
-    public Map<String, CircleCell> getCircleCellsOnUI() {
-        return circleCellsOnUI;
-    }
-
     private Map<String, CircleCell> circleCellsOnUI = new HashMap<>();
-
-    public Map<String, Edge> getEdgesOnUI() {
-        return edgesOnUI;
-    }
-
     private Map<String, Edge> edgesOnUI = new HashMap<>();
-
-    public Map<Integer, RectangleCell> getHighlightsOnUI() {
-        return highlightsOnUI;
-    }
-
     private Map<Integer, com.application.fxgraph.graph.RectangleCell> highlightsOnUI = new HashMap<>();
 
     // Region where UI components are loaded.
@@ -62,6 +48,7 @@ public class CanvasController {
 
     private Map<String, Double> vScrollBarPos = new HashMap<>();
     private Map<String, Double> hScrollBarPos = new HashMap<>();
+
 
 
     @FXML
@@ -609,4 +596,15 @@ public class CanvasController {
         ControllerLoader.eventHandlers.jumpTo(cellId, threadId, elementDTO.getCollapsed());
     }
 
+    public void onReset() {
+        clearAll();
+
+        circleCellsOnUI = new HashMap<>();
+        edgesOnUI = new HashMap<>();
+        highlightsOnUI = new HashMap<>();
+    }
+
+    public Map<Integer, RectangleCell> getHighlightsOnUI() {
+        return highlightsOnUI;
+    }
 }

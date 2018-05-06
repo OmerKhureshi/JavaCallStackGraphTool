@@ -358,11 +358,17 @@ public class ElementDAOImpl {
         }
 
         // Get the width for placeholder line.
-        String SQLMaxLevelCount = "select max(LEVEL_COUNT) from ELEMENT " +
-                "where ID_ENTER_CALL_TRACE in " +
-                "(SELECT  CALL_TRACE.ID from CALL_TRACE where THREAD_ID  = " + threadId + ")";
+        // String SQLMaxLevelCount = "select max(LEVEL_COUNT) from ELEMENT " +
+        //         "where ID_ENTER_CALL_TRACE in " +
+        //         "(SELECT  CALL_TRACE.ID from CALL_TRACE where THREAD_ID  = " + threadId + ")";
 
-        return DatabaseUtil.executeSelectForInt(SQLMaxLevelCount);
+        String SQLMaxLevelCount= "select MAX(LEVEL_COUNT) from " + TableNames.ELEMENT_TABLE + " E " +
+                "join " + TableNames.CALL_TRACE_TABLE + " CT on E.ID_ENTER_CALL_TRACE = CT.ID " +
+                "where CT.THREAD_ID = " + threadId;
+
+        int levelCount = DatabaseUtil.executeSelectForInt(SQLMaxLevelCount);
+        System.out.println("ElementDAOImpl.getMaxLevelCount levelCount: " + levelCount);
+        return levelCount;
     }
 
     public static int getMaxLeafCount(String threadId) {
@@ -379,17 +385,24 @@ public class ElementDAOImpl {
         }
 
         // Get the height for placeholder line.
-        String SQLMaxLeafCount = "select LEAF_COUNT from ELEMENT " +
-                "where LEVEL_COUNT = 1 AND ID = " +
-                "(SELECT PARENT_ID from ELEMENT_TO_CHILD " +
-                "where CHILD_ID = " +
-                "(SELECT id from ELEMENT " +
-                "where ID_ENTER_CALL_TRACE = " +
-                "(SELECT  min(CALL_TRACE.ID) from CALL_TRACE " +
-                "where THREAD_ID  = " + threadId + ")))";
+        // String SQLMaxLeafCount = "select LEAF_COUNT from ELEMENT " +
+        //         "where LEVEL_COUNT = 1 AND ID = " +
+        //         "(SELECT PARENT_ID from ELEMENT_TO_CHILD " +
+        //         "where CHILD_ID = " +
+        //         "(SELECT id from ELEMENT " +
+        //         "where ID_ENTER_CALL_TRACE = " +
+        //         "(SELECT  min(CALL_TRACE.ID) from CALL_TRACE " +
+        //         "where THREAD_ID  = " + threadId + ")))";
+
+        String SQLMaxLeafCount = "select MAX(LEAF_COUNT) from " + TableNames.ELEMENT_TABLE + " E " +
+                "join " + TableNames.CALL_TRACE_TABLE + " CT on E.ID_ENTER_CALL_TRACE = CT.ID " +
+                "where CT.THREAD_ID = " + threadId;
         // System.out.println("ElementDAOImpl.getMaxLeafCount query: " + SQLMaxLeafCount);
 
-        return DatabaseUtil.executeSelectForInt(SQLMaxLeafCount);
+        int leafCount = DatabaseUtil.executeSelectForInt(SQLMaxLeafCount);
+        System.out.println("ElementDAOImpl.getMaxLeafCount leafCount: " + leafCount);
+
+        return leafCount;
     }
 
     public static int getLowestCellInThread(String threadId) {

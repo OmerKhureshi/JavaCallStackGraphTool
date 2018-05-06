@@ -28,4 +28,8 @@ public class ModuleLocator {
 
         return bookmarksModule;
     }
+
+    public static void resetElementTreeModule() {
+        elementTreeModule = null;
+    }
 }

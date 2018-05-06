@@ -292,7 +292,7 @@ public class HighlightDAOImpl {
         List<String> queries = new ArrayList<>();
 
         double startXOffset = 30;
-        double widthOffset = 30;
+        double widthOffset = 35;
         double startYOffset = -10;
         double heightOffset = -20;
 
@@ -301,13 +301,28 @@ public class HighlightDAOImpl {
         String cellId = clickedEleDTO.getId();
         double deltaY = clickedEleDTO.getDeltaY();
 
+        // get ids of all 'full' highlights that contain the current cell and cells of parent chain.
+        // String getHighlightIdsToResize =  "SELECT ID " +
+        //         "FROM HIGHLIGHT_ELEMENT " +
+        //         "WHERE START_X <= " + (x + startXOffset) + " " +
+        //         "AND START_X + WIDTH >=  " + (x + startXOffset) + " " +
+        //         "AND START_Y <= " + (y + startYOffset) + " " +
+        //         "AND START_Y + HEIGHT >= " + (y + startYOffset) + " " +
+        //         "AND ELEMENT_ID <= " + cellId + " " +
+        //         "AND COLLAPSED = 0 " +
+        //         "AND HIGHLIGHT_TYPE = 'FULL' " +
+        //         "AND THREAD_ID = " + threadId;
+
+        double clickedCellX = clickedEleDTO.getBoundBoxXCoordinate();
+        double clickedCellY = clickedEleDTO.getBoundBoxYCoordinate();
+
 
         String getHighlightIdsToResize =  "SELECT ID " +
                 "FROM HIGHLIGHT_ELEMENT " +
-                "WHERE START_X <= " + (x + startXOffset) + " " +
-                "AND START_X + WIDTH >=  " + (x + startXOffset) + " " +
-                "AND START_Y <= " + (y + startYOffset) + " " +
-                "AND START_Y + HEIGHT >= " + (y + startYOffset) + " " +
+                "WHERE START_X <= " + (clickedCellX) + " " +
+                "AND START_X + WIDTH >=  " + (clickedCellX) + " " +
+                "AND START_Y <= " + (clickedCellY) + " " +
+                "AND START_Y + HEIGHT >= " + (clickedCellY) + " " +
                 "AND ELEMENT_ID <= " + cellId + " " +
                 "AND COLLAPSED = 0 " +
                 "AND HIGHLIGHT_TYPE = 'FULL' " +

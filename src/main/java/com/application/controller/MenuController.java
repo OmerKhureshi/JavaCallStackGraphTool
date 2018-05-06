@@ -11,6 +11,7 @@ import com.application.fxgraph.graph.SizeProp;
 import com.application.presentation.CustomProgressBar;
 import com.application.service.files.FileNames;
 import com.application.service.files.LoadedFiles;
+import com.application.service.modules.ModuleLocator;
 import com.application.service.tasks.ConstructTreeTask;
 import com.application.service.tasks.ParseFileTask;
 import javafx.concurrent.Task;
@@ -148,9 +149,9 @@ public class MenuController {
     }
 
     private void setUpFileMenu() {
-        chooseMethodDefMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.F, KeyCombination.ALT_DOWN));
-
+        chooseMethodDefMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.M, KeyCombination.ALT_DOWN));
         chooseMethodDefMenuItem.setOnAction(event -> {
+            System.out.println("MenuController.setUpFileMenu choosing method def file.");
             try {
                 File methodDefLogFile = ControllerUtil.fileChooser("Choose method definition log fileMenu.", "Text Files", "*.txt");
                 if (methodDefLogFile == null) {
@@ -165,8 +166,8 @@ public class MenuController {
         });
 
         chooseCallTraceMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.C, KeyCombination.ALT_DOWN));
-
         chooseCallTraceMenuItem.setOnAction(event -> {
+            System.out.println("MenuController.setUpFileMenu choosing call trace file");
             try {
                 File callTraceLogFile = ControllerUtil.fileChooser("Choose call trace log fileMenu.", "Text Files", "*.txt");
                 if (callTraceLogFile == null) {
@@ -181,15 +182,15 @@ public class MenuController {
         });
 
         chooseDBMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.D, KeyCombination.ALT_DOWN));
-
         chooseDBMenuItem.setOnAction(event -> {
+            System.out.println("MenuController.setUpFileMenu choosing db.");
             try {
                 File dbFile = ControllerUtil.directoryChooser("Choose an existing database.");
                 if (dbFile == null) {
                     return;
                 }
 
-                LoadedFiles.setFile("db", dbFile);
+                LoadedFiles.setFile(FileNames.DB.getFileName(), dbFile);
 
                 setDBRelatedGraphics(true);
 
@@ -269,9 +270,11 @@ public class MenuController {
 
         // No need to parse log file and compute graph if loading from DB.
         if (LoadedFiles.isLoadedFromDB()) {
+            System.out.println("MenuController.onRun loading from db without parsing.");
             ControllerLoader.mainController.loadGraphPane();
             postGraphLoadProcess();
         } else {
+            System.out.println("MenuController.onRun loading from log file. parsing now");
             customProgressBar = new CustomProgressBar("", "");
 
             Task<Void> parseTask = new ParseFileTask();
@@ -305,10 +308,13 @@ public class MenuController {
     }
 
     public void onReset() {
+        ModuleLocator.resetElementTreeModule();
         ControllerLoader.mainController.showInstructionsPane();
+        // ControllerLoader.canvasController.onReset();
+
+        // DatabaseUtil.resetDB();
 
         LoadedFiles.resetFile();
-
 
         setDBRelatedGraphics(true);
         setFileRelatedGraphics();
@@ -330,10 +336,9 @@ public class MenuController {
         MenuItem noBookmarksMenuItem = new MenuItem("No bookmarks");
         noBookmarksMenuItem.setDisable(true);
         bookmarksMenu.getItems().add(noBookmarksMenuItem);
-        // updateBookmarksMenu();
     }
 
-    public void updateBookmarksMenu() {
+    private void updateBookmarksMenu() {
         System.out.println("MenuController.updateBookmarksMenu");
         bookmarksMenu.getItems().clear();
 
@@ -389,7 +394,6 @@ public class MenuController {
 
         bookmarksMenu.getItems().add(clearBookmarksMenuItem);
     }
-
 
     private void firstTimeSetUpHighlightsWindow() {
         if (!firstTimeSetUpHighlightsWindowCall)

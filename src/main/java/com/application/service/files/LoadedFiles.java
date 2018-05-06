@@ -40,5 +40,6 @@ public class LoadedFiles {
         methodDefLogFile = null;
         callTraceLogFile = null;
         dbFile = null;
+        DatabaseUtil.setDBDir(null);
     }
 }
