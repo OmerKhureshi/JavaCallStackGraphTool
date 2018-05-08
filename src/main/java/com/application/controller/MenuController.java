@@ -96,7 +96,7 @@ public class MenuController {
     // Settings Menu
     @FXML
     private CheckMenuItem liteModeCheckMenuItem;
-    public Boolean isLiteModeEnabled = false;
+    public Boolean isLiteModeEnabled = true;
 
     // Debug menu button
     @FXML
