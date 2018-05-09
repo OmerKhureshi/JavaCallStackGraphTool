@@ -1,10 +1,10 @@
-package com.csgt.db.DAO.DAOImplementation;
+package com.csgt.dataaccess.DAO;
 
 import com.csgt.controller.ControllerLoader;
-import com.csgt.db.DTO.ElementDTO;
-import com.csgt.db.DTO.HighlightDTO;
-import com.csgt.db.DatabaseUtil;
-import com.csgt.db.TableNames;
+import com.csgt.dataaccess.DTO.ElementDTO;
+import com.csgt.dataaccess.DTO.HighlightDTO;
+import com.csgt.dataaccess.DatabaseUtil;
+import com.csgt.dataaccess.TableNames;
 import com.csgt.presentation.graph.BoundBox;
 import javafx.geometry.BoundingBox;
 import javafx.scene.paint.Color;

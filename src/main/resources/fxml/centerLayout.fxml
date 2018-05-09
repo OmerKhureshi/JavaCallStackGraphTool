@@ -20,16 +20,18 @@
                     </BorderPane.margin>
                 </ToggleButton>
             </top>
-<!--
-            <bottom>
-                <ToggleButton fx:id="bookmarksToggleButton" minHeight="-Infinity" minWidth="-Infinity"
-                     mnemonicParsing="false" prefWidth="90.0" rotate="-90.0" text="Bookmarks" BorderPane.alignment="CENTER">
-                    <BorderPane.margin>
-                        <Insets bottom="40.0" />
-                    </BorderPane.margin>
-                </ToggleButton>
-            </bottom>
--->
+
+            <!-- To add bookmark toggle -->
+            <!--
+                   <bottom>
+                        <ToggleButton fx:id="bookmarksToggleButton" minHeight="-Infinity" minWidth="-Infinity"
+                             mnemonicParsing="false" prefWidth="90.0" rotate="-90.0" text="Bookmarks" BorderPane.alignment="CENTER">
+                            <BorderPane.margin>
+                                <Insets bottom="40.0" />
+                            </BorderPane.margin>
+                        </ToggleButton>
+                    </bottom>
+            -->
         </BorderPane>
     </left>
 
@@ -43,22 +45,22 @@
                     <ListView fx:id="threadListView" prefHeight="200.0" prefWidth="200.0"
                               AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"/>
 
-<!--
-                    <SplitPane fx:id="horizontalSplitPane" dividerPositions="0.4960182025028441" focusTraversable="true"
-                               minHeight="0.0" minWidth="0.0" orientation="VERTICAL" prefHeight="879.0" prefWidth="238.0"
-                               AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
-                        &lt;!&ndash;<AnchorPane minHeight="0.0" minWidth="0.0" prefWidth="303.0">&ndash;&gt;
-                        <AnchorPane minHeight="0">
-                            <ListView fx:id="threadListView" prefHeight="200.0" prefWidth="200.0"
-                                      AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"/>
-                        </AnchorPane>
+                    <!--
+                                        <SplitPane fx:id="horizontalSplitPane" dividerPositions="0.4960182025028441" focusTraversable="true"
+                                                   minHeight="0.0" minWidth="0.0" orientation="VERTICAL" prefHeight="879.0" prefWidth="238.0"
+                                                   AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+                                            &lt;!&ndash;<AnchorPane minHeight="0.0" minWidth="0.0" prefWidth="303.0">&ndash;&gt;
+                                            <AnchorPane minHeight="0">
+                                                <ListView fx:id="threadListView" prefHeight="200.0" prefWidth="200.0"
+                                                          AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"/>
+                                            </AnchorPane>
 
-                        <AnchorPane minHeight="0">
-                            <ListView fx:id="bookmarkListView" prefHeight="200.0" prefWidth="200.0"
-                                      AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"/>
-                        </AnchorPane>
-                    </SplitPane>
--->
+                                            <AnchorPane minHeight="0">
+                                                <ListView fx:id="bookmarkListView" prefHeight="200.0" prefWidth="200.0"
+                                                          AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"/>
+                                            </AnchorPane>
+                                        </SplitPane>
+                    -->
                 </AnchorPane>
 
                 <AnchorPane>

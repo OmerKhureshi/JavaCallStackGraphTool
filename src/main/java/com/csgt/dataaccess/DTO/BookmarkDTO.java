@@ -1,9 +1,11 @@
-package com.csgt.db.model;
+package com.csgt.dataaccess.DTO;
+
 
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
 
-public class Bookmark {
+public class BookmarkDTO {
+
     private String elementId;
     private String threadId;
     private String methodName;
@@ -16,7 +18,7 @@ public class Bookmark {
 
     private Rectangle barMark = new Rectangle(20, 1);
 
-    public Bookmark( String elementId, String threadId, String methodName, String color, double xCoordinate, double yCoordinate, int collapsed) {
+    public BookmarkDTO(String elementId, String threadId, String methodName, String color, double xCoordinate, double yCoordinate, int collapsed) {
         this.elementId = elementId;
         this.threadId = threadId;
         this.methodName = methodName;

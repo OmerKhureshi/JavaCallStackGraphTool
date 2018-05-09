@@ -6,7 +6,7 @@ public class EdgeElement {
 
     // collapsed = 0 -> associated target element is not collapsed. Show this edge.
     // collapsed = 1 -> associated target element is collapsed. Hide this edge.
-    private int collpased = 0;
+    private int collapsed = 0;
 
     public EdgeElement(Element sourceElement, Element targetElement) {
         this.sourceElement = sourceElement;
@@ -70,12 +70,12 @@ public class EdgeElement {
         this.targetElement = targetElement;
     }
 
-    public int getCollpased() {
-        return collpased;
+    public int getCollapsed() {
+        return collapsed;
     }
 
-    public void setCollpased(int collpased) {
-        this.collpased = collpased;
+    public void setCollapsed(int collapsed) {
+        this.collapsed = collapsed;
     }
 
 }

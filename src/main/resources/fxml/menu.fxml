@@ -37,7 +37,7 @@
     </Menu>
 
     <Menu fx:id="settingMenu" text="_Settings">
-        <CheckMenuItem fx:id="liteModeCheckMenuItem" text="Enable lite mode"/>
+        <CheckMenuItem fx:id="liteModeCheckMenuItem" text="Enable lite mode" selected="true"/>
     </Menu>
 
 </MenuBar>

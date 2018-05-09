@@ -24,9 +24,4 @@
 
     <Label fx:id="errorHeaderLabel" text="An Error occurred" visible="false"/>
     <Label fx:id="errorInfoLabel" text="Reset application and start again." visible="false"/>
-
-    <!--
-    prefHeight="400.0" prefWidth="600.0"
-       maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
-    -->
 </FlowPane>

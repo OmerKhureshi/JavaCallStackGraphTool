@@ -1,8 +1,8 @@
 package com.csgt.controller.tasks;
 
-import com.csgt.db.DAO.DAOImplementation.CallTraceDAOImpl;
-import com.csgt.db.DAO.DAOImplementation.MethodDefDAOImpl;
-import com.csgt.db.DatabaseUtil;
+import com.csgt.dataaccess.DAO.CallTraceDAOImpl;
+import com.csgt.dataaccess.DAO.MethodDefDAOImpl;
+import com.csgt.dataaccess.DatabaseUtil;
 import com.csgt.controller.files.fileIntegrity.CheckFileIntegrity;
 import com.csgt.controller.files.parsers.ParseCallTrace;
 import com.csgt.controller.files.parsers.ParseMethodDefinition;

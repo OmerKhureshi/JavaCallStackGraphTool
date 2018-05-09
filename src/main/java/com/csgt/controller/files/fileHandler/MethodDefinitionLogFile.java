@@ -1,6 +1,6 @@
 package com.csgt.controller.files.fileHandler;
 
-import com.csgt.db.DAO.DAOImplementation.FilesDAOImpl;
+import com.csgt.dataaccess.DAO.FilesDAOImpl;
 
 import java.io.File;
 import java.sql.ResultSet;

@@ -1,28 +1,21 @@
 package com.csgt.controller.modules;
 
-import com.csgt.db.DAO.DAOImplementation.*;
 import com.csgt.controller.ElementHelpers.EdgeElement;
 import com.csgt.controller.ElementHelpers.Element;
+import com.csgt.dataaccess.DAO.EdgeDAOImpl;
 
 import java.util.*;
 
 public class ElementTreeModule {
     public static Element greatGrandParent;
     private Map<Integer, Element> threadMapToRoot;
-    public ArrayList<Element> rootsList;
-    Element grandParent, parent, cur;
-    Map<Integer, Element> currentMap;
-    private String currentThreadId = "0";
 
-    private boolean showAllThreads = true;
+    private Element parent;
+    private Map<Integer, Element> currentMap;
 
-    public int multiplierForVisibleViewPort = 3;
-    public int multiplierForPreLoadedViewPort = 2;
-
-    public ElementTreeModule() {
+    ElementTreeModule() {
         Element.clearAutoIncrementId();
         greatGrandParent = new Element(null, -2);
-        rootsList = new ArrayList<>();
         currentMap = new HashMap<>();
         threadMapToRoot = new LinkedHashMap<>();
     }
@@ -34,6 +27,7 @@ public class ElementTreeModule {
         String msg = line.get(3);
         Integer threadId = Integer.valueOf(line.get(2));
 
+        Element cur;
         switch (msg.toUpperCase()) {
             case "WAIT-ENTER":
             case "NOTIFY-ENTER":
@@ -62,8 +56,7 @@ public class ElementTreeModule {
                 break;
 
             default:
-                IllegalStateException up = new IllegalStateException("EventType should be either ENTER OR EXIT. This line caused exception: " + line);
-                throw up;  // Yuck! Not having any of that :(
+                throw new IllegalStateException("EventType should be either ENTER OR EXIT. This line caused exception: " + line);  // Yuck! Not having any of that :(
         }
 
         if (parent == null &&
@@ -72,8 +65,8 @@ public class ElementTreeModule {
                         !msg.equalsIgnoreCase("NOTIFY-EXIT") &&
                         !msg.equalsIgnoreCase("NOTIFYALL-EXIT"))) {
             if (!threadMapToRoot.containsKey(threadId)) {
-                grandParent = new Element(greatGrandParent, -1);
-                grandParent.setChildren(new ArrayList<>(Arrays.asList(cur)));
+                Element grandParent = new Element(greatGrandParent, -1);
+                grandParent.setChildren(new ArrayList<>(Collections.singletonList(cur)));
                 cur.setParent(grandParent);
                 threadMapToRoot.put(threadId, grandParent);
                 /*defaultInitialize(grandParent);
@@ -84,28 +77,6 @@ public class ElementTreeModule {
                 cur.setParent(grandparent);
             }
         }
-
-        /*if ( msg.equalsIgnoreCase("ENTER")) {
-            defaultInitialize(cur);
-            ElementDAOImpl.insert(cur);
-        }*/
-    }
-
-    private void defaultInitialize(Element element) {
-        cur.setLeafCount(-1);
-        cur.setLevelCount(-1);
-        cur.getBoundBox().xTopLeft = -1;
-        cur.getBoundBox().yTopLeft = -1;
-        cur.getBoundBox().xTopRight = -1;
-        cur.getBoundBox().yTopRight = -1;
-        cur.getBoundBox().xBottomRight = -1;
-        cur.getBoundBox().yBottomRight = -1;
-        cur.getBoundBox().xBottomLeft = -1;
-        cur.getBoundBox().yBottomLeft = -1;
-    }
-
-    public Map<Integer, Element> getThreadMapToRoot() {
-        return threadMapToRoot;
     }
 
 
@@ -117,29 +88,10 @@ public class ElementTreeModule {
         greatGrandParent.calculateLeafCount();
         greatGrandParent.calculateLevelCount(0);
 
-        greatGrandParent.getChildren().stream().forEach(element -> {
-            element.setBoundBoxOnAll(element);
-        });
-        // greatGrandParent.setBoundBoxOnAll(greatGrandParent);
-
+        greatGrandParent.getChildren().forEach(element -> element.setBoundBoxOnAll(element));
     }
 
-    public void recursivelyInsertElementsIntoDB(Element root) {
-        if (root == null)
-            return;
-        ElementDAOImpl.insert(root);
-        ElementToChildDAOImpl.insert(
-                root.getParent() == null ? -1 : root.getParent().getElementId(),
-                root.getElementId());
-        // // Create and insert Edges.
-        // Edge edge = new Edge(root.getParent(), root);
-        // edge.setStartX();
-
-        if (root.getChildren() != null)
-            root.getChildren().stream().forEachOrdered(this::recursivelyInsertElementsIntoDB);
-    }
-
-    public void recursivelyInsertEdgeElementsIntoDB(Element root) {
+    private void recursivelyInsertEdgeElementsIntoDB(Element root) {
         if (root == null)
             return;
 
@@ -161,8 +113,6 @@ public class ElementTreeModule {
             root.getChildren().stream().forEachOrdered(targetElement -> {
                 EdgeElement edgeElement = new EdgeElement(root, targetElement);
                 edgeElement.calculateEndPoints();
-                // EdgeDAOImpl.insert(edgeElement);
-
                 edgeElementList.add(edgeElement);
 
                 recursivelyInsertEdgeElementsIntoDB(targetElement);

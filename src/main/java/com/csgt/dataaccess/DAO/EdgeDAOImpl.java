@@ -1,9 +1,9 @@
-package com.csgt.db.DAO.DAOImplementation;
+package com.csgt.dataaccess.DAO;
 
 import com.csgt.controller.ControllerLoader;
-import com.csgt.db.DTO.EdgeDTO;
-import com.csgt.db.DatabaseUtil;
-import com.csgt.db.TableNames;
+import com.csgt.dataaccess.DTO.EdgeDTO;
+import com.csgt.dataaccess.DatabaseUtil;
+import com.csgt.dataaccess.TableNames;
 import com.csgt.controller.ElementHelpers.EdgeElement;
 import javafx.geometry.BoundingBox;
 
@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.csgt.db.TableNames.EDGE_TABLE;
+import static com.csgt.dataaccess.TableNames.EDGE_TABLE;
 
 public class EdgeDAOImpl {
     // public static boolean isTableCreated = false;
@@ -76,7 +76,7 @@ public class EdgeDAOImpl {
                     edge.getStartY() + ", " +
                     edge.getEndX() + ", " +
                     edge.getEndY() + ", " +
-                    edge.getCollpased() + "" +
+                    edge.getCollapsed() + "" +
                     ")";
 
             ps.execute(sql);
@@ -141,11 +141,7 @@ public class EdgeDAOImpl {
                 conn = DatabaseUtil.getConnection();
                 ps = conn.createStatement();
                 sql = "SELECT * FROM " + EDGE_TABLE + " WHERE " + where;
-                //                System.out.println(">>> we got " + sql);
                 ResultSet resultSet = ps.executeQuery(sql);
-                // System.out.println("Where: " + sql);
-                //                resultSet.next();
-                //                System.out.println(resultSet.getInt("id"));
                 return resultSet;
             } catch (SQLException e) {
                 System.out.println("Line that threw error: " + sql);
@@ -222,7 +218,6 @@ public class EdgeDAOImpl {
     private static void getEdgesFromResultSet(ResultSet rs, List<EdgeDTO> edgeDTOList) {
         try {
             while (rs.next()) {
-                // System.out.println("EdgeDAOImpl.getEdgesFromResultSet: in while loop: " + rs.getInt("id"));
                 String targetEdgeId = String.valueOf(rs.getInt("fk_target_element_id"));
                 float startX = rs.getFloat("start_x");
                 float endX = rs.getFloat("end_x");

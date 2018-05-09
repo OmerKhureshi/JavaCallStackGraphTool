@@ -1,6 +1,6 @@
 package com.csgt.controller;
 
-import com.csgt.db.DAO.DAOImplementation.CallTraceDAOImpl;
+import com.csgt.dataaccess.DAO.CallTraceDAOImpl;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;

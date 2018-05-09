@@ -1,6 +1,6 @@
 package com.csgt.controller.files.fileHandler;
 
-import com.csgt.db.DAO.DAOImplementation.FilesDAOImpl;
+import com.csgt.dataaccess.DAO.FilesDAOImpl;
 
 import java.io.File;
 import java.sql.ResultSet;
@@ -14,7 +14,6 @@ public class CallTraceLogFile {
     private static File file = new File(Thread.currentThread().getContextClassLoader().getResource(fileName).getFile());
 
     CallTraceLogFile() {
-        // http://stackoverflow.com/a/21722773/3690248
         file = new File(Thread.currentThread().getContextClassLoader().getResource(fileName).getFile());
     }
 

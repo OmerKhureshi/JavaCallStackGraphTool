@@ -1,12 +1,12 @@
 package com.csgt.controller.tasks;
 
 import com.csgt.controller.ControllerUtil;
-import com.csgt.db.DAO.DAOImplementation.EdgeDAOImpl;
-import com.csgt.db.DAO.DAOImplementation.ElementDAOImpl;
-import com.csgt.db.DAO.DAOImplementation.ElementToChildDAOImpl;
-import com.csgt.db.DTO.EdgeDTO;
-import com.csgt.db.DTO.ElementDTO;
-import com.csgt.db.DTO.ElementToChildDTO;
+import com.csgt.dataaccess.DAO.EdgeDAOImpl;
+import com.csgt.dataaccess.DAO.ElementDAOImpl;
+import com.csgt.dataaccess.DAO.ElementToChildDAOImpl;
+import com.csgt.dataaccess.DTO.EdgeDTO;
+import com.csgt.dataaccess.DTO.ElementDTO;
+import com.csgt.dataaccess.DTO.ElementToChildDTO;
 import com.csgt.controller.ElementHelpers.EdgeElement;
 import com.csgt.controller.ElementHelpers.Element;
 import com.csgt.controller.files.parsers.ParseCallTrace;

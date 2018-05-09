@@ -1,4 +1,4 @@
-package com.csgt.db.model;
+package com.csgt.dataaccess.model;
 
 /**
  * Model for a log statement in the Call Trace File.

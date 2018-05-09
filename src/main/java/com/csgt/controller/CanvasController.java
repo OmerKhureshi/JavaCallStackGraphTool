@@ -1,19 +1,17 @@
 package com.csgt.controller;
 
-import com.csgt.db.DAO.DAOImplementation.EdgeDAOImpl;
-import com.csgt.db.DAO.DAOImplementation.ElementDAOImpl;
-import com.csgt.db.DAO.DAOImplementation.HighlightDAOImpl;
-import com.csgt.db.DTO.BookmarkDTO;
-import com.csgt.db.DTO.EdgeDTO;
-import com.csgt.db.DTO.ElementDTO;
-import com.csgt.db.DTO.HighlightDTO;
+import com.csgt.dataaccess.DAO.EdgeDAOImpl;
+import com.csgt.dataaccess.DAO.ElementDAOImpl;
+import com.csgt.dataaccess.DAO.HighlightDAOImpl;
+import com.csgt.dataaccess.DTO.BookmarkDTO;
+import com.csgt.dataaccess.DTO.EdgeDTO;
+import com.csgt.dataaccess.DTO.ElementDTO;
+import com.csgt.dataaccess.DTO.HighlightDTO;
 import com.csgt.presentation.graph.CircleCell;
 import com.csgt.presentation.graph.BoundBox;
 import com.csgt.presentation.graph.Edge;
 import com.csgt.presentation.graph.RectangleCell;
 import com.csgt.presentation.graph.ZoomableScrollPane;
-import com.csgt.controller.modules.GraphLoaderModule;
-import com.csgt.controller.modules.ModuleLocator;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.geometry.BoundingBox;
@@ -33,7 +31,6 @@ public class CanvasController {
     @FXML
     AnchorPane canvasAnchorPane;
 
-    private GraphLoaderModule graphLoaderModule;
     public Pane canvas;
 
     public ZoomableScrollPane scrollPane;
@@ -53,7 +50,6 @@ public class CanvasController {
 
     @FXML
     private void initialize() {
-        graphLoaderModule = ModuleLocator.getGraphLoaderModule();
         ControllerLoader.register(this);
     }
 
@@ -127,11 +123,9 @@ public class CanvasController {
     private void addCirclesToUI() {
         BoundingBox viewPort = getPrefetchViewPortDims();
 
-        // System.out.println("CanvasController.addCirclesToUI prefetch viewport: "+ viewPort);
         List<ElementDTO> elementDTOList = ElementDAOImpl.getElementDTOsInViewport(viewPort);
         List<CircleCell> circleCells = ControllerUtil.convertElementDTOTOCell(elementDTOList);
 
-        // System.out.println();
         circleCells.forEach(this::addNewCellToUI);
     }
 
@@ -196,7 +190,6 @@ public class CanvasController {
     }
 
     public void removeUIComponentsBetween(ElementDTO elementDTO, int endCellId) {
-        // System.out.println("CanvasController.removeUIComponentsBetween");
         int startCellId = Integer.valueOf(elementDTO.getId());
         float clickedCellTopRightX =  elementDTO.getBoundBoxXTopRight();
         float clickedCellTopY = elementDTO.getBoundBoxYTopLeft();
@@ -218,19 +211,13 @@ public class CanvasController {
             }
 
             // Remove all children cells and edges that end at these cells from UI
-
             double thisCellTopLeftX = circleCell.getLayoutX();
             double thisCellTopY = circleCell.getLayoutY();
 
             if (!removeCircleCells.contains(circleCell) && thisCellTopY >= clickedCellBottomY && thisCellTopY < clickedCellBoundBottomY && thisCellTopLeftX > clickedCellTopRightX) {
-                // if (thisCellTopY >= clickedCellTopY ) {
-                // System.out.println(" -" + id);
-                // System.out.println(" --" + id);
                 removeCircleCells.add(circleCell);
                 removeEdges.add(edgesOnUI.get(id));
             } else if (!removeCircleCells.contains(circleCell) && thisCellTopY == clickedCellTopY && thisCellTopLeftX >= clickedCellTopRightX) {
-                // System.out.println(" -" + id);
-                // System.out.println(" --" + id);
                 removeCircleCells.add(circleCell);
                 removeEdges.add(edgesOnUI.get(id));
             }
@@ -531,8 +518,8 @@ public class CanvasController {
             System.out.println("CanvasController.drawPlaceHolderLines. currentThreadId is null. Returning without loading.");
             return;
         }
-        int height = graphLoaderModule.computePlaceHolderHeight(currentThreadId);
-        int width = graphLoaderModule.computePlaceHolderWidth(currentThreadId);
+        int height = ElementDAOImpl.getMaxLeafCount(currentThreadId);
+        int width = ElementDAOImpl.getMaxLevelCount(currentThreadId);
 
         Line hPlaceHolderLine = new Line(0, 0, (width + 2) * BoundBox.unitWidthFactor, 0);
         hPlaceHolderLine.setStrokeWidth(.0005);

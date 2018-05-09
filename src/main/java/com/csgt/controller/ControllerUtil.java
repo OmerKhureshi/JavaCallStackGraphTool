@@ -1,8 +1,8 @@
 package com.csgt.controller;
 
-import com.csgt.db.DTO.EdgeDTO;
-import com.csgt.db.DTO.ElementDTO;
-import com.csgt.db.DTO.HighlightDTO;
+import com.csgt.dataaccess.DTO.EdgeDTO;
+import com.csgt.dataaccess.DTO.ElementDTO;
+import com.csgt.dataaccess.DTO.HighlightDTO;
 import com.csgt.controller.ElementHelpers.EdgeElement;
 import com.csgt.controller.ElementHelpers.Element;
 import com.csgt.presentation.graph.CircleCell;
@@ -98,7 +98,7 @@ public class ControllerUtil {
                     edgeDTO.setStartY((float) edge.getStartY());
                     edgeDTO.setEndX((float) edge.getEndX());
                     edgeDTO.setEndY((float) edge.getEndY());
-                    edgeDTO.setCollapsed(edge.getCollpased());
+                    edgeDTO.setCollapsed(edge.getCollapsed());
 
                     return edgeDTO;
                 })

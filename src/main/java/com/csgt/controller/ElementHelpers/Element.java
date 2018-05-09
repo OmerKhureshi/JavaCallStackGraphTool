@@ -132,7 +132,6 @@ public class Element {
     }
 
     public int getLeafCount() {
-        // ToDo add exception if calculateleafCount was not invoked.
         return leafCount;
     }
 
@@ -227,7 +226,6 @@ public class Element {
             boundBox.xTopLeft = sibBB.xBottomLeft;
             boundBox.yTopLeft = sibBB.yBottomLeft;
         } else if (getParent() == null) {
-
             // If this element is the root of the tree.
             boundBox.xTopLeft= 0;
             boundBox.yTopLeft = 0;
@@ -288,29 +286,12 @@ public class Element {
         this.setBoundBoxOnAll(root);
     }
 
-//    @Override
-//    public String toString() {
-//        return "Element{" +
-////                "parent levelCount=" + parent.getLevelCount() +
-////                ", children size=" + Optional.ofNullable(children).; +
-//                ", indexInParent=" + indexInParent +
-//                ", leafCount=" + leafCount +
-//                ", isLeafCountSet=" + isLeafCountSet +
-//                ", levelCount=" + levelCount +
-//                ", boundBox=" + boundBox +
-//                ", coordMultiplier=" + coordMultiplier +
-//                '}';
-//    }
-
     public int getCoordMultiplier() {
         return coordMultiplier;
     }
 
     public void setCoordMultiplier(int coordMultiplier) {
         this.coordMultiplier = coordMultiplier;
-
-//        boundBox.xCoordinate *= coordMultiplier;
-//        boundBox.yCoordinate *= coordMultiplier;
     }
 
     public int getFkEnterCallTrace() {
@@ -336,21 +317,6 @@ public class Element {
 
     public int getIsCollapsed() {
         return isCollapsed;
-    }
-
-    public static void main(String[] args) {
-
-        // java.time.Instant instant = Instant.now();
-        // System.out.println(instant);
-        // // java.sql.Timestamp timestamp = Timestamp.from(instant);
-
-        // // string -> instant
-        String str = "2017-04-18T00:00:00.111Z";
-        Instant instant = Instant.parse(str);
-
-        Timestamp timestamp = new Timestamp(instant.toEpochMilli());
-        System.out.println(timestamp);
-
     }
 
     public double getDelta() {

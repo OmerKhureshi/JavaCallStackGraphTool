@@ -14,7 +14,4 @@ public class SizeProp {
     public final static String PADDING_MENU = "-fx-padding: 5 5 5 10;";
     public final static String PADDING_SUBMENU = "-fx-padding: 5 5 5 5;";
     public final static String PADDING_ICONS = "-fx-padding: 5 0 5 5;";
-
-
-
 }

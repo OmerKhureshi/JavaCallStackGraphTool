@@ -1,6 +1,6 @@
 package com.csgt.controller;
 
-import com.csgt.db.DatabaseUtil;
+import com.csgt.dataaccess.DatabaseUtil;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -36,7 +36,7 @@ public class MainController {
 
     void loadGraphPane() {
         if (!DatabaseUtil.isDBValid()) {
-            System.out.println("MainController.loadGraphPane. db not valid.");
+            System.out.println("MainController.loadGraphPane. dataaccess not valid.");
             return;
         }
 

@@ -2,8 +2,6 @@ package com.csgt.controller.modules;
 
 public class ModuleLocator {
     private static ElementTreeModule elementTreeModule;
-    private static GraphLoaderModule graphLoaderModule;
-    private static BookmarksModule bookmarksModule;
 
     public static ElementTreeModule getElementTreeModule() {
         if (elementTreeModule == null) {
@@ -13,21 +11,6 @@ public class ModuleLocator {
         return elementTreeModule;
     }
 
-    public static GraphLoaderModule getGraphLoaderModule() {
-        if (graphLoaderModule == null) {
-            graphLoaderModule = new GraphLoaderModule();
-        }
-
-        return graphLoaderModule;
-    }
-
-    public static BookmarksModule getBookmarksModule() {
-        if (bookmarksModule == null) {
-            bookmarksModule = new BookmarksModule();
-        }
-
-        return bookmarksModule;
-    }
 
     public static void resetElementTreeModule() {
         elementTreeModule = null;

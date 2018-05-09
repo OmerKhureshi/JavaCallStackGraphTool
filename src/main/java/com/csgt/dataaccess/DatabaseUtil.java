@@ -1,7 +1,7 @@
-package com.csgt.db;
+package com.csgt.dataaccess;
 
 import com.csgt.controller.ControllerLoader;
-import com.csgt.db.DAO.DAOImplementation.*;
+import com.csgt.dataaccess.DAO.*;
 
 import java.io.File;
 import java.sql.*;
@@ -60,11 +60,11 @@ public class DatabaseUtil {
                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmsss");
                 String sDate = dateFormat.format(date);
                 url = "jdbc:derby:" + prefix + sDate + ";create=true";
-                // System.out.println("DatabaseUtil.createDatabaseConnection. new db. url: " + url);
+                // System.out.println("DatabaseUtil.createDatabaseConnection. new dataaccess. url: " + url);
                 dataSourceDir = new File(prefix + sDate);
             } else {
                 url = "jdbc:derby:" + dataSourceDir.getPath() + ";create=true";
-                // System.out.println("DatabaseUtil.createDatabaseConnection. use existing db. url: " + url);
+                // System.out.println("DatabaseUtil.createDatabaseConnection. use existing dataaccess. url: " + url);
             }
 
             conn = DriverManager.getConnection(url);

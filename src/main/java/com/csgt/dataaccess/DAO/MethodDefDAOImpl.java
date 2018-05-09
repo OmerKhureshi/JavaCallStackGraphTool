@@ -1,8 +1,8 @@
-package com.csgt.db.DAO.DAOImplementation;
+package com.csgt.dataaccess.DAO;
 
-import com.csgt.db.DTO.MethodDefDTO;
-import com.csgt.db.DatabaseUtil;
-import com.csgt.db.TableNames;
+import com.csgt.dataaccess.DTO.MethodDefDTO;
+import com.csgt.dataaccess.DatabaseUtil;
+import com.csgt.dataaccess.TableNames;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -11,7 +11,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.csgt.db.TableNames.METHOD_DEFINITION_TABLE;
+import static com.csgt.dataaccess.TableNames.METHOD_DEFINITION_TABLE;
 
 public class MethodDefDAOImpl {
 

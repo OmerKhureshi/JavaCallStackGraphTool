@@ -1,4 +1,4 @@
-package com.csgt.db;
+package com.csgt.dataaccess;
 
 public class TableNames {
     public static final String METHOD_DEFINITION_TABLE = "METHOD_DEFN";

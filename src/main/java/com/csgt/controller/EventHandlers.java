@@ -1,11 +1,11 @@
 package com.csgt.controller;
 
 import com.csgt.Main;
-import com.csgt.db.DAO.DAOImplementation.*;
-import com.csgt.db.DTO.BookmarkDTO;
-import com.csgt.db.DTO.ElementDTO;
-import com.csgt.db.DatabaseUtil;
-import com.csgt.db.TableNames;
+import com.csgt.dataaccess.DAO.*;
+import com.csgt.dataaccess.DTO.BookmarkDTO;
+import com.csgt.dataaccess.DTO.ElementDTO;
+import com.csgt.dataaccess.DatabaseUtil;
+import com.csgt.dataaccess.TableNames;
 import com.csgt.presentation.graph.CircleCell;
 import com.csgt.presentation.graph.BoundBox;
 import com.csgt.presentation.graph.RectangleCell;
@@ -38,8 +38,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-
-@SuppressWarnings("ALL")
 public class EventHandlers {
 
     private static ElementTreeModule elementTreeModule;
@@ -832,7 +830,7 @@ public class EventHandlers {
                 double clickedCellBottomY = clickedElementDTO.getBoundBoxYTopLeft() + BoundBox.unitHeightFactor;
 
                 /*
-                   update collapse and delta values in db.
+                   update collapse and delta values in dataaccess.
                 */
                 clickedElementDTO.setDeltaY(newDeltaY);
                 clickedElementDTO.setDeltaX(newDeltaX);
@@ -933,13 +931,10 @@ public class EventHandlers {
 
     private void onClickWhenDisabled() {
         if (!allowClicks) {
-            ControllerLoader.statusBarController.setStatusText("please wait while the graphs loads ...");
-
-            Timeline idleWait = new Timeline(new KeyFrame(Duration.millis(3000),
-                    event -> ControllerLoader.statusBarController.setStatusText("Processing ...")));
-
-            idleWait.setCycleCount(1);
-            idleWait.play();
+            ControllerLoader.statusBarController.setTimedStatusText(
+                    "Please wait while the graphs loads ...",
+                    "Processing ...",
+                    3 * 1000);
         }
     }
 
@@ -1131,9 +1126,9 @@ public class EventHandlers {
      * Then updates cell's BOUND_BOX_Y_BOTTOM_LEFT and BOUND_BOX_Y_BOTTOM_RIGHT values.
      * Recurse to the parent and updates it's BOUND_BOX_Y_BOTTOM_LEFT and BOUND_BOX_Y_BOTTOM_RIGHT values.
      *
-     * @param cellId    The id of cell where recursive updateIfNeeded starts.
-     * @param delta     The value to be subtracted from or added to the columns.
-     * @param statement All updated queries are added to this statement as batch.
+     * @param elementDTO    The id of cell where recursive updateIfNeeded starts.
+     * @param deltaForParentChain     The value to be subtracted from or added to the columns.
+     * @param deltaForParentChain All updated queries are added to this statement as batch.
      */
     private static void addParentChainUpdateQueryRecursive(ElementDTO elementDTO, double deltaForParentChain, List<String> queryList) {
 

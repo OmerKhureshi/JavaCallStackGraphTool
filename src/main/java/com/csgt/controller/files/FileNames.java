@@ -4,7 +4,7 @@ public enum FileNames {
 
     METHOD_DEF("methodDef"),
     Call_Trace("callTrace"),
-    DB("db");
+    DB("dataaccess");
 
     private String fileName;
 

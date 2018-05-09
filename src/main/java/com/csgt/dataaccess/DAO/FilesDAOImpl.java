@@ -1,14 +1,14 @@
-package com.csgt.db.DAO.DAOImplementation;
+package com.csgt.dataaccess.DAO;
 
-import com.csgt.db.DatabaseUtil;
-import com.csgt.db.TableNames;
+import com.csgt.dataaccess.DatabaseUtil;
+import com.csgt.dataaccess.TableNames;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import static com.csgt.db.TableNames.FILES_TABLE;
+import static com.csgt.dataaccess.TableNames.FILES_TABLE;
 
 public class FilesDAOImpl {
 

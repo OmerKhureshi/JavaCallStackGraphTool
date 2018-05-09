@@ -1,11 +1,11 @@
 package com.csgt.controller;
 
-import com.csgt.db.DAO.DAOImplementation.BookmarksDAOImpl;
-import com.csgt.db.DAO.DAOImplementation.HighlightDAOImpl;
-import com.csgt.db.DAO.DAOImplementation.MethodDefDAOImpl;
-import com.csgt.db.DTO.BookmarkDTO;
-import com.csgt.db.DatabaseUtil;
-import com.csgt.db.TableNames;
+import com.csgt.dataaccess.DAO.BookmarksDAOImpl;
+import com.csgt.dataaccess.DAO.HighlightDAOImpl;
+import com.csgt.dataaccess.DAO.MethodDefDAOImpl;
+import com.csgt.dataaccess.DTO.BookmarkDTO;
+import com.csgt.dataaccess.DatabaseUtil;
+import com.csgt.dataaccess.TableNames;
 import com.csgt.presentation.graph.ColorProp;
 import com.csgt.presentation.graph.SizeProp;
 import com.csgt.presentation.CustomProgressBar;
@@ -90,6 +90,8 @@ public class MenuController {
     private MenuItem addHighlightMenuItem;
 
     // Settings Menu
+    @FXML
+    private Menu settingMenu;
     @FXML
     private CheckMenuItem liteModeCheckMenuItem;
     public Boolean isLiteModeEnabled = true;
@@ -188,7 +190,7 @@ public class MenuController {
 
         chooseDBMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.D, KeyCombination.ALT_DOWN));
         chooseDBMenuItem.setOnAction(event -> {
-            System.out.println("MenuController.setUpFileMenu choosing db.");
+            System.out.println("MenuController.setUpFileMenu choosing dataaccess.");
             try {
                 File dbFile = ControllerUtil.directoryChooser("Choose an existing database.");
                 if (dbFile == null) {
@@ -258,6 +260,7 @@ public class MenuController {
     private void setUpSettingMenu() {
         liteModeCheckMenuItem.selectedProperty().addListener((observable, oldValue, newValue) -> {
             isLiteModeEnabled = newValue;
+            ControllerLoader.statusBarController.setTimedStatusText("Refresh to see changes", "System Ready", 5*1000);
         });
     }
 
@@ -281,7 +284,7 @@ public class MenuController {
 
         // No need to parse log file and compute graph if loading from DB.
         if (LoadedFiles.isLoadedFromDB()) {
-            System.out.println("MenuController.onRun loading from db without parsing.");
+            System.out.println("MenuController.onRun loading from dataaccess without parsing.");
             ControllerLoader.mainController.loadGraphPane();
             postGraphLoadProcess();
         } else {
@@ -322,7 +325,6 @@ public class MenuController {
         ModuleLocator.resetElementTreeModule();
         ControllerLoader.mainController.showInstructionsPane();
         // ControllerLoader.canvasController.onReset();
-
         // DatabaseUtil.resetDB();
 
         LoadedFiles.resetFile();
@@ -350,13 +352,11 @@ public class MenuController {
     }
 
     private void updateBookmarksMenu() {
-        System.out.println("MenuController.updateBookmarksMenu");
         bookmarksMenu.getItems().clear();
 
         Map<String, BookmarkDTO> bookmarkDTOs = getBookmarkDTOs();
         MenuItem noBookmarksMenuItem = new MenuItem("No bookmarks");
 
-        System.out.println("MenuController.updateBookmarksMenu: bookmarkDTOs size: " + bookmarkDTOs.size());
         if (bookmarkDTOs.size() == 0) {
             noBookmarksMenuItem.setDisable(true);
             bookmarksMenu.getItems().add(noBookmarksMenuItem);
@@ -559,7 +559,6 @@ public class MenuController {
                     colorPicker.setOnAction(event -> {
                         anyColorChange = true;
                         colorsMap.put(fullName, colorPicker.getValue());
-                        // System.out.println(colorPicker.getValue());
                     });
                     colorPicker.getStyleClass().add("button");
                     colorPicker.setStyle(
@@ -670,9 +669,6 @@ public class MenuController {
                 "(SELECT ID FROM " + TableNames.METHOD_DEFINITION_TABLE + " " +
                 "WHERE (" + TableNames.METHOD_DEFINITION_TABLE + ".PACKAGE_NAME || '.' || " + TableNames.METHOD_DEFINITION_TABLE + ".METHOD_NAME) " +
                 "IN (" + fullNames + "))";
-
-        // System.out.println( "Main::addDeleteQueryToStatement: sql: " + sql);
-
 
         try {
             statement.addBatch(sql);
@@ -868,7 +864,7 @@ public class MenuController {
             methodDefnGlyph.setIcon(FontAwesome.Glyph.CHECK);
             methodDefnGlyph.setColor(ColorProp.GREEN);
         } else if (!enabled && !isSet) {
-            // after choosing db and clicking run analysis
+            // after choosing dataaccess and clicking run analysis
             chooseMethodDefMenuItem.setDisable(true);
             methodDefnGlyph.setIcon(FontAwesome.Glyph.PLUS);
             methodDefnGlyph.setColor(ColorProp.GREY);
@@ -890,7 +886,7 @@ public class MenuController {
             callTraceGlyph.setIcon(FontAwesome.Glyph.CHECK);
             callTraceGlyph.setColor(ColorProp.GREEN);
         } else if (!enabled && !isSet) {
-            // after choosing db and clicking run analysis
+            // after choosing dataaccess and clicking run analysis
             chooseCallTraceMenuItem.setDisable(true);
             callTraceGlyph.setIcon(FontAwesome.Glyph.PLUS);
             callTraceGlyph.setColor(ColorProp.GREY);
@@ -936,6 +932,7 @@ public class MenuController {
         bookmarksMenu.setDisable(!enabled);
         viewMenu.setDisable(!enabled);
         debugMenu.setDisable(!enabled);
+        settingMenu.setDisable(!enabled);
     }
 
     public void postGraphLoadProcess() {

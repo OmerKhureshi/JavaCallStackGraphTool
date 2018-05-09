@@ -1,13 +1,13 @@
-package com.csgt.db.DAO.DAOImplementation;
+package com.csgt.dataaccess.DAO;
 
-import com.csgt.db.DatabaseUtil;
-import com.csgt.db.TableNames;
+import com.csgt.dataaccess.DatabaseUtil;
+import com.csgt.dataaccess.TableNames;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.csgt.db.TableNames.CALL_TRACE_TABLE;
+import static com.csgt.dataaccess.TableNames.CALL_TRACE_TABLE;
 
 public class CallTraceDAOImpl {
     private static int currentSelectedThread;

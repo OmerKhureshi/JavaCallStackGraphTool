@@ -1,9 +1,9 @@
-package com.csgt.db.DAO.DAOImplementation;
+package com.csgt.dataaccess.DAO;
 
 import com.csgt.controller.ControllerLoader;
-import com.csgt.db.DTO.ElementDTO;
-import com.csgt.db.DatabaseUtil;
-import com.csgt.db.TableNames;
+import com.csgt.dataaccess.DTO.ElementDTO;
+import com.csgt.dataaccess.DatabaseUtil;
+import com.csgt.dataaccess.TableNames;
 import com.csgt.controller.ElementHelpers.Element;
 import javafx.geometry.BoundingBox;
 
@@ -14,7 +14,7 @@ import java.sql.Statement;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.csgt.db.TableNames.ELEMENT_TABLE;
+import static com.csgt.dataaccess.TableNames.ELEMENT_TABLE;
 
 public class ElementDAOImpl {
 
@@ -26,12 +26,11 @@ public class ElementDAOImpl {
 
     public static void createTable() {
         if (!isTableCreated()) {
-            try (Connection c = DatabaseUtil.getConnection(); Statement ps = c.createStatement()) {
                 String sql = "CREATE TABLE " + ELEMENT_TABLE + " (" +
                         "id INTEGER NOT NULL, " +
-                        "parent_id INTEGER, " +  // todo define foreign key
-                        "id_enter_call_trace INTEGER, " +  // not a foreign key.
-                        "id_exit_call_trace INTEGER, " +  // not a foreign key.
+                        "parent_id INTEGER, " +
+                        "id_enter_call_trace INTEGER, " +
+                        "id_exit_call_trace INTEGER, " +
                         "bound_box_x_top_left FLOAT, " +
                         "bound_box_y_top_left FLOAT, " +
                         "bound_box_x_top_right FLOAT, " +
@@ -49,6 +48,7 @@ public class ElementDAOImpl {
                         "delta FLOAT, " +
                         "delta_x FLOAT" +
                         ")";
+            try (Connection c = DatabaseUtil.getConnection(); Statement ps = c.createStatement()) {
                 ps.execute(sql);
                 System.out.println("** Creating table " + TableNames.ELEMENT_TABLE);
             } catch (SQLException e) {
@@ -215,8 +215,6 @@ public class ElementDAOImpl {
 
         String sql = "SELECT * FROM " + TableNames.ELEMENT_TABLE + " WHERE ID = " + id;
 
-        // System.out.println();
-        // System.out.println("ElementDAOImpl.getElementDTOsInViewport query: " + sql);
         try (ResultSet rs = DatabaseUtil.select(sql)) {
             if (rs.next()) {
                 elementDTO = processElementDTO(rs);
@@ -321,11 +319,8 @@ public class ElementDAOImpl {
                 " AND (E.COLLAPSED = 0" +
                 " OR E.COLLAPSED = 2)";
 
-        // System.out.println();
-        // System.out.println("ElementDAOImpl.getElementDTOsInViewport query: " + sql);
         try (ResultSet rs = DatabaseUtil.select(sql)) {
             while (rs != null && rs.next()) {
-                // System.out.println("ElementDAOImpl.getElementDTOsInViewport: while in loop : "  + rs.getInt("EID"));
                 ElementDTO elementDTO = new ElementDTO();
                 elementDTO.setId(String.valueOf(rs.getInt("EID")));
                 elementDTO.setParentId(rs.getInt("parent_id"));
@@ -357,17 +352,11 @@ public class ElementDAOImpl {
             CallTraceDAOImpl.createTable();
         }
 
-        // Get the width for placeholder line.
-        // String SQLMaxLevelCount = "select max(LEVEL_COUNT) from ELEMENT " +
-        //         "where ID_ENTER_CALL_TRACE in " +
-        //         "(SELECT  CALL_TRACE.ID from CALL_TRACE where THREAD_ID  = " + threadId + ")";
-
         String SQLMaxLevelCount= "select MAX(LEVEL_COUNT) from " + TableNames.ELEMENT_TABLE + " E " +
                 "join " + TableNames.CALL_TRACE_TABLE + " CT on E.ID_ENTER_CALL_TRACE = CT.ID " +
                 "where CT.THREAD_ID = " + threadId;
 
         int levelCount = DatabaseUtil.executeSelectForInt(SQLMaxLevelCount);
-        System.out.println("ElementDAOImpl.getMaxLevelCount levelCount: " + levelCount);
         return levelCount;
     }
 
@@ -384,24 +373,11 @@ public class ElementDAOImpl {
             ElementToChildDAOImpl.createTable();
         }
 
-        // Get the height for placeholder line.
-        // String SQLMaxLeafCount = "select LEAF_COUNT from ELEMENT " +
-        //         "where LEVEL_COUNT = 1 AND ID = " +
-        //         "(SELECT PARENT_ID from ELEMENT_TO_CHILD " +
-        //         "where CHILD_ID = " +
-        //         "(SELECT id from ELEMENT " +
-        //         "where ID_ENTER_CALL_TRACE = " +
-        //         "(SELECT  min(CALL_TRACE.ID) from CALL_TRACE " +
-        //         "where THREAD_ID  = " + threadId + ")))";
-
         String SQLMaxLeafCount = "select MAX(LEAF_COUNT) from " + TableNames.ELEMENT_TABLE + " E " +
                 "join " + TableNames.CALL_TRACE_TABLE + " CT on E.ID_ENTER_CALL_TRACE = CT.ID " +
                 "where CT.THREAD_ID = " + threadId;
-        // System.out.println("ElementDAOImpl.getMaxLeafCount query: " + SQLMaxLeafCount);
 
         int leafCount = DatabaseUtil.executeSelectForInt(SQLMaxLeafCount);
-        System.out.println("ElementDAOImpl.getMaxLeafCount leafCount: " + leafCount);
-
         return leafCount;
     }
 
@@ -508,11 +484,9 @@ public class ElementDAOImpl {
 
 
         // get element dtos for parent elements.
-        // System.out.println("ElementDAOImpl.getAllParentElementDTOs query: " + getAllParentIDsQuery);
         try (ResultSet rs = DatabaseUtil.select(getAllParentIDsQuery)) {
             while (rs.next()) {
                 ids.add(String.valueOf(rs.getInt("ID")));
-                // elementDTOs.add(processElementDTO(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -534,6 +508,5 @@ public class ElementDAOImpl {
                 "WHERE bound_box_y_coordinate >= " + y + " " +
                 "AND ID >= " + nextCellId + " " +
                 "AND ID <= " + lastCellId;
-
     }
 }

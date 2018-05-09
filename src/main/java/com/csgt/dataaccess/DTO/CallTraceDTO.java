@@ -1,4 +1,4 @@
-package com.csgt.db.DTO;
+package com.csgt.dataaccess.DTO;
 
 import java.sql.Date;
 

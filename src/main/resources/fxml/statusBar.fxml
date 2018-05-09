@@ -9,20 +9,20 @@
 <HBox fx:id="statusBar" fx:controller="com.csgt.controller.StatusBarController"
       xmlns:fx="http://javafx.com/fxml/1"
       id="HBox" alignment="CENTER_LEFT" prefWidth="1152.0" spacing="5.0" BorderPane.alignment="CENTER">
-    <children>
-        <Label fx:id="leftStatusText" text="System ready"
-               maxHeight="1.7976931348623157E308" maxWidth="-1.0"  HBox.hgrow="ALWAYS">
-            <font>
-                <Font size="11.0" fx:id="x3" />
-            </font>
-            <textFill>
-                <Color blue="0.625" green="0.625" red="0.625" fx:id="x4" />
-            </textFill>
-        </Label>
-        <Pane prefHeight="-1.0" prefWidth="-1.0" HBox.hgrow="ALWAYS" />
-        <Label font="$x3" maxWidth="-1.0" text="" textFill="$x4" HBox.hgrow="NEVER" />
-    </children>
     <padding>
-        <Insets bottom="3.0" left="3.0" right="3.0" top="3.0" />
+        <Insets bottom="3.0" left="3.0" right="3.0" top="3.0"/>
     </padding>
+    <Label fx:id="leftStatusText" text="System ready"
+           maxHeight="1.7976931348623157E308" maxWidth="-1.0" HBox.hgrow="ALWAYS">
+        <font>
+            <Font size="11.0" fx:id="x3"/>
+        </font>
+        <textFill>
+            <Color blue="0.625" green="0.625" red="0.625" fx:id="x4"/>
+        </textFill>
+    </Label>
+
+    <Pane prefHeight="-1.0" prefWidth="-1.0" HBox.hgrow="ALWAYS"/>
+
+    <Label font="$x3" maxWidth="-1.0" text="" textFill="$x4" HBox.hgrow="NEVER"/>
 </HBox>
