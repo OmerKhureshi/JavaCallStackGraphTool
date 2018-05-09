@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.layout.BorderPane?>
-<BorderPane fx:controller="com.application.controller.MainController" fx:id="borderPane"
-        prefHeight="936.0" prefWidth="1052.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1">
+<BorderPane fx:controller="com.csgt.controller.MainController" fx:id="borderPane"
+            prefHeight="936.0" prefWidth="1052.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1">
     <!--Menu-->
    <top>
       <fx:include source="fxml/menu.fxml" fx:id="menuBar"/>

@@ -1,6 +1,6 @@
 1500994917851|13532|1|Enter|1|[[Ljava.lang.String;@5fcfe4b2]
 1500994917940|13532|12|Enter|2|[javafx.stage.Stage@1dd8ca16]
-1500994917944|13532|12|Enter|3|[com.application.Main@275a96b5]
+1500994917944|13532|12|Enter|3|[com.csgt.Main@275a96b5]
 1500994917944|13532|12|Exit
 1500994917945|13532|12|Enter|4|[]
 1500994918049|13532|12|Enter|5|[MenuItem@12b748e0[styleClass=[menu-item]]]

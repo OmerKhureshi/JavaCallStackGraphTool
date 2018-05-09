@@ -6,7 +6,7 @@
 <?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.CheckMenuItem?>
 <MenuBar fx:id="menuBar"
-         fx:controller="com.application.controller.MenuController"
+         fx:controller="com.csgt.controller.MenuController"
          xmlns:fx="http://javafx.com/fxml/1">
 
     <Menu fx:id="fileMenu" text="_File">

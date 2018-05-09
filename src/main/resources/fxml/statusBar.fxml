@@ -6,7 +6,7 @@
 
 <?import javafx.scene.paint.Color?>
 <?import javafx.geometry.Insets?>
-<HBox fx:id="statusBar" fx:controller="com.application.controller.StatusBarController"
+<HBox fx:id="statusBar" fx:controller="com.csgt.controller.StatusBarController"
       xmlns:fx="http://javafx.com/fxml/1"
       id="HBox" alignment="CENTER_LEFT" prefWidth="1152.0" spacing="5.0" BorderPane.alignment="CENTER">
     <children>

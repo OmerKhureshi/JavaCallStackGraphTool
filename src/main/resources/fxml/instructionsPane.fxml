@@ -5,7 +5,7 @@
 
 
 <FlowPane fx:id="flowPane"
-          fx:controller="com.application.controller.InstructionsPaneController"
+          fx:controller="com.csgt.controller.InstructionsPaneController"
           alignment="CENTER" vgap="5"
           orientation="VERTICAL" xmlns="http://javafx.com/javafx/8.0.141"
           xmlns:fx="http://javafx.com/fxml/1">
