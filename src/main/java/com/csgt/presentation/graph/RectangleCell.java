@@ -3,8 +3,10 @@ package com.csgt.presentation.graph;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
-// UI cell for highlights
 
+/**
+ * This call represents the Background highlight for the nodes on UI.
+ */
 public class RectangleCell extends Cell {
     private Rectangle rectangle;
 

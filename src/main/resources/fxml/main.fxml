@@ -5,12 +5,12 @@
             prefHeight="936.0" prefWidth="1052.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1">
     <!--Menu-->
    <top>
-      <fx:include source="fxml/menu.fxml" fx:id="menuBar"/>
+      <fx:include source="menu.fxml" fx:id="menuBar"/>
    </top>
 
     <!--Status Bar-->
    <bottom>
-      <fx:include source="fxml/statusBar.fxml"/>
+      <fx:include source="statusBar.fxml"/>
    </bottom>
 
    <!--Main content-->

@@ -14,6 +14,9 @@ import javafx.scene.text.TextAlignment;
 import org.controlsfx.glyphfont.FontAwesome;
 import org.controlsfx.glyphfont.Glyph;
 
+/**
+ * This class represents the nodes in the graph on UI.
+ */
 public class CircleCell extends Cell {
 
     private Label label;

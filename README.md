@@ -5,7 +5,7 @@ This tool generate a tree graph for the call stack using the information in log 
 2. In IntelliJ, create a new project and choose `Create Project from Existing Sources...`. Choose the cloned repository to import all the files.
 
       Or.
-
+      
     Right click pom.xml file and click open with then choose IntelliJ.
 3. Ensure that this project is recognized as a Maven project inside IntelliJ and all the dependencies are downloaded.
 6. Run the Main java class at `<project-root>/src/main/java/com/csgt/Main.java`.

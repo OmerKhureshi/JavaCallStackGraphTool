@@ -1,10 +1,8 @@
-package com.csgt.controller.ElementHelpers;
+package com.csgt.dataaccess.model;
 
 import com.csgt.presentation.graph.CircleCell;
 import com.csgt.presentation.graph.BoundBox;
 
-import java.sql.Timestamp;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

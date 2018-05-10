@@ -4,7 +4,7 @@ import com.csgt.controller.ControllerLoader;
 import com.csgt.dataaccess.DTO.EdgeDTO;
 import com.csgt.dataaccess.DatabaseUtil;
 import com.csgt.dataaccess.TableNames;
-import com.csgt.controller.ElementHelpers.EdgeElement;
+import com.csgt.dataaccess.model.EdgeElement;
 import javafx.geometry.BoundingBox;
 
 import java.sql.Connection;

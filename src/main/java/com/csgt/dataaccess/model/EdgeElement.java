@@ -1,4 +1,6 @@
-package com.csgt.controller.ElementHelpers;
+package com.csgt.dataaccess.model;
+
+import com.csgt.dataaccess.model.Element;
 
 public class EdgeElement {
     private double startX, startY, endX, endY;

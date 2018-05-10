@@ -7,6 +7,9 @@ import javafx.scene.effect.Glow;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 
+/**
+ * This class represents the connecting lines between nodes on UI.
+ */
 public class Edge extends Group {
     protected Cell source;
     protected Cell target;

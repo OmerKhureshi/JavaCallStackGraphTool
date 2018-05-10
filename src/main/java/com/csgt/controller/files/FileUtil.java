@@ -1,4 +1,4 @@
-package com.csgt.controller.files.fileIntegrity;
+package com.csgt.controller.files;
 
 import com.csgt.Main;
 import com.csgt.controller.ControllerLoader;
@@ -9,7 +9,7 @@ import java.io.*;
 import java.util.*;
 import java.util.function.Consumer;
 
-public class CheckFileIntegrity {
+public class FileUtil {
     public static void checkFile(File file, ParseFileTask.BytesRead bytesRead, Consumer<Void> cmd) {
         String line = null;
         Deque<Integer> stack;

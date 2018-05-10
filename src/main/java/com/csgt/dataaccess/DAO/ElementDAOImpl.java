@@ -4,7 +4,7 @@ import com.csgt.controller.ControllerLoader;
 import com.csgt.dataaccess.DTO.ElementDTO;
 import com.csgt.dataaccess.DatabaseUtil;
 import com.csgt.dataaccess.TableNames;
-import com.csgt.controller.ElementHelpers.Element;
+import com.csgt.dataaccess.model.Element;
 import javafx.geometry.BoundingBox;
 
 import java.sql.Connection;

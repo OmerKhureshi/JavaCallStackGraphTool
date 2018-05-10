@@ -16,7 +16,7 @@ import java.io.IOException;
  */
 public class Main extends Application {
 
-    private static final String mainFXML = "/main.fxml";
+    private static final String mainFXML = "/fxml/main.fxml";
 
     public static void main(String[] args) {
         launch(args);

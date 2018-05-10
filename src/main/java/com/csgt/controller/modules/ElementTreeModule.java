@@ -1,7 +1,7 @@
 package com.csgt.controller.modules;
 
-import com.csgt.controller.ElementHelpers.EdgeElement;
-import com.csgt.controller.ElementHelpers.Element;
+import com.csgt.dataaccess.model.EdgeElement;
+import com.csgt.dataaccess.model.Element;
 import com.csgt.dataaccess.DAO.EdgeDAOImpl;
 
 import java.util.*;

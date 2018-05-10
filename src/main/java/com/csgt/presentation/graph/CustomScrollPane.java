@@ -10,7 +10,10 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.transform.Scale;
 
-public class ZoomableScrollPane extends ScrollPane {
+/**
+ * This class represents an enclosing scroll pane that contains all the nodes on UI.
+ */
+public class CustomScrollPane extends ScrollPane {
     private Group zoomGroup;
     private Scale scaleTransform;
     private Node content;
@@ -24,7 +27,7 @@ public class ZoomableScrollPane extends ScrollPane {
     private static DoubleProperty vValProperty;
     private static ChangeListener<Number> vValListener;
 
-    public ZoomableScrollPane(Node content) {
+    public CustomScrollPane(Node content) {
         this.content = content;
         Group contentGroup = new Group();
         zoomGroup = new Group();

@@ -11,7 +11,7 @@ import com.csgt.presentation.graph.CircleCell;
 import com.csgt.presentation.graph.BoundBox;
 import com.csgt.presentation.graph.Edge;
 import com.csgt.presentation.graph.RectangleCell;
-import com.csgt.presentation.graph.ZoomableScrollPane;
+import com.csgt.presentation.graph.CustomScrollPane;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.geometry.BoundingBox;
@@ -33,7 +33,7 @@ public class CanvasController {
 
     public Pane canvas;
 
-    public ZoomableScrollPane scrollPane;
+    public CustomScrollPane scrollPane;
     private Map<String, CircleCell> circleCellsOnUI = new HashMap<>();
     private Map<String, Edge> edgesOnUI = new HashMap<>();
     private Map<Integer, com.csgt.presentation.graph.RectangleCell> highlightsOnUI = new HashMap<>();
@@ -59,7 +59,7 @@ public class CanvasController {
 
     private void setUpCenterLayout() {
         canvas = new Pane();
-        scrollPane = new ZoomableScrollPane(canvas);
+        scrollPane = new CustomScrollPane(canvas);
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(true);
 
@@ -416,7 +416,7 @@ public class CanvasController {
 
 
     public BoundingBox getViewPortDims() {
-        double scale = ZoomableScrollPane.getScaleValue();
+        double scale = CustomScrollPane.getScaleValue();
 
         double hValue = scrollPane.getHvalue();
         double scaledContentWidth = scrollPane.getContent().getLayoutBounds().getWidth();// * scale;

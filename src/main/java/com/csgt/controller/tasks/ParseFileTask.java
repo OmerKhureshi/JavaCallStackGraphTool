@@ -3,7 +3,7 @@ package com.csgt.controller.tasks;
 import com.csgt.dataaccess.DAO.CallTraceDAOImpl;
 import com.csgt.dataaccess.DAO.MethodDefDAOImpl;
 import com.csgt.dataaccess.DatabaseUtil;
-import com.csgt.controller.files.fileIntegrity.CheckFileIntegrity;
+import com.csgt.controller.files.FileUtil;
 import com.csgt.controller.files.parsers.ParseCallTrace;
 import com.csgt.controller.files.parsers.ParseMethodDefinition;
 import com.csgt.controller.files.FileNames;
@@ -40,7 +40,7 @@ public class ParseFileTask extends Task<Void> {
         updateMessage("Please wait... total Bytes: " + bytesRead.total + " bytes processed: " + bytesRead.readSoFar);
         updateProgress(bytesRead.readSoFar, bytesRead.total);
 
-        CheckFileIntegrity.checkFile(LoadedFiles.getFile(FileNames.Call_Trace.getFileName()), bytesRead, (Void) -> {
+        FileUtil.checkFile(LoadedFiles.getFile(FileNames.Call_Trace.getFileName()), bytesRead, (Void) -> {
             updateMessage("Please wait... total Bytes: " + bytesRead.total + " bytes processed: " + bytesRead.readSoFar);
             updateProgress(bytesRead.readSoFar, bytesRead.total);
         });
