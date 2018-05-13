@@ -37,7 +37,9 @@ public class HighlightDAOImpl {
                         "width FLOAT, " +
                         "height FLOAT, " +
                         "color VARCHAR(10), " +
-                        "collapsed INT" +
+                        "collapsed INT, " +
+                        "FOREIGN KEY(element_id) REFERENCES " + TableNames.ELEMENT_TABLE + "(ID), " +
+                        "FOREIGN KEY(method_id) REFERENCES " + TableNames.METHOD_DEFINITION_TABLE + "(ID)" +
                         ")";
                 ps.execute(sql);
                 System.out.println("** Creating table " + TableNames.HIGHLIGHT_ELEMENT);

@@ -25,7 +25,8 @@ public class BookmarksDAOImpl {
                         "id INTEGER NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1), " +
                         "element_id INT, " +
                         "color VARCHAR(10), " +
-                        "collapsed INT" +
+                        "collapsed INT, " +
+                        "FOREIGN KEY(element_id) REFERENCES " + TableNames.ELEMENT_TABLE + "(ID) " +
                         ")";
                 ps.execute(sql);
                 System.out.println("** Creating table " + TableNames.BOOKMARKS);

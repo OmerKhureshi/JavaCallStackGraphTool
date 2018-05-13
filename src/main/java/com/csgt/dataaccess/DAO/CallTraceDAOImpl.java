@@ -20,7 +20,7 @@ public class CallTraceDAOImpl {
         if (!isTableCreated()) {
             try (Connection c = DatabaseUtil.getConnection(); Statement ps = c.createStatement()) {
                 sql = "CREATE TABLE " + CALL_TRACE_TABLE + " (" +
-                        "id INTEGER NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1), " +
+                        "id INTEGER PRIMARY KEY NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1), " +
                         "process_id INTEGER not null, " +
                         "thread_id INTEGER, " +
                         "method_id INTEGER, " +
@@ -29,6 +29,7 @@ public class CallTraceDAOImpl {
                         "lockObjId VARCHAR(50), " +
                         // "time_instant VARCHAR(24)" +
                         "time_instant TIMESTAMP" +
+                        // "FOREIGN KEY(method_id) REFERENCES " + TableNames.METHOD_DEFINITION_TABLE + "(ID)" +
                         ")";
                 ps.execute(sql);
                 System.out.println("** Creating table " + TableNames.CALL_TRACE_TABLE);

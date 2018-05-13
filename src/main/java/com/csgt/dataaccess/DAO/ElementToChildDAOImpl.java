@@ -15,15 +15,19 @@ import static com.csgt.dataaccess.TableNames.ELEMENT_TO_CHILD_TABLE;
 
 public class ElementToChildDAOImpl {
     public static void createTable() {
+        String sql = "";
         if (!isTableCreated()) {
             try (Connection c = DatabaseUtil.getConnection(); Statement ps = c.createStatement()) {
-                String sql = "CREATE TABLE " + ELEMENT_TO_CHILD_TABLE + " (" +
+                sql = "CREATE TABLE " + ELEMENT_TO_CHILD_TABLE + " (" +
                         "parent_id INTEGER, " +
                         "child_id INTEGER" +
+                        // "CONSTRAINT foreignKeyOne FOREIGN KEY(parent_id) REFERENCES " + TableNames.ELEMENT_TABLE + "(ID), " +
+                        // "CONSTRAINT foreignKeyTwo FOREIGN KEY(child_id) REFERENCES " + TableNames.ELEMENT_TABLE + "(ID)" +
                         ")";
                 ps.execute(sql);
                 System.out.println("** Creating table " + TableNames.ELEMENT_TO_CHILD_TABLE);
             } catch (SQLException e) {
+                System.out.println("ElementToChildDAOImpl.createTable exception caused by query: " + sql);
                 e.printStackTrace();
             }
         }

@@ -18,26 +18,15 @@ import java.util.stream.Collectors;
 import static com.csgt.dataaccess.TableNames.EDGE_TABLE;
 
 public class EdgeDAOImpl {
-    // public static boolean isTableCreated = false;
-
     public static boolean isTableCreated() {
-        //        System.out.println("starting isTableCreated");
-        // if (!isTableCreated) {// No need to call DatabaseUtil method every time. Save time this way.
-            //            System.out.println("ElementDAOImpl:isTableCreated: " + isTableCreated);
-            // isTableCreated = DatabaseUtil.isTableCreated(EDGE_TABLE);
-            //            System.out.println("ElementDAOImpl:isTableCreated: " + isTableCreated);
-        // }
-        //        System.out.println("ending isTableCreated");
-        // return isTableCreated;
         return DatabaseUtil.isTableCreated(TableNames.EDGE_TABLE);
     }
 
     public static void createTable() {
-        //        System.out.println("starting createTable");
-        //        System.out.println("ElementDAOImpl:createTable: " + isTableCreated());
+        String sql = "";
         if (!isTableCreated()) {
             try (Connection c = DatabaseUtil.getConnection(); Statement ps = c.createStatement()) {
-                String sql = "CREATE TABLE " + EDGE_TABLE + " (" +
+                sql = "CREATE TABLE " + EDGE_TABLE + " (" +
                         "id INTEGER NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1), " +
                         "fk_source_element_id INTEGER, " +
                         "fk_target_element_id INTEGER, " +
@@ -45,11 +34,14 @@ public class EdgeDAOImpl {
                         "start_y FLOAT, " +
                         "end_x FLOAT, " +
                         "end_y FLOAT, " +
-                        "collapsed INTEGER" +
+                        "collapsed INTEGER, " +
+                        "FOREIGN KEY(fk_source_element_id) REFERENCES " + TableNames.ELEMENT_TABLE + "(ID), " +
+                        "FOREIGN KEY(fk_target_element_id) REFERENCES " + TableNames.ELEMENT_TABLE + "(ID)" +
                         ")";
                 ps.execute(sql);
                 System.out.println("** Creating table " + TableNames.EDGE_TABLE);
             } catch (SQLException e) {
+                System.out.println("EdgeDAOImpl.createTable: exception caused by query: " + sql);
                 e.printStackTrace();
             }
         }

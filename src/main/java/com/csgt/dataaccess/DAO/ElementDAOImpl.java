@@ -27,7 +27,7 @@ public class ElementDAOImpl {
     public static void createTable() {
         if (!isTableCreated()) {
                 String sql = "CREATE TABLE " + ELEMENT_TABLE + " (" +
-                        "id INTEGER NOT NULL, " +
+                        "id INTEGER PRIMARY KEY NOT NULL, " +
                         "parent_id INTEGER, " +
                         "id_enter_call_trace INTEGER, " +
                         "id_exit_call_trace INTEGER, " +
@@ -46,7 +46,9 @@ public class ElementDAOImpl {
                         "level_count INTEGER, " +
                         "collapsed INTEGER, " +
                         "delta FLOAT, " +
-                        "delta_x FLOAT" +
+                        "delta_x FLOAT " +
+                        // "FOREIGN KEY(id_enter_call_trace) REFERENCES " + TableNames.CALL_TRACE_TABLE + "(ID), " +
+                        // "FOREIGN KEY(id_exit_call_trace) REFERENCES " + TableNames.CALL_TRACE_TABLE + "(ID)" +
                         ")";
             try (Connection c = DatabaseUtil.getConnection(); Statement ps = c.createStatement()) {
                 ps.execute(sql);

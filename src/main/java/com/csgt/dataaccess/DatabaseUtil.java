@@ -425,8 +425,8 @@ public class DatabaseUtil {
         FilesDAOImpl.dropTable();
         BookmarksDAOImpl.dropTable();
 
-        CallTraceDAOImpl.createTable();
         MethodDefDAOImpl.createTable();
+        CallTraceDAOImpl.createTable();
         // FilesDAOImpl.createTable();
     }
 

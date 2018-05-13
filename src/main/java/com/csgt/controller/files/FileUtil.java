@@ -102,8 +102,4 @@ public class FileUtil {
                 "Please reset (View menu -> Reset) and load a different set of log files. ");
     }
 
-    static Main main;
-    public static void saveRef(Main m) {
-        main = m;
-    }
 }
