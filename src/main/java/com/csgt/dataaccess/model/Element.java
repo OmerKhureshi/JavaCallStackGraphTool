@@ -1,6 +1,6 @@
 package com.csgt.dataaccess.model;
 
-import com.csgt.presentation.graph.CircleCell;
+import com.csgt.presentation.graph.NodeCell;
 import com.csgt.presentation.graph.BoundBox;
 
 import java.util.ArrayList;
@@ -63,15 +63,15 @@ public class Element {
         return elementId;
     }
 
-    public CircleCell getCircleCell() {
-        return circleCell;
+    public NodeCell getNodeCell() {
+        return nodeCell;
     }
 
-    public void setCircleCell(CircleCell circleCell) {
-        this.circleCell = circleCell;
+    public void setNodeCell(NodeCell nodeCell) {
+        this.nodeCell = nodeCell;
     }
 
-    public CircleCell circleCell = null;
+    public NodeCell nodeCell = null;
 
     public int getIndexInParent() {
         return indexInParent;

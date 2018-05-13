@@ -7,12 +7,12 @@ import javafx.scene.shape.Rectangle;
 /**
  * This call represents the Background highlight for the nodes on UI.
  */
-public class RectangleCell extends Cell {
+public class HighlightCell extends Cell {
     private Rectangle rectangle;
 
     private int elementId;
 
-    public RectangleCell(int id, int elementId, float startX, float startY, float width, float height) {
+    public HighlightCell(int id, int elementId, float startX, float startY, float width, float height) {
         super(String.valueOf(elementId));
         this.elementId = elementId;
 

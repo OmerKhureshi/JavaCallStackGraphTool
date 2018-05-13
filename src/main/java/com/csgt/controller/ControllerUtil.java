@@ -5,9 +5,9 @@ import com.csgt.dataaccess.DTO.ElementDTO;
 import com.csgt.dataaccess.DTO.HighlightDTO;
 import com.csgt.dataaccess.model.EdgeElement;
 import com.csgt.dataaccess.model.Element;
-import com.csgt.presentation.graph.CircleCell;
+import com.csgt.presentation.graph.NodeCell;
 import com.csgt.presentation.graph.Edge;
-import com.csgt.presentation.graph.RectangleCell;
+import com.csgt.presentation.graph.HighlightCell;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -59,22 +59,22 @@ public class ControllerUtil {
                 .collect(Collectors.toList());
     }
 
-    static List<CircleCell> convertElementDTOTOCell(List<ElementDTO> elementDTOList) {
-        List<CircleCell> circleCellList = new ArrayList<>();
+    static List<NodeCell> convertElementDTOTOCell(List<ElementDTO> elementDTOList) {
+        List<NodeCell> nodeCellList = new ArrayList<>();
 
         elementDTOList.forEach(elementDTO -> {
-            CircleCell circleCell = new CircleCell(elementDTO.getId(), elementDTO.getBoundBoxXCoordinate(), elementDTO.getBoundBoxYCoordinate(), elementDTO.getMethodName(), elementDTO.getCollapsed());
-            circleCellList.add(circleCell);
+            NodeCell nodeCell = new NodeCell(elementDTO.getId(), elementDTO.getBoundBoxXCoordinate(), elementDTO.getBoundBoxYCoordinate(), elementDTO.getMethodName(), elementDTO.getCollapsed());
+            nodeCellList.add(nodeCell);
         });
 
-        return circleCellList;
+        return nodeCellList;
     }
 
-    static List<RectangleCell> convertHighlightDTOsToHighlights(List<HighlightDTO> highlightDTOs) {
-        List<RectangleCell> rectangleCells = new ArrayList<>();
+    static List<HighlightCell> convertHighlightDTOsToHighlights(List<HighlightDTO> highlightDTOs) {
+        List<HighlightCell> highlightCells = new ArrayList<>();
 
         highlightDTOs.forEach(highlightDTO -> {
-            RectangleCell rect = new RectangleCell(highlightDTO.getId(),
+            HighlightCell rect = new HighlightCell(highlightDTO.getId(),
                     highlightDTO.getElementId(),
                     highlightDTO.getStartX(), highlightDTO.getStartY(),
                     highlightDTO.getWidth(), highlightDTO.getHeight());
@@ -82,10 +82,10 @@ public class ControllerUtil {
             rect.setColor(highlightDTO.getColor());
             rect.setArcHeight(20);
             rect.setArcWidth(20);
-            rectangleCells.add(rect);
+            highlightCells.add(rect);
         });
 
-        return rectangleCells;
+        return highlightCells;
     }
 
     public static List<EdgeDTO> convertEdgeElementsToEdgeDTO(List<EdgeElement> edgeList) {

@@ -6,13 +6,11 @@ import com.csgt.dataaccess.DTO.BookmarkDTO;
 import com.csgt.dataaccess.DTO.ElementDTO;
 import com.csgt.dataaccess.DatabaseUtil;
 import com.csgt.dataaccess.TableNames;
-import com.csgt.presentation.graph.CircleCell;
+import com.csgt.presentation.graph.NodeCell;
 import com.csgt.presentation.graph.BoundBox;
-import com.csgt.presentation.graph.RectangleCell;
+import com.csgt.presentation.graph.HighlightCell;
 import com.csgt.controller.modules.ElementTreeModule;
 import javafx.animation.FillTransition;
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
 import javafx.concurrent.Task;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -46,8 +44,8 @@ public class EventHandlers {
     public PopOver popOver = new PopOver();
 
     public void setCustomMouseEventHandlers(final Node node) {
-        ((CircleCell)node).getInfoStackPane().setOnMousePressed(infoButtonOnClickEventHandler);
-        ((CircleCell)node).getMinMaxStackPane().setOnMousePressed(minMaxButtonOnClickEventHandler);
+        ((NodeCell)node).getInfoStackPane().setOnMousePressed(infoButtonOnClickEventHandler);
+        ((NodeCell)node).getMinMaxStackPane().setOnMousePressed(minMaxButtonOnClickEventHandler);
     }
 
     private EventHandler<MouseEvent> infoButtonOnClickEventHandler = new EventHandler<MouseEvent>() {
@@ -59,7 +57,7 @@ public class EventHandlers {
             }
 
             Node node = (Node) event.getSource();
-            CircleCell cell = (CircleCell) node.getParent();
+            NodeCell cell = (NodeCell) node.getParent();
 
             String timeStamp;
             int elementId, methodId, processId, threadId, collapsed;
@@ -393,7 +391,7 @@ public class EventHandlers {
     //         }
     //
     //         Node node = (Node) event.getSource();
-    //         CircleCell cell = (CircleCell) node.getParent();
+    //         NodeCell cell = (NodeCell) node.getParent();
     //
     //         String timeStamp;
     //         int elementId, methodId, processId, threadId, collapsed;
@@ -776,12 +774,12 @@ public class EventHandlers {
         @Override
         public void handle(MouseEvent event) {
             System.out.println("EventHandlers.handle. minMaxButtonOnClickEventHandler   ");
-            CircleCell cell = ((CircleCell) ((Node) event.getSource()).getParent());
+            NodeCell cell = ((NodeCell) ((Node) event.getSource()).getParent());
             minMaxButtonOnClick(cell, ControllerLoader.centerLayoutController.getCurrentThreadId());
         }
     };
 
-    private void minMaxButtonOnClick(CircleCell clickedCell, String threadId) {
+    private void minMaxButtonOnClick(NodeCell clickedCell, String threadId) {
         {
             if (popOver != null) {
                 popOver.hide();
@@ -1159,7 +1157,7 @@ public class EventHandlers {
     }
 
     private void updateAllParentHighlightsOnUI(ElementDTO clickedEleDTO) {
-        Map<Integer, RectangleCell> mapHighlightsOnUI = ControllerLoader.canvasController.getHighlightsOnUI();
+        Map<Integer, HighlightCell> mapHighlightsOnUI = ControllerLoader.canvasController.getHighlightsOnUI();
 
         String clickedCellId = clickedEleDTO.getId();
         float deltaY = clickedEleDTO.getDeltaY();
@@ -1170,16 +1168,16 @@ public class EventHandlers {
 
         double finalX = x + BoundBox.unitWidthFactor * 0.5;
         double finalY = y + BoundBox.unitHeightFactor * 0.5;
-        mapHighlightsOnUI.forEach((id, rectangleCell) -> {
+        mapHighlightsOnUI.forEach((id, highlightCell) -> {
             // if this is the clicked cell, make highlight unit dimensions.
-            if (rectangleCell.getElementId() == Integer.valueOf(clickedCellId)) {
-                rectangleCell.setHeight(rectangleCell.getPrefHeight() - deltaY);
-                rectangleCell.setWidth(rectangleCell.getPrefWidth() - deltaX);
+            if (highlightCell.getElementId() == Integer.valueOf(clickedCellId)) {
+                highlightCell.setHeight(highlightCell.getPrefHeight() - deltaY);
+                highlightCell.setWidth(highlightCell.getPrefWidth() - deltaX);
             }
 
             // if this rectangle contains y, then shrink it by deltaY
-            else if (rectangleCell.getBoundsInParent().contains(finalX, finalY)) {
-                rectangleCell.setHeight(rectangleCell.getPrefHeight() - deltaY);
+            else if (highlightCell.getBoundsInParent().contains(finalX, finalY)) {
+                highlightCell.setHeight(highlightCell.getPrefHeight() - deltaY);
 
             }
         });

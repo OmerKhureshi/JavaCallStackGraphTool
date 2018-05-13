@@ -17,7 +17,7 @@ import org.controlsfx.glyphfont.Glyph;
 /**
  * This class represents the nodes in the graph on UI.
  */
-public class CircleCell extends Cell {
+public class NodeCell extends Cell {
 
     private Label label;
     private StackPane idBubble;
@@ -28,9 +28,6 @@ public class CircleCell extends Cell {
     Glyph minMaxGlyph;
 
     private StackPane infoStackPane;
-
-
-    private StackPane rootStackPane;
 
     private double bookmarkStrokeWidth = 3;
     // private double firstPortion = 0.7;
@@ -43,11 +40,11 @@ public class CircleCell extends Cell {
 
     private boolean collapsed = false;
 
-    public CircleCell(String id) {
+    public NodeCell(String id) {
         super(id);
     }
 
-    public CircleCell (String id, float xCoordinate, float yCoordinate, int collapsed) {
+    public NodeCell(String id, float xCoordinate, float yCoordinate, int collapsed) {
         this(id);
         boolean isLite = ControllerLoader.menuController.isLiteModeEnabled;
 
@@ -124,7 +121,7 @@ public class CircleCell extends Cell {
     }
 
 
-    public CircleCell(String id, float xCoordinate, float yCoordinate, String methodName, int collapsed) {
+    public NodeCell(String id, float xCoordinate, float yCoordinate, String methodName, int collapsed) {
         this(id, xCoordinate, yCoordinate, collapsed);
         this.methodNameLabel.setText(methodName);
     }
@@ -201,7 +198,7 @@ public class CircleCell extends Cell {
 
     @Override
     public String toString() {
-        return "CircleCell: id: " + getCellId() + "; x: " + getLayoutX() + "; y: " + getLayoutY();
+        return "NodeCell: id: " + getCellId() + "; x: " + getLayoutX() + "; y: " + getLayoutY();
     }
 
     private Shape createCircle() {
