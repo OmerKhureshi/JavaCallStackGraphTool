@@ -1,6 +1,12 @@
 package com.csgt.presentation.graph;
 
 import com.csgt.controller.ControllerLoader;
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.application.Platform;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.effect.DropShadow;
@@ -11,6 +17,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
+import javafx.util.Duration;
 import org.controlsfx.glyphfont.FontAwesome;
 import org.controlsfx.glyphfont.Glyph;
 
@@ -39,6 +46,16 @@ public class NodeCell extends Cell {
     private Rectangle bookmarkBar;
 
     private boolean collapsed = false;
+
+    // Color smallButtonsColor = Color.valueOf("#e5a2d0");
+    Color minMaxButtonColor = Color.valueOf("#FF4C4C");
+    Color infoButtonColor = Color.valueOf("#262626");
+    // Color infoButtonColor = Color.valueOf("#001f3f");
+    Color idBubbleBackgroundColor = Color.valueOf("#f6dfef");
+    Color cell1Color = Color.valueOf("#b2baf0");
+    Color cell2Color = Color.valueOf("#bab2f0");
+    Color cellShadowColor = Color.rgb(96, 112, 224, .47);
+    Color idBubbleShadowColor = Color.rgb(106,30,83, 0.30);
 
     public NodeCell(String id) {
         super(id);
@@ -284,14 +301,50 @@ public class NodeCell extends Cell {
         }
     }
 
-    // Color smallButtonsColor = Color.valueOf("#e5a2d0");
-    Color minMaxButtonColor = Color.valueOf("#FF4C4C");
-    Color infoButtonColor = Color.valueOf("#262626");
-    // Color infoButtonColor = Color.valueOf("#001f3f");
-    Color idBubbleBackgroundColor = Color.valueOf("#f6dfef");
-    Color cell1Color = Color.valueOf("#b2baf0");
-    Color cell2Color = Color.valueOf("#bab2f0");
-    Color cellShadowColor = Color.rgb(96, 112, 224, .47);
-    Color idBubbleShadowColor = Color.rgb(106,30,83, 0.30);
+    public void blink() {
+        double duration = 10;
+        double min = nodeShape.getStrokeWidth();
+        double max = 4;
+        final boolean[] grow = {true};
+
+        Platform.runLater(() -> {
+            final int[] noOfPluses = {5*2};
+
+            Timeline timeline = new Timeline();
+            KeyFrame pulseNode = new KeyFrame(Duration.millis(duration),
+                    new EventHandler<ActionEvent>() {
+                        @Override
+                        public void handle(ActionEvent event) {
+                            double strokeWidth = nodeShape.getStrokeWidth();
+
+                            if (noOfPluses[0] == 0) {
+                                timeline.stop();
+                                return;
+                            }
+
+                            if (grow[0]) {
+                                strokeWidth = strokeWidth + 0.1;
+                                if (strokeWidth > max) {
+                                    grow[0] = false;
+                                    noOfPluses[0]--;
+                                }
+                            } else {
+                                strokeWidth = strokeWidth - 0.1;
+                                if (strokeWidth < min) {
+                                    grow[0] = true;
+                                    noOfPluses[0]--;
+                                }
+                            }
+
+                            nodeShape.setStrokeWidth(strokeWidth);
+                        }
+                    });
+
+            timeline.getKeyFrames().add(pulseNode);
+            timeline.setCycleCount(Animation.INDEFINITE);
+            timeline.play();
+        });
+
+    }
 
 }

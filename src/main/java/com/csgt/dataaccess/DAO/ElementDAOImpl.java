@@ -375,9 +375,20 @@ public class ElementDAOImpl {
             ElementToChildDAOImpl.createTable();
         }
 
-        String SQLMaxLeafCount = "select MAX(LEAF_COUNT) from " + TableNames.ELEMENT_TABLE + " E " +
-                "join " + TableNames.CALL_TRACE_TABLE + " CT on E.ID_ENTER_CALL_TRACE = CT.ID " +
-                "where CT.THREAD_ID = " + threadId;
+        // String SQLMaxLeafCount = "select MAX(LEAF_COUNT) from " + TableNames.ELEMENT_TABLE + " E " +
+        //         "join " + TableNames.CALL_TRACE_TABLE + " CT on E.ID_ENTER_CALL_TRACE = CT.ID " +
+        //         "where CT.THREAD_ID = " + threadId;
+
+        String SQLMaxLeafCount = "select LEAF_COUNT " +
+                "from " + TableNames.ELEMENT_TABLE + " " +
+                "where LEVEL_COUNT = 1 AND ID = (SELECT PARENT_ID" +
+                "                                from " + TableNames.ELEMENT_TO_CHILD_TABLE + " " +
+                "                                where CHILD_ID = (SELECT id" +
+                "                                                  from " + TableNames.ELEMENT_TABLE + " " +
+                "                                                  where ID_ENTER_CALL_TRACE = (SELECT min(CALL_TRACE.ID)" +
+                "                                                                               from " + TableNames.CALL_TRACE_TABLE + " " +
+                "                                                                               where THREAD_ID = " + threadId + ")))";
+
 
         int leafCount = DatabaseUtil.executeSelectForInt(SQLMaxLeafCount);
         return leafCount;

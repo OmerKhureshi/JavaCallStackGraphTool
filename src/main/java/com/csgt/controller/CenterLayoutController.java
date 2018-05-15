@@ -31,7 +31,6 @@ public class CenterLayoutController {
     // @FXML
     // private SplitPane horizontalSplitPane;
 
-
     @FXML private ListView<String> threadListView;
 
     // @FXML private ListView<String> bookmarkListView;
@@ -81,6 +80,7 @@ public class CenterLayoutController {
         // bookmarksToggleButton.setOnAction(event -> paneActions());
     }
 
+    // uncomment to add bookmarks pane.
     // private void paneActions() {
     //     KeyValue vSplitPaneKeyVal = null;
     //     KeyValue hSplitPaneKeyVal = null;

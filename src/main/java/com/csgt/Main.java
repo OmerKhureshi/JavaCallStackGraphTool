@@ -1,11 +1,21 @@
 package com.csgt;
 
 import com.csgt.controller.ControllerUtil;
+import javafx.animation.*;
 import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
+import javafx.scene.*;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.RectangleBuilder;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import java.io.IOException;
 

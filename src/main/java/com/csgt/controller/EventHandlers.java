@@ -11,6 +11,7 @@ import com.csgt.presentation.graph.BoundBox;
 import com.csgt.presentation.graph.HighlightCell;
 import com.csgt.controller.modules.ElementTreeModule;
 import javafx.animation.FillTransition;
+import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -69,8 +70,6 @@ public class EventHandlers {
                     "MESSAGE, LOCKOBJID, BOUND_BOX_X_COORDINATE, BOUND_BOX_Y_COORDINATE from " + TableNames.ELEMENT_TABLE + " AS E " +
                     "JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT ON CT.id = E.ID_ENTER_CALL_TRACE " +
                     "WHERE E.ID = " + cell.getCellId();
-
-            System.out.println("EventHandlers.handle first sql: " + sql);
 
             try (ResultSet callTraceRS = DatabaseUtil.select(sql)) {
                 if (callTraceRS.next()) {
@@ -914,6 +913,13 @@ public class EventHandlers {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
+        // Platform.runLater(() -> {
+        //     if (ControllerLoader.canvasController.nodeCellsOnUI.containsKey(cellId)) {
+        //         System.out.println("EventHandlers.jumpTo:::: blinking cell....");
+        //         ControllerLoader.canvasController.nodeCellsOnUI.get(cellId).blink();
+        //     }
+        // });
     }
 
 

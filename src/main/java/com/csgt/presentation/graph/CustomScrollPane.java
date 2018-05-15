@@ -40,6 +40,11 @@ public class CustomScrollPane extends ScrollPane {
 
         setHbarPolicy(ScrollBarPolicy.ALWAYS);
         setVbarPolicy(ScrollBarPolicy.ALWAYS);
+
+        this.vvalueProperty().addListener((observable, oldValue, newValue) -> {
+            System.out.println("CustomScrollPane.CustomScrollPane vVal changed from: " + oldValue + " to: " + newValue);
+        });
+
 /*
         hValProperty = hvalueProperty();
         hValListener = (observable, oldValue, newValue) -> main.updateUi();

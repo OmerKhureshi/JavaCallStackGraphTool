@@ -12,6 +12,7 @@ import com.csgt.presentation.graph.BoundBox;
 import com.csgt.presentation.graph.Edge;
 import com.csgt.presentation.graph.HighlightCell;
 import com.csgt.presentation.graph.CustomScrollPane;
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.geometry.BoundingBox;
@@ -34,7 +35,7 @@ public class CanvasController {
     public Pane canvas;
 
     public CustomScrollPane scrollPane;
-    private Map<String, NodeCell> circleCellsOnUI = new HashMap<>();
+    public Map<String, NodeCell> nodeCellsOnUI = new HashMap<>();
     private Map<String, Edge> edgesOnUI = new HashMap<>();
     private Map<Integer, HighlightCell> highlightsOnUI = new HashMap<>();
 
@@ -85,6 +86,7 @@ public class CanvasController {
      * This method is invoked to check and draw any UI components on the graph if needed.
      */
     public void updateIfNeeded() {
+        System.out.println("CanvasController.updateIfNeeded");
         if (isUIDrawingRequired()) {
             addUIComponents();
             removeUIComponents();
@@ -95,10 +97,12 @@ public class CanvasController {
      * This methods creates and draws circle cells and Edges on the active region of the viewport.
      */
     private void addCanvasComponentsFromDB() {
+        System.out.println("CanvasController.addCanvasComponentsFromDB");
         addUIComponents();
     }
 
     private void addUIComponents() {
+        System.out.println("CanvasController.addUIComponents");
         if (ControllerLoader.centerLayoutController.getCurrentThreadId() == null) {
             return;
         }
@@ -111,6 +115,7 @@ public class CanvasController {
     }
 
     private void removeUIComponents() {
+        System.out.println("CanvasController.removeUIComponents");
         removeCirclesFromUI();
         removeEdgesFromUI();
         removeHighlightsFromUI();
@@ -135,8 +140,8 @@ public class CanvasController {
      * @param nodeCell
      */
     private void addNewCellToUI(NodeCell nodeCell) {
-        if (!circleCellsOnUI.containsKey(nodeCell.getCellId())) {
-            circleCellsOnUI.put(nodeCell.getCellId(), nodeCell);
+        if (!nodeCellsOnUI.containsKey(nodeCell.getCellId())) {
+            nodeCellsOnUI.put(nodeCell.getCellId(), nodeCell);
             canvas.getChildren().add(nodeCell);
             nodeCell.toFront();
             ControllerLoader.getEventHandlers().setCustomMouseEventHandlers(nodeCell);
@@ -145,7 +150,7 @@ public class CanvasController {
     }
 
     private void removeCirclesFromUI() {
-        List<NodeCell> removeNodeCellsList = circleCellsOnUI.values().stream()
+        List<NodeCell> removeNodeCellsList = nodeCellsOnUI.values().stream()
                 .filter(nodeCell -> !activeRegion.contains(nodeCell.getBoundsInParent()))
                 .collect(Collectors.toList());
 
@@ -153,8 +158,8 @@ public class CanvasController {
     }
 
     private void removeCellFromUI(NodeCell nodeCell) {
-        if (nodeCell != null && circleCellsOnUI.containsKey(nodeCell.getCellId())) {
-            circleCellsOnUI.remove(nodeCell.getCellId());
+        if (nodeCell != null && nodeCellsOnUI.containsKey(nodeCell.getCellId())) {
+            nodeCellsOnUI.remove(nodeCell.getCellId());
             canvas.getChildren().remove(nodeCell);
         }
     }
@@ -204,7 +209,7 @@ public class CanvasController {
         Map<Integer, HighlightCell> highlightsOnUi = ControllerLoader.canvasController.getHighlightsOnUI();
         List<HighlightCell> removeHighlights = new ArrayList<>();
 
-        circleCellsOnUI.forEach((id, nodeCell) -> {
+        nodeCellsOnUI.forEach((id, nodeCell) -> {
             int intId = Integer.parseInt(id);
             if (intId > startCellId && intId < endCellId) {
                 removeNodeCells.add(nodeCell);
@@ -273,7 +278,7 @@ public class CanvasController {
         double delta = elementDTO.getDeltaY();
 
         // For each circle cell on UI that is below the clicked cell, move up by delta
-        circleCellsOnUI.forEach((thisCellID, thisNodeCell) -> {
+        nodeCellsOnUI.forEach((thisCellID, thisNodeCell) -> {
             double thisCellTopY = thisNodeCell.getLayoutY();
 
             if (thisCellTopY >= clickedCellBottomY) {
@@ -342,22 +347,22 @@ public class CanvasController {
         Map<String, BookmarkDTO> bookmarkMap = ControllerLoader.menuController.getBookmarkDTOs();
 
         bookmarkMap.forEach((cellId, bookmark) -> {
-            if (circleCellsOnUI.containsKey(cellId)) {
-                circleCellsOnUI.get(cellId).bookmarkCell(bookmark.getColor());
+            if (nodeCellsOnUI.containsKey(cellId)) {
+                nodeCellsOnUI.get(cellId).bookmarkCell(bookmark.getColor());
             }
         });
     }
 
     public void removeBookmarkFromUI(String circleCellId) {
-        if (circleCellsOnUI.containsKey(circleCellId)) {
-            circleCellsOnUI.get(circleCellId).removeBookmark();
+        if (nodeCellsOnUI.containsKey(circleCellId)) {
+            nodeCellsOnUI.get(circleCellId).removeBookmark();
         }
     }
 
     public void removeAllBookmarksFromUI() {
         Map<String, BookmarkDTO> bookmarkDTOs = ControllerLoader.menuController.getBookmarkDTOs();
 
-        circleCellsOnUI.forEach((id, nodeCell) -> {
+        nodeCellsOnUI.forEach((id, nodeCell) -> {
             if (bookmarkDTOs.containsKey(id)) {
                 nodeCell.removeBookmark();
             }
@@ -369,10 +374,10 @@ public class CanvasController {
      * Clears all UI components on canvas except the placeholder lines.
      */
     private void clear() {
-        circleCellsOnUI.forEach((id, nodeCell) -> {
+        nodeCellsOnUI.forEach((id, nodeCell) -> {
             canvas.getChildren().remove(nodeCell);
         });
-        circleCellsOnUI.clear();
+        nodeCellsOnUI.clear();
         // bookmarks are part of circle cells, so no need to remove them explicitly.
 
         edgesOnUI.forEach((id, edge) -> {
@@ -391,7 +396,7 @@ public class CanvasController {
      */
     private void clearAll() {
         canvas.getChildren().clear();
-        circleCellsOnUI.clear();
+        nodeCellsOnUI.clear();
         edgesOnUI.clear();
         highlightsOnUI.clear();
     }
@@ -457,7 +462,6 @@ public class CanvasController {
         }
 
         if (!triggerRegion.contains(getViewPortDims())) {
-            // System.out.println("CanvasController.isUIDrawingRequired drawing IS required.   YYYYYYYYYYYYYY");
             setRegions();
             return true;
         }
@@ -505,6 +509,14 @@ public class CanvasController {
         addCanvasComponentsFromDB();
     };
 
+    private void setScrollBarPos(double hVal, double vVal) {
+        removeListeners();
+        scrollPane.setHvalue(hVal);
+        scrollPane.setVvalue(vVal);
+        updateIfNeeded();
+        setListeners();
+    }
+
 
     private void removeListeners() {
         scrollPane.vvalueProperty().removeListener(valuePropListener);
@@ -540,27 +552,30 @@ public class CanvasController {
     private void positionScrollBarFromHistory() {
         String threadId = ControllerLoader.centerLayoutController.getCurrentThreadId();
 
-        scrollPane.setVvalue(vScrollBarPos.getOrDefault(threadId, 0.0));
-        scrollPane.setHvalue(hScrollBarPos.getOrDefault(threadId, 0.0));
+        setScrollBarPos(
+                hScrollBarPos.getOrDefault(threadId, 0.0),
+                vScrollBarPos.getOrDefault(threadId, 0.0)
+        );
     }
 
-    public void moveScrollPane(double xCord, double yCord){
-        scrollPane.setHvalue(getHValue(xCord));
-        scrollPane.setVvalue(getVValue(yCord));
+    public void moveScrollPane(double xCord, double yCord) {
+        double hVal = getHValue(xCord);
+        double vVal = getVValue(yCord);
+        setScrollBarPos(hVal, vVal);
     }
 
     private double getHValue(double xCoordinate) {
         double scaledContentWidth = scrollPane.getContent().getLayoutBounds().getWidth();// * scale;
         double scaledViewportWidth = scrollPane.getViewportBounds().getWidth(); // / scale;
 
-        return xCoordinate / (scaledContentWidth - scaledViewportWidth);
+        return xCoordinate / (scaledContentWidth - scaledViewportWidth * 0.5);
     }
 
     private double getVValue(double yCoordinate) {
         double scaledContentHeight = scrollPane.getContent().getLayoutBounds().getHeight();// * scale;
         double scaledViewportHeight = scrollPane.getViewportBounds().getHeight(); // / scale;
 
-        return yCoordinate / (scaledContentHeight - scaledViewportHeight);
+        return yCoordinate / (scaledContentHeight - scaledViewportHeight * 0.5);
     }
 
     public void stackRectangles() {
@@ -573,7 +588,7 @@ public class CanvasController {
         list.forEach(Node::toBack);
 
         edgesOnUI.forEach((id, edge) -> edge.toFront());
-        circleCellsOnUI.forEach((id, nodeCell) -> nodeCell.toFront());
+        nodeCellsOnUI.forEach((id, nodeCell) -> nodeCell.toFront());
     }
 
     public void jumpTo(String cellId, String threadId, int collapsed) {
@@ -586,7 +601,7 @@ public class CanvasController {
     public void onReset() {
         clearAll();
 
-        circleCellsOnUI = new HashMap<>();
+        nodeCellsOnUI = new HashMap<>();
         edgesOnUI = new HashMap<>();
         highlightsOnUI = new HashMap<>();
     }
