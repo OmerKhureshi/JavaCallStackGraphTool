@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * This call handles the util functions required by other classes in controller package.
+ * This call handles the utility functions required by other classes in controller package.
  */
 public class ControllerUtil {
 
@@ -59,7 +59,7 @@ public class ControllerUtil {
                 .collect(Collectors.toList());
     }
 
-    static List<NodeCell> convertElementDTOTOCell(List<ElementDTO> elementDTOList) {
+    public static List<NodeCell> convertElementDTOTOCell(List<ElementDTO> elementDTOList) {
         List<NodeCell> nodeCellList = new ArrayList<>();
 
         elementDTOList.forEach(elementDTO -> {
@@ -70,7 +70,7 @@ public class ControllerUtil {
         return nodeCellList;
     }
 
-    static List<HighlightCell> convertHighlightDTOsToHighlights(List<HighlightDTO> highlightDTOs) {
+    public static List<HighlightCell> convertHighlightDTOsToHighlights(List<HighlightDTO> highlightDTOs) {
         List<HighlightCell> highlightCells = new ArrayList<>();
 
         highlightDTOs.forEach(highlightDTO -> {
@@ -106,7 +106,7 @@ public class ControllerUtil {
     }
 
 
-    static List<Edge> convertEdgeDTOToEdges(List<EdgeDTO> edgeDTOList) {
+    public static List<Edge> convertEdgeDTOToEdges(List<EdgeDTO> edgeDTOList) {
         return edgeDTOList.stream()
                 .map(edgeDTO -> new Edge(edgeDTO.getTargetElementId(),
                         edgeDTO.getStartX(), edgeDTO.getEndX(),

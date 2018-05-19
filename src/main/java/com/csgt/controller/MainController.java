@@ -12,6 +12,9 @@ import javafx.scene.layout.Region;
 
 import java.io.IOException;
 
+/**
+ * This is the main controller which handles displaying the instructions during application startup and loading canvas after running analysis.
+ */
 public class MainController {
     @FXML private BorderPane borderPane;
 

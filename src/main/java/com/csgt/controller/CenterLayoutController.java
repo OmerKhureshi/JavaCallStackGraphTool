@@ -17,7 +17,9 @@ import javafx.util.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@SuppressWarnings("ALL")
+/**
+ * This is the controller class for centerLayout.fxml.
+ */
 public class CenterLayoutController {
     @FXML
     private ToggleButton threadsToggleButton;

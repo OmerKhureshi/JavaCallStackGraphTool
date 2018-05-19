@@ -10,6 +10,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
+/**
+ * Parser class for Call Trace Log file.
+ */
 public class ParseCallTrace  {
 
     public void readFile(File logFile, ParseFileTask.BytesRead bytesRead, Consumer<List<String>> cmd) {

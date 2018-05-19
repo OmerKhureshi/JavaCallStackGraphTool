@@ -22,6 +22,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
+/**
+ * This task handles the creation of in-memory tree and insertion of the corresponding records to the database.
+ */
 public class ConstructTreeTask extends Task<Void> {
 
     private File callTraceLogFile;

@@ -7,7 +7,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
-
+/**
+ * Parser class for Method Definition Log file.
+ */
 public class ParseMethodDefinition{
 
     public List<List<String>> parseFile(File logFile, ParseFileTask.BytesRead bytesRead, Consumer<Void> cmd) {

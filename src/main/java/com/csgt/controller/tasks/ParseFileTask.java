@@ -14,6 +14,9 @@ import javafx.concurrent.Task;
 import java.io.File;
 import java.util.List;
 
+/**
+ * This task handles parsing both the log files.
+ */
 public class ParseFileTask extends Task<Void> {
 
     private File methodDefinitionLogFile;

@@ -48,6 +48,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * This class handles all actions related to the menu.
+ */
 public class MenuController {
     // Menu bar
     @FXML

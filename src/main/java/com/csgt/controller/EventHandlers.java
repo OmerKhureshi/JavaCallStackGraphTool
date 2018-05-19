@@ -37,6 +37,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * This class handles all events related to the nodes such as info button and collapse button.
+ */
 public class EventHandlers {
 
     private static ElementTreeModule elementTreeModule;

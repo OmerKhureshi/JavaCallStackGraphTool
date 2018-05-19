@@ -10,6 +10,9 @@ import javafx.scene.layout.FlowPane;
 import org.controlsfx.glyphfont.FontAwesome;
 import org.controlsfx.glyphfont.Glyph;
 
+/**
+ * This class handles all actions related to the instrcutions during application startup.
+ */
 public class InstructionsPaneController {
 
     @FXML

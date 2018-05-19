@@ -142,7 +142,7 @@ public class CallTraceDAOImpl {
         //        System.out.println("ending dropTable");
     }
 
-    static Connection conn;
+    private static Connection conn;
 
     static Statement ps;
     static String sql;
@@ -151,10 +151,8 @@ public class CallTraceDAOImpl {
             conn = DatabaseUtil.getConnection();
             ps = conn.createStatement();
             sql = "SELECT * FROM " + CALL_TRACE_TABLE + " WHERE " + where;
-            // System.out.println(">>> we got " + sql);
             ResultSet resultSet = ps.executeQuery(sql);
-            //                resultSet.next();
-            //                System.out.println(resultSet.getInt("id"));
+
             return resultSet;
         } catch (SQLException e) {
             System.out.println("Line that threw error: " + sql);

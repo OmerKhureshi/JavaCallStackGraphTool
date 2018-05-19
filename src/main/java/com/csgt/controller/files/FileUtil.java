@@ -1,14 +1,19 @@
 package com.csgt.controller.files;
 
-import com.csgt.Main;
 import com.csgt.controller.ControllerLoader;
 import com.csgt.controller.tasks.ParseFileTask;
 import javafx.application.Platform;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.function.Consumer;
 
+/**
+ * This is a utility class that checks if the log file conform to the syntax rules.
+ */
 public class FileUtil {
     public static void checkFile(File file, ParseFileTask.BytesRead bytesRead, Consumer<Void> cmd) {
         String line = null;

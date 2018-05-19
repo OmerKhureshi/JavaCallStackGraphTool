@@ -1,5 +1,6 @@
 package com.csgt.controller;
 
+import com.csgt.controller.tasks.DBFetchTask;
 import com.csgt.dataaccess.DAO.EdgeDAOImpl;
 import com.csgt.dataaccess.DAO.ElementDAOImpl;
 import com.csgt.dataaccess.DAO.HighlightDAOImpl;
@@ -7,12 +8,7 @@ import com.csgt.dataaccess.DTO.BookmarkDTO;
 import com.csgt.dataaccess.DTO.EdgeDTO;
 import com.csgt.dataaccess.DTO.ElementDTO;
 import com.csgt.dataaccess.DTO.HighlightDTO;
-import com.csgt.presentation.graph.NodeCell;
-import com.csgt.presentation.graph.BoundBox;
-import com.csgt.presentation.graph.Edge;
-import com.csgt.presentation.graph.HighlightCell;
-import com.csgt.presentation.graph.CustomScrollPane;
-import javafx.application.Platform;
+import com.csgt.presentation.graph.*;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.geometry.BoundingBox;
@@ -27,6 +23,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Controller class for canvas.fxml
+ * This class handles all the actions on the canvas including the graph.
+ */
 public class CanvasController {
 
     @FXML
@@ -86,10 +86,8 @@ public class CanvasController {
      * This method is invoked to check and draw any UI components on the graph if needed.
      */
     public void updateIfNeeded() {
-        System.out.println("CanvasController.updateIfNeeded");
         if (isUIDrawingRequired()) {
-            addUIComponents();
-            removeUIComponents();
+            DBFetchTask.initiateTask(true);
         }
     }
 
@@ -97,16 +95,14 @@ public class CanvasController {
      * This methods creates and draws circle cells and Edges on the active region of the viewport.
      */
     private void addCanvasComponentsFromDB() {
-        System.out.println("CanvasController.addCanvasComponentsFromDB");
-        addUIComponents();
+        DBFetchTask.initiateTask(false);
     }
 
     private void addUIComponents() {
-        System.out.println("CanvasController.addUIComponents");
         if (ControllerLoader.centerLayoutController.getCurrentThreadId() == null) {
             return;
         }
-        addCirclesToUI();
+        addNodeCellsToUI();
         addEdgesToUI();
         addHighlightsToUI();
         addBookmarks();
@@ -114,24 +110,56 @@ public class CanvasController {
         stackRectangles();
     }
 
-    private void removeUIComponents() {
+    public void removeUIComponents() {
         System.out.println("CanvasController.removeUIComponents");
-        removeCirclesFromUI();
+        removeNodeCellsFromUI();
         removeEdgesFromUI();
         removeHighlightsFromUI();
     }
 
+    public List<NodeCell>  getNodeCell() {
+        BoundingBox viewPort = getPrefetchViewPortDims();
+
+        List<ElementDTO> elementDTOList = ElementDAOImpl.getElementDTOsInViewport(viewPort);
+        return ControllerUtil.convertElementDTOTOCell(elementDTOList);
+    }
+
+
+    public void addElementsToUI(List<NodeCell> nodeCells, List<Edge> edges, List<HighlightCell> highlightRectList, Map<String, BookmarkDTO> bookmarkDTOMap) {
+        nodeCells.forEach(this::addNewCellToUI);
+
+        edges.forEach(edge -> {
+            if (!edgesOnUI.containsKey(edge.getEdgeId())) {
+                edgesOnUI.put(edge.getEdgeId(), edge);
+                canvas.getChildren().add(edge);
+                edge.toBack();
+            }
+        });
+
+        highlightRectList.forEach(this::addNewHighlightsToUI);
+
+        bookmarkDTOMap.forEach((cellId, bookmark) -> {
+            if (nodeCellsOnUI.containsKey(cellId)) {
+                nodeCellsOnUI.get(cellId).bookmarkCell(bookmark.getColor());
+            }
+        });
+    }
 
     /**
      * Determines all the element nodes that should be drawn in the current viewport and draws them if not already present.
      */
-    private void addCirclesToUI() {
+    private void addNodeCellsToUI() {
+        List<NodeCell> nodeCells = getNodeCellsFromDB();
+        nodeCells.forEach(this::addNewCellToUI);
+    }
+
+    public List<NodeCell> getNodeCellsFromDB() {
         BoundingBox viewPort = getPrefetchViewPortDims();
 
         List<ElementDTO> elementDTOList = ElementDAOImpl.getElementDTOsInViewport(viewPort);
         List<NodeCell> nodeCells = ControllerUtil.convertElementDTOTOCell(elementDTOList);
 
-        nodeCells.forEach(this::addNewCellToUI);
+        return nodeCells;
     }
 
     /**
@@ -145,11 +173,10 @@ public class CanvasController {
             canvas.getChildren().add(nodeCell);
             nodeCell.toFront();
             ControllerLoader.getEventHandlers().setCustomMouseEventHandlers(nodeCell);
-            // System.out.print("+" + nodeCell.getCellId() + ", ");
         }
     }
 
-    private void removeCirclesFromUI() {
+    private void removeNodeCellsFromUI() {
         List<NodeCell> removeNodeCellsList = nodeCellsOnUI.values().stream()
                 .filter(nodeCell -> !activeRegion.contains(nodeCell.getBoundsInParent()))
                 .collect(Collectors.toList());
@@ -165,11 +192,7 @@ public class CanvasController {
     }
 
     private void addEdgesToUI() {
-        BoundingBox viewPort = getPrefetchViewPortDims();
-
-        List<EdgeDTO> edgeDTOList = EdgeDAOImpl.getEdgeDTO(viewPort);
-        List<Edge> edges = ControllerUtil.convertEdgeDTOToEdges(edgeDTOList);
-
+        List<Edge> edges = getEdgesFromDB();
         edges.forEach(edge -> {
             if (!edgesOnUI.containsKey(edge.getEdgeId())) {
                 edgesOnUI.put(edge.getEdgeId(), edge);
@@ -179,6 +202,14 @@ public class CanvasController {
         });
     }
 
+    public List<Edge> getEdgesFromDB() {
+        BoundingBox viewPort = getPrefetchViewPortDims();
+
+        List<EdgeDTO> edgeDTOList = EdgeDAOImpl.getEdgeDTO(viewPort);
+        List<Edge> edges = ControllerUtil.convertEdgeDTOToEdges(edgeDTOList);
+
+        return edges;
+    }
     private void removeEdgesFromUI() {
         List<Edge> removeEdgeList = edgesOnUI.values().stream()
                 .filter(edge -> !activeRegion.contains(edge.line.getEndX(), edge.line.getEndY()))
@@ -313,12 +344,17 @@ public class CanvasController {
 
 
     private void addHighlightsToUI() {
+        List<HighlightCell> highlightRectList = getHighlightsFromDB();
+        highlightRectList.forEach(this::addNewHighlightsToUI);
+    }
+
+    public List<HighlightCell> getHighlightsFromDB() {
         BoundingBox viewPort = getPrefetchViewPortDims();
 
         List<HighlightDTO> highlightDTOs = HighlightDAOImpl.getHighlightDTOsInViewPort(viewPort);
         List<HighlightCell> highlightRectList = ControllerUtil.convertHighlightDTOsToHighlights(highlightDTOs);
 
-        highlightRectList.forEach(this::addNewHighlightsToUI);
+        return highlightRectList;
     }
 
     private void addNewHighlightsToUI(HighlightCell highlightCell) {
@@ -344,13 +380,17 @@ public class CanvasController {
     }
 
     public void addBookmarks() {
-        Map<String, BookmarkDTO> bookmarkMap = ControllerLoader.menuController.getBookmarkDTOs();
+        Map<String, BookmarkDTO> bookmarkMap = getBookmarksFromDB();
 
         bookmarkMap.forEach((cellId, bookmark) -> {
             if (nodeCellsOnUI.containsKey(cellId)) {
                 nodeCellsOnUI.get(cellId).bookmarkCell(bookmark.getColor());
             }
         });
+    }
+
+    public Map<String, BookmarkDTO> getBookmarksFromDB() {
+        return ControllerLoader.menuController.getBookmarkDTOs();
     }
 
     public void removeBookmarkFromUI(String circleCellId) {
@@ -360,7 +400,7 @@ public class CanvasController {
     }
 
     public void removeAllBookmarksFromUI() {
-        Map<String, BookmarkDTO> bookmarkDTOs = ControllerLoader.menuController.getBookmarkDTOs();
+        Map<String, BookmarkDTO> bookmarkDTOs = getBookmarksFromDB();
 
         nodeCellsOnUI.forEach((id, nodeCell) -> {
             if (bookmarkDTOs.containsKey(id)) {
@@ -606,7 +646,20 @@ public class CanvasController {
         highlightsOnUI = new HashMap<>();
     }
 
-    public Map<Integer, HighlightCell> getHighlightsOnUI() {
+    Map<Integer, HighlightCell> getHighlightsOnUI() {
         return highlightsOnUI;
+    }
+
+    public void processTaskResults(List<NodeCell> nodeCells,
+                                   List<Edge> edges,
+                                   List<HighlightCell> highlightRectList,
+                                   Map<String, BookmarkDTO> bookmarkDTOMap,
+                                   boolean isRemovalRequired) {
+
+        addElementsToUI(nodeCells, edges, highlightRectList, bookmarkDTOMap);
+        stackRectangles();
+        if (isRemovalRequired) {
+            removeUIComponents();
+        }
     }
 }

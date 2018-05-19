@@ -151,7 +151,6 @@ public class EdgeDAOImpl {
                 sql = "UPDATE " + TableNames.EDGE_TABLE +
                         " SET " + columnName + " = " + columnValue +
                         " WHERE " + where;
-                //                System.out.println(">>> we got " + sql);
                 ps.executeUpdate(sql);
                 return;
                 //                resultSet.next();

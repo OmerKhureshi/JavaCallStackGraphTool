@@ -6,6 +6,9 @@ import com.csgt.dataaccess.DAO.EdgeDAOImpl;
 
 import java.util.*;
 
+/**
+ * This class handles all the activities associated with the tree during the application startup.
+ */
 public class ElementTreeModule {
     public static Element greatGrandParent;
     private Map<Integer, Element> threadMapToRoot;
