@@ -111,7 +111,6 @@ public class CanvasController {
     }
 
     public void removeUIComponents() {
-        System.out.println("CanvasController.removeUIComponents");
         removeNodeCellsFromUI();
         removeEdgesFromUI();
         removeHighlightsFromUI();

@@ -1,6 +1,7 @@
 package com.csgt.controller.files.parsers;
 
 import com.csgt.controller.tasks.ParseFileTask;
+import org.apache.commons.lang.StringEscapeUtils;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -9,6 +10,7 @@ import java.io.LineNumberReader;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * Parser class for Call Trace Log file.
@@ -31,7 +33,10 @@ public class ParseCallTrace  {
     }
 
     private List<String> parse(String line) {
-        return Arrays.asList(line.split("\\|"));
+        List<String> parsedList = Arrays.asList(line.split("\\|"));
+        List<String> escapedList =  parsedList.stream().map(s -> StringEscapeUtils.escapeSql(s)).collect(Collectors.toList());
+
+        return escapedList;
     }
 
     public static int countNumberOfLines(File file) {

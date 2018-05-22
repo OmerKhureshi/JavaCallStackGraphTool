@@ -237,7 +237,6 @@ public class ElementDAOImpl {
         ids.forEach(id -> stringJoiner.add(id));
 
         String sql = "SELECT * FROM " + TableNames.ELEMENT_TABLE + " WHERE ID in " + stringJoiner.toString();
-        System.out.println("ElementDAOImpl.getElementDTOsInViewport query: " + sql);
 
         try (ResultSet rs = DatabaseUtil.select(sql)) {
             while (rs.next()) {

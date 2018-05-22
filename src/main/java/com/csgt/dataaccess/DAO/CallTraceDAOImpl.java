@@ -42,25 +42,7 @@ public class CallTraceDAOImpl {
     public static int insert(List<String> val) {
 
         int autoIncrementedId = -1;
-        // int processID = Integer.parseInt(readSoFar.get(0));
-        // int threadID = Integer.parseInt(readSoFar.get(1));
-        // int methodID = Integer.parseInt(readSoFar.get(2));
-        // String eventType = readSoFar.get(3);
-        // String parameters = readSoFar.get(4);
-        // String time_instant = readSoFar.get(5);
-
-        // TimeStamp       | ProcessID | ThreadID |  EventType |LockObjectID
-        // utc time format | 40948     |    9     | Wait-Enter |3986916
-
-        // TimeStamp                | ProcessID | ThreadID | EventType | MethodID  | Arguments
-        // 2017-03-31T17:00:19.305Z | 40948     |    9     |   Enter   |     1     |    []
-        // TimeStamp                | ProcessID | ThreadID | EventType | MethodID
-        // 2017-03-31T17:00:19.305Z | 40948     |    9     |   Enter   |     1
         String time_instant = val.get(0);
-        // Instant instant = Instant.parse(time_instant);
-        // Timestamp timestamp = Timestamp.from(instant);
-        // java.sql.Timestamp sqlTimeStamp = new Timestamp(instant.toEpochMilli());
-
         Timestamp timestamp = new Timestamp(Long.valueOf(time_instant));
         int processID = Integer.parseInt(val.get(1));
         int threadID = Integer.parseInt(val.get(2));
@@ -72,22 +54,16 @@ public class CallTraceDAOImpl {
         if (eventType.equalsIgnoreCase("ENTER")) {
             methodID = Integer.parseInt(val.get(4));
             parameters = val.get(5);
-            // } else if (eventType.equalsIgnoreCase("EXIT")) {
-            //     methodID = Integer.parseInt(readSoFar.get(4));
         } else if (eventType.equalsIgnoreCase("WAIT-ENTER") || eventType.equalsIgnoreCase("WAIT-EXIT") ||
                 eventType.equalsIgnoreCase("NOTIFY-ENTER") || eventType.equalsIgnoreCase("NOTIFY-EXIT") ||
                 eventType.equalsIgnoreCase("NOTIFYALL-ENTER") || eventType.equalsIgnoreCase("NOTIFYALL-EXIT")) {
             lockObjectId = val.get(4);
         }
-        //        System.out.println("starting insert");
-        //        System.out.println("CallTraceDAOImpl:insert: " + isTableCreated());
 
         if (!isTableCreated())
             createTable();
         String sql = null;
         try (Connection c = DatabaseUtil.getConnection(); Statement ps = c.createStatement()) {
-
-            //            System.out.println("value of callTraceTableCreated: " + callTraceTableCreated);
             sql = "INSERT INTO " + CALL_TRACE_TABLE +
                     "(" +
                     "process_id, " +

@@ -215,4 +215,9 @@ public class ElementDTO extends BaseDTO {
     public void setThredId(String thredId) {
         this.thredId = thredId;
     }
+
+    @Override
+    public String toString() {
+        return "[id=" + id + "; parentId=" + parentId +"]";
+    }
 }

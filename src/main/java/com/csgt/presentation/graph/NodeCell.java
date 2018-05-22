@@ -302,13 +302,15 @@ public class NodeCell extends Cell {
     }
 
     public void blink() {
+        System.out.println("NodeCell.blink");
         double duration = 10;
         double min = nodeShape.getStrokeWidth();
         double max = 4;
         final boolean[] grow = {true};
+        nodeShape.setStroke(Color.RED);
 
         Platform.runLater(() -> {
-            final int[] noOfPluses = {5*2};
+            final int[] noOfPluses = {3 * 2};
 
             Timeline timeline = new Timeline();
             KeyFrame pulseNode = new KeyFrame(Duration.millis(duration),
@@ -343,6 +345,11 @@ public class NodeCell extends Cell {
             timeline.getKeyFrames().add(pulseNode);
             timeline.setCycleCount(Animation.INDEFINITE);
             timeline.play();
+
+            timeline.setOnFinished(event -> {
+                nodeShape.setStroke(Color.GREY);
+                nodeShape.setStrokeWidth(0.5);
+            });
         });
 
     }

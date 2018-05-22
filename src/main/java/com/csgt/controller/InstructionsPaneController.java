@@ -133,6 +133,8 @@ public class InstructionsPaneController {
     }
 
     public void setMethodDefGraphics(boolean enabled) {
+        System.out.println("InstructionsPaneController.setMethodDefGraphics");
+        System.out.println("enabled = [" + enabled + "]");
         if (enabled) {
             // methodDefInfoLabel.setWrapText(true);
             // methodDefInfoLabel.setTextOverrun(OverrunStyle.CENTER_ELLIPSIS);
@@ -145,7 +147,7 @@ public class InstructionsPaneController {
 
         } else {
             methodDefInfoGlyph.setIcon(FontAwesome.Glyph.ARROW_RIGHT);
-            methodDefInfoGlyph.setColor(ColorProp.GREY);
+            methodDefInfoGlyph.setColor(ColorProp.RED);
         }
     }
 

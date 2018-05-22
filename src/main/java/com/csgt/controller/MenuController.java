@@ -226,7 +226,7 @@ public class MenuController {
 
             setRunAnalysisMenuItemGraphics(true);
             setResetMenuItemGraphics(true);
-            // ControllerLoader.instructionsPaneController.setMethodDefGraphics(true);
+            ControllerLoader.instructionsPaneController.setMethodDefGraphics(true);
             ControllerLoader.instructionsPaneController.setCallTraceGraphics(true);
             ControllerLoader.instructionsPaneController.setFileRunInfoGraphics(true);
         } else if (!methodDefFileSet && !callTraceFileSet) {
@@ -433,13 +433,13 @@ public class MenuController {
         GridPane.setConstraints(headingCol1, 0, 0);
         GridPane.setHalignment(headingCol1, HPos.CENTER);
 
-        Label headingCol2 = new Label("Highlight method only");
+        Label headingCol2 = new Label("Highlight node only");
         headingCol2.setWrapText(true);
         headingCol2.setFont(Font.font("Verdana", FontWeight.BOLD, headingCol2.getFont().getSize() * 1.1));
         GridPane.setConstraints(headingCol2, 1, 0);
         GridPane.setHalignment(headingCol2, HPos.CENTER);
 
-        Label headingCol3 = new Label("Highlight subtree");
+        Label headingCol3 = new Label("Highlight node subtree");
         headingCol3.setWrapText(true);
         headingCol3.setFont(Font.font("Verdana", FontWeight.BOLD, headingCol3.getFont().getSize() * 1.1));
         GridPane.setConstraints(headingCol3, 2, 0);
@@ -867,7 +867,7 @@ public class MenuController {
             methodDefnGlyph.setIcon(FontAwesome.Glyph.CHECK);
             methodDefnGlyph.setColor(ColorProp.GREEN);
         } else if (!enabled && !isSet) {
-            // after choosing dataaccess and clicking run analysis
+            // after choosing database and clicking run analysis
             chooseMethodDefMenuItem.setDisable(true);
             methodDefnGlyph.setIcon(FontAwesome.Glyph.PLUS);
             methodDefnGlyph.setColor(ColorProp.GREY);
