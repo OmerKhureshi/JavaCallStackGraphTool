@@ -303,7 +303,6 @@ public class CanvasController {
     }
 
     public void moveLowerTreeByDelta(ElementDTO elementDTO) {
-
         float clickedCellBottomY = elementDTO.getBoundBoxYTopLeft() + BoundBox.unitHeightFactor;
         double delta = elementDTO.getDeltaY();
 

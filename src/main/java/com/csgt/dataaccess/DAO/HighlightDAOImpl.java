@@ -147,7 +147,13 @@ public class HighlightDAOImpl {
                 "'" + colorsMap.getOrDefault(fullName, Color.AQUAMARINE) + "'," +
 
                 // COLLAPSED
-                "0 " +
+                "(SELECT " +
+                "CASE " +
+                "WHEN E1.COLLAPSED = 0 THEN 0 " +
+                "WHEN E1.COLLAPSED = 2 THEN 0 " +
+                "ELSE 1 " +
+                "END " +
+                "FROM " + TableNames.ELEMENT_TABLE + " AS E1 WHERE E1.ID = " + TableNames.ELEMENT_TABLE + ".ID) " +
 
                 "FROM " + TableNames.ELEMENT_TABLE + " " +
                 "JOIN " + TableNames.CALL_TRACE_TABLE + " ON " + TableNames.ELEMENT_TABLE + ".ID_ENTER_CALL_TRACE = " + TableNames.CALL_TRACE_TABLE + ".ID " +
@@ -364,7 +370,7 @@ public class HighlightDAOImpl {
         return queries;
     }
 
-    public static List<String> getChildrenHighlightResizeQueries(ElementDTO clickedEleDTO, boolean isCollapsed, int nextCellId, int threadId) {
+    public static List<String> getChildrenHighlightResizeQueries(ElementDTO clickedEleDTO, boolean isCollapsing, int nextCellId, int threadId) {
         List<String> queries = new ArrayList<>();
 
         String cellId = clickedEleDTO.getId();
@@ -376,7 +382,7 @@ public class HighlightDAOImpl {
         double startYOffset = -10;
         double heightOffset = -20;
 
-        if (!isCollapsed) {
+        if (!isCollapsing) {
             // get all highlights that are contained within the expanded subtree.
             String getHighlightsToResize = "SELECT * " +
                     "FROM " + TableNames.HIGHLIGHT_ELEMENT + " " +
@@ -385,8 +391,6 @@ public class HighlightDAOImpl {
                     "AND COLLAPSED IN (0, 2) " +
                     "AND HIGHLIGHT_TYPE = 'FULL' " +
                     "AND THREAD_ID = " + threadId;
-
-            // System.out.println(" getHighlightsToResize: " + getHighlightsToResize);
 
             try (ResultSet rs = DatabaseUtil.select(getHighlightsToResize)) {
                 while (rs.next()) {

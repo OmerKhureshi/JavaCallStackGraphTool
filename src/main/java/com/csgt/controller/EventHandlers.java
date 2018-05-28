@@ -36,6 +36,8 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * This class handles all events related to the nodes such as info button and collapse button.
@@ -379,329 +381,6 @@ public class EventHandlers {
     };
 
 
-// backup if i mess up the above method.
-    // private EventHandler<MouseEvent> infoButtonOnClickEventHandler = new EventHandler<MouseEvent>() {
-    //
-    //     @Override
-    //     public void handle(MouseEvent event) {
-    //         if (popOver != null) {
-    //             popOver.hide();
-    //         }
-    //
-    //         Node node = (Node) event.getSource();
-    //         NodeCell cell = (NodeCell) node.getParent();
-    //
-    //         String timeStamp;
-    //         int elementId, methodId, processId, threadId, collapsed;
-    //         String parameters, packageName = "", methodName = "", parameterTypes = "", eventType, lockObjectId;
-    //         double xCord, yCord;
-    //
-    //
-    //         String sql = "Select E.ID as EID, TIME_INSTANT, METHOD_ID, PROCESS_ID, THREAD_ID, PARAMETERS, COLLAPSED, " +
-    //                 "MESSAGE, LOCKOBJID, BOUND_BOX_X_COORDINATE, BOUND_BOX_Y_COORDINATE from " + TableNames.ELEMENT_TABLE + " AS E " +
-    //                 "JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT ON CT.id = E.ID_ENTER_CALL_TRACE " +
-    //                 "WHERE E.ID = " + cell.getCellId();
-    //
-    //         System.out.println("EventHandlers.handle first sql: " + sql);
-    //
-    //         try (ResultSet callTraceRS = DatabaseUtil.select(sql)) {
-    //             if (callTraceRS.next()) {
-    //                 elementId = callTraceRS.getInt("EID");
-    //                 timeStamp = callTraceRS.getString("time_instant");
-    //                 methodId = callTraceRS.getInt("method_id");
-    //                 processId = callTraceRS.getInt("process_id");
-    //                 threadId = callTraceRS.getInt("thread_id");
-    //                 parameters = callTraceRS.getString("parameters");
-    //                 eventType = callTraceRS.getString("message");
-    //                 lockObjectId = callTraceRS.getString("lockobjid");
-    //                 xCord = callTraceRS.getFloat("bound_box_x_coordinate");
-    //                 yCord = callTraceRS.getFloat("bound_box_y_coordinate");
-    //                 collapsed = callTraceRS.getInt("COLLAPSED");
-    //
-    //
-    //                 try (ResultSet methodDefRS = MethodDefDAOImpl.selectWhere("id = " + methodId)) {
-    //                     if (methodDefRS.next()) {
-    //                         packageName = methodDefRS.getString("package_name");
-    //                         methodName = methodDefRS.getString("method_name");
-    //                         parameterTypes = methodDefRS.getString("parameter_types");
-    //                     }
-    //
-    //                     if (methodId == 0) {
-    //                         methodName = eventType;
-    //                         packageName = "N/A";
-    //                         parameterTypes = "N/A";
-    //                         parameters = "N/A";
-    //                     }
-    //                 } catch (SQLException e) {
-    //                     e.printStackTrace();
-    //                 }
-    //
-    //                 // Save the clicked element into recent menu.
-    //                 // graph.addToRecent(packageName + "." + methodName, new XYCoordinate(xCord, yCord, threadId));
-    //
-    //
-    //                 Label lMethodName = new Label(methodName);
-    //                 Label lPackageName = new Label(packageName);
-    //                 Label lParameterTypes = new Label(parameterTypes);
-    //                 Label lParameters = new Label(parameters);
-    //                 Label lProcessId = new Label(String.valueOf(processId));
-    //                 Label lThreadId = new Label(String.valueOf(threadId));
-    //                 Label lTimeInstant = new Label(timeStamp);
-    //
-    //                 GridPane gridPane = new GridPane();
-    //                 gridPane.setPadding(new Insets(10, 10, 10, 10));
-    //                 gridPane.setVgap(10);
-    //                 gridPane.setHgap(20);
-    //                 gridPane.add(new Label("Method Name: "), 0, 0);
-    //                 gridPane.add(lMethodName, 1, 0);
-    //
-    //                 gridPane.add(new Label("Package Name: "), 0, 1);
-    //                 gridPane.add(lPackageName, 1, 1);
-    //
-    //                 gridPane.add(new Label("Parameter Types: "), 0, 2);
-    //                 gridPane.add(lParameterTypes, 1, 2);
-    //
-    //                 gridPane.add(new Label("Parameters: "), 0, 3);
-    //                 gridPane.add(lParameters, 1, 3);
-    //
-    //                 gridPane.add(new Label("Process ID: "), 0, 4);
-    //                 gridPane.add(lProcessId, 1, 4);
-    //
-    //                 gridPane.add(new Label("Thread ID: "), 0, 5);
-    //                 gridPane.add(lThreadId, 1, 5);
-    //
-    //                 gridPane.add(new Label("Time of Invocation: "), 0, 6);
-    //                 gridPane.add(lTimeInstant, 1, 6);
-    //
-    //
-    //                 /*
-    //                  * wait-enter -> lock released.
-    //                  *       Get all elements with same lock id and notify-enter
-    //                  * wait-exit -> lock reacquired.
-    //                  *
-    //                  * notify-enter / notify-exit -> lock released
-    //                  *
-    //                  * object lock flow:
-    //                  * wait-enter -> notify-enter / notify-exit -> wait-exit
-    //                  **/
-    //
-    //                 List<Integer> ctIdList = new ArrayList<>();
-    //                 List<Integer> eleIdList = new ArrayList<>();
-    //                 if (eventType.equalsIgnoreCase("WAIT-ENTER")) {
-    //                     int ctId = -2;  // Will throw exception if value not changed. Which is what we want.
-    //                     sql = "lockobjid = '" + lockObjectId + "'" +
-    //                             " AND (message = 'NOTIFY-ENTER' OR message = 'NOTIFYALL-ENTER')" +
-    //                             " AND time_instant >= " + "'" + timeStamp + "'";
-    //
-    //                     CallTraceDAOImpl.getThreadIdsWhere(sql).stream().forEach(id -> {
-    //                         ctIdList.add(id);
-    //                     });
-    //
-    //                     try (ResultSet elementRS = ElementDAOImpl.selectWhere("id_enter_call_trace = " + ctId)) {
-    //                         // Expecting to see a single row.
-    //                         if (elementRS.next()) {
-    //                             int eId = elementRS.getInt("id");
-    //                             eleIdList.add(eId);
-    //                         }
-    //                     }
-    //                 } else if (eventType.equalsIgnoreCase("NOTIFY-ENTER")) {
-    //
-    //                     try (Connection conn = DatabaseUtil.getConnection(); Statement ps = conn.createStatement()) {
-    //                         sql = "SELECT * FROM " + TableNames.CALL_TRACE_TABLE + " AS parent\n" +
-    //                                 "WHERE MESSAGE = 'WAIT-EXIT' \n" +
-    //                                 "AND LOCKOBJID = '" + lockObjectId + "' " +
-    //                                 "AND TIME_INSTANT >= '" + timeStamp + "' \n" +
-    //                                 "AND (SELECT count(*) \n" +
-    //                                 "FROM " + TableNames.CALL_TRACE_TABLE + " AS child \n" +
-    //                                 "WHERE child.message = 'WAIT-ENTER' \n" +
-    //                                 "AND LOCKOBJID = '" + lockObjectId + "' " +
-    //                                 "AND child.TIME_INSTANT >=  '" + timeStamp + "' \n" +
-    //                                 "AND child.TIME_INSTANT <= parent.time_instant\n" +
-    //                                 ")\n" +
-    //                                 "= 0\n";
-    //
-    //                         // System.out.println("Sql: " + sql);
-    //                         int ctId = -2;
-    //                         try (ResultSet resultSet = ps.executeQuery(sql)) {
-    //                             if (resultSet.next()) {
-    //                                 ctId = resultSet.getInt("id");
-    //                                 ctIdList.add(ctId);
-    //                             }
-    //                         }
-    //
-    //                         try (ResultSet elementRS = ElementDAOImpl.selectWhere("id_exit_call_trace = " + ctId)) {
-    //                             // Expecting to see a single row.
-    //                             if (elementRS.next()) {
-    //                                 int eId = elementRS.getInt("id");
-    //                                 eleIdList.add(eId);
-    //                             }
-    //                         }
-    //                     }
-    //
-    //                 } else if (eventType.equalsIgnoreCase("NOTIFYALL-ENTER")) {
-    //                     try (Connection conn = DatabaseUtil.getConnection();
-    //                          Statement ps = conn.createStatement()) {
-    //
-    //
-    //                         sql = "SELECT * FROM " + TableNames.CALL_TRACE_TABLE + " AS parent WHERE MESSAGE = 'WAIT-EXIT' " +
-    //                                 "AND LOCKOBJID = '" + lockObjectId + "' " +
-    //                                 "AND TIME_INSTANT >= '" + timeStamp + "' " +
-    //                                 "AND (SELECT count(*) FROM " + TableNames.CALL_TRACE_TABLE + " AS child " +
-    //                                 "WHERE child.message = 'WAIT-ENTER' " +
-    //                                 "AND LOCKOBJID = '" + lockObjectId + "' " +
-    //                                 "AND child.TIME_INSTANT >= '" + timeStamp + "' " +
-    //                                 "AND child.TIME_INSTANT <= parent.time_instant ) = 0";
-    //
-    //                         int ctId = -2;
-    //
-    //                         try (ResultSet resultSet = ps.executeQuery(sql)) {
-    //                             while (resultSet.next()) {
-    //                                 ctId = resultSet.getInt("id");
-    //                                 ctIdList.add(ctId);
-    //                             }
-    //                         }
-    //
-    //                         ctIdList.stream().forEach(id -> {
-    //                             try (ResultSet elementRS = ElementDAOImpl.selectWhere("id_exit_call_trace = " + id)) {
-    //                                 // Can be more than a single row.
-    //                                 while (elementRS.next()) {
-    //                                     int eId = elementRS.getInt("id");
-    //                                     eleIdList.add(eId);
-    //                                 }
-    //                             } catch (SQLException e) {
-    //                             }
-    //                         });
-    //                     }
-    //                 }
-    //
-    //                 List<Button> buttonList = new ArrayList<>();
-    //                 String finalPackageName = packageName;
-    //                 String finalMethodName = methodName;
-    //                 eleIdList.stream().forEach(eId -> {
-    //                     String query = "SELECT E.ID AS EID, bound_box_x_coordinate, bound_box_y_coordinate, THREAD_ID " +
-    //                             "FROM CALL_TRACE AS CT " +
-    //                             "JOIN ELEMENT AS E ON CT.ID = E.ID_ENTER_CALL_TRACE " +
-    //                             "WHERE E.ID = " + eId;
-    //                     try (ResultSet elementRS = DatabaseUtil.select(query)) {
-    //                         // try (ResultSet elementRS = ElementDAOImpl.getWhere("id = " + eId)){
-    //                         if (elementRS.next()) {
-    //                             int id = elementRS.getInt("EID");
-    //                             String targetThreadId = String.valueOf(elementRS.getInt("thread_id"));
-    //                             float xCoordinate = elementRS.getFloat("bound_box_x_coordinate");
-    //                             float yCoordinate = elementRS.getFloat("bound_box_y_coordinate");
-    //
-    //                             // go to location.
-    //                             Button jumpToButton = new Button();
-    //                             jumpToButton.setOnMouseClicked(event1 -> {
-    //                                 System.out.println("EventHandlers.handle: jumpToButton Clicked. for eleId: " + eId);
-    //                                 jumpTo(String.valueOf(eId), targetThreadId, collapsed);
-    //                             });
-    //                             buttonList.add(jumpToButton);
-    //                         }
-    //                     } catch (SQLException e) {
-    //                         e.printStackTrace();
-    //                     }
-    //                 });
-    //
-    //                 String message = "", actionMsg = "";
-    //                 switch (eventType.toUpperCase()) {
-    //                     case "WAIT-ENTER":
-    //                         message = "Wait method was invoked and therefore, \nthe lock on object ( object id = " + lockObjectId + ") \nwas released and reaquired here.";
-    //                         actionMsg = "Go to Notify or NotifyAll \nmethods invocations.";
-    //                         break;
-    //
-    //                     case "NOTIFY-ENTER":
-    //                         message = "Notify method was invoked and therefore, \nthe lock on object ( object id = " + lockObjectId + ") \nwas released here.";
-    //                         actionMsg = "Go to wait \nmethods invocations.";
-    //                         break;
-    //                     case "NOTIFYALL-ENTER":
-    //                         message = "NotifyAll method was invoked and therefore, \nthe lock on object ( object id = " + lockObjectId + ") \nwas released here.";
-    //                         actionMsg = "Go to wait \nmethods invocations.";
-    //                         break;
-    //                 }
-    //                 Label labelMessage = new Label(message);
-    //                 labelMessage.setWrapText(true);
-    //
-    //                 Label labelActionMsg = new Label(actionMsg);
-    //
-    //                 gridPane.add(labelMessage, 0, 7);
-    //                 gridPane.add(labelActionMsg, 0, 8);
-    //                 int rowIndex = 8;
-    //                 for (Button button : buttonList) {
-    //                     button.setText("Goto node");
-    //                     gridPane.add(button, 1, rowIndex++);
-    //                 }
-    //
-    //                 // Add Bookmark button
-    //                 // Group bookmarkGroup = new Group();
-    //                 final Color[] bookmarkColor = new Color[1];
-    //                 bookmarkColor[0] = Color.INDIANRED;
-    //
-    //                 ColorPicker bookmarkColorPicker = new ColorPicker(Color.INDIANRED);
-    //                 bookmarkColorPicker.getStyleClass().add("button");
-    //                 bookmarkColorPicker.setStyle(
-    //                         "-fx-color-label-visible: false; " +
-    //                                 "-fx-background-radius: 15 15 15 15;");
-    //                 bookmarkColorPicker.setOnAction(e -> {
-    //                     bookmarkColor[0] = bookmarkColorPicker.getValue();
-    //                 });
-    //                 // bookmarkColorPicker.getStyleClass().add("button");
-    //                 // bookmarkColorPicker.setStyle(
-    //                 //         "-fx-color-label-visible: false; " +
-    //                 //                 "-fx-background-radius: 15 15 15 15;");
-    //
-    //                 Button addBookmarkButton = new Button("Add Bookmark");
-    //                 Button removeBookmarkButton = new Button("Remove bookmark");
-    //
-    //                 String finalMethodNameTemp = methodName;
-    //                 addBookmarkButton.setOnMouseClicked(event1 -> {
-    //                     BookmarkDTO bookmarkDTO = new BookmarkDTO(
-    //                             String.valueOf(elementId),
-    //                             String.valueOf(threadId),
-    //                             finalMethodNameTemp,
-    //                             bookmarkColor[0].toString(),
-    //                             xCord,
-    //                             yCord,
-    //                             collapsed);
-    //
-    //                     ControllerLoader.menuController.insertBookmark(bookmarkDTO);
-    //
-    //                     removeBookmarkButton.setDisable(false);
-    //                     addBookmarkButton.setDisable(true);
-    //                 });
-    //
-    //                 boolean contains = ControllerLoader.menuController.getBookmarkDTOs().containsKey(String.valueOf(elementId));
-    //                 addBookmarkButton.setDisable(contains);
-    //                 removeBookmarkButton.setDisable(!contains);
-    //
-    //                 removeBookmarkButton.setOnMouseClicked(eve -> {
-    //                     ControllerLoader.menuController.deleteBookmark(String.valueOf(elementId));
-    //                     addBookmarkButton.setDisable(false);
-    //                 });
-    //
-    //                 HBox hBox = new HBox();
-    //                 hBox.getChildren().addAll(bookmarkColorPicker, addBookmarkButton, removeBookmarkButton);
-    //
-    //                 gridPane.add(hBox, 1, rowIndex++);
-    //                 // gridPane.add(bookmarkColorPicker, 1, rowIndex++);
-    //                 // gridPane.add(addBookmarkButton, 1, rowIndex++);
-    //                 // gridPane.add(removeBookmarkButton, 1, rowIndex++);
-    //
-    //                 popOver = new PopOver(gridPane);
-    //                 popOver.setAnimated(true);
-    //                 // popOver.detach();
-    //                 // popOver.setAutoHide(true);
-    //                 popOver.setConsumeAutoHidingEvents(false);
-    //                 popOver.show(node);
-    //
-    //             }
-    //         } catch (SQLException e) {
-    //             System.out.println("Line that threw exception: " + sql);
-    //             e.printStackTrace();
-    //         }
-    //     }
-    // };
-
     EventHandler<MouseEvent> onMouseExitToDismissPopover = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {
@@ -797,8 +476,7 @@ public class EventHandlers {
 
         if (collapsed == 0) {
             System.out.println();
-            System.out.println("EventHandlers.minMaxButtonOnClick: clicked on : " + clickedCellID);
-            System.out.println("EventHandlers.minMaxButtonOnClick: collapsed == 0: collapsing now.");
+            System.out.println("EventHandlers.minMaxButtonOnClick: clicked on : " + clickedCellID + " collapsed == 0: collapsing now.");
             // visible and un-collapsed --> visible and collapsed
             // this cell only: 0 ->   2
             // all other cells: >2 -> ++1
@@ -819,30 +497,30 @@ public class EventHandlers {
             ElementDAOImpl.updateCollapseAndDelta(clickedElementDTO);
 
             // update UI.
-            // ControllerLoader.canvasController.removeUIComponentsBetween(clickedElementDTO, nextCellId);
-            // ControllerLoader.canvasController.moveLowerTreeByDelta(clickedElementDTO);
+            ControllerLoader.canvasController.removeUIComponentsBetween(clickedElementDTO, nextCellId);
+            ControllerLoader.canvasController.moveLowerTreeByDelta(clickedElementDTO);
 
-            updateDBInBackgroundThread(clickedElementDTO, true, nextCellId, Integer.valueOf(threadId), lastCellId);
-
+            Task<Void> task = updateDBInBackgroundThread(clickedElementDTO, true, nextCellId, Integer.valueOf(threadId), lastCellId);
+            new Thread(task).start();
             // clickedCell.setCollapsed(2);
         } else if (collapsed == 2) {
             System.out.println();
             System.out.println("EventHandlers.minMaxButtonOnClick: clicked on : " + clickedCellID);
             System.out.println("EventHandlers.minMaxButtonOnClick: collapsed == 2: expanding now.");
-            // visible and collapsed --> visible and uncollapsed
+            // visible and collapsed --> visible and un-collapsed
             // this cell only :  2 ->   0
             // all other cells: >2 -> --1
             // all other cells: <0 -> ++1
 
-            expandTreeAt(clickedElementDTO, threadId);
+            Task<Void> task = expandTreeAt(clickedElementDTO, threadId);
+            new Thread(task).start();
             // clickedCell.setCollapsed(0);
         }
     }
 
 
-    private void expandTreeAt(ElementDTO clickedEleDTO, String threadId) {
-        System.out.println("EventHandlers.expandTreeAt");
-        System.out.println("clickedEleDTO = [" + clickedEleDTO + "], threadId = [" + threadId + "]");
+    private Task<Void> expandTreeAt(ElementDTO clickedEleDTO, String threadId) {
+        System.out.println("EventHandlers.expandTreeAt clickedEleDTO = [" + clickedEleDTO + "], threadId = [" + threadId + "]");
         float deltaY = clickedEleDTO.getDeltaY();
         System.out.println("deltaY = " + deltaY);
         float deltaX = clickedEleDTO.getDeltaX();
@@ -861,22 +539,26 @@ public class EventHandlers {
         clickedEleDTO.setCollapsed(0);
         ElementDAOImpl.updateCollapse(clickedEleDTO);
 
-        updateDBInBackgroundThread(clickedEleDTO, false, nextCellId, Integer.valueOf(threadId), lastCellId);
+        return updateDBInBackgroundThread(clickedEleDTO, false, nextCellId, Integer.valueOf(threadId), lastCellId);
     }
 
 
     private void expandParentTreeChain(ElementDTO elementDTO , String threadId) {
         List<ElementDTO> parentElementDTOs = ElementDAOImpl.getAllParentElementDTOs(elementDTO, threadId);
 
+        ExecutorService es = Executors.newSingleThreadExecutor();
         parentElementDTOs.stream()
-                .map(eleDTO -> {
-                    eleDTO.setDeltaY(0);
-                    eleDTO.setDeltaX(0);
-                    return eleDTO;
-                })
+                // .map(eleDTO -> {
+                //     eleDTO.setDeltaY(0);
+                //     eleDTO.setDeltaX(0);
+                //     return eleDTO;
+                // })
                 .forEach(eleDTO -> {
-                    expandTreeAt(eleDTO, threadId);
+                    Task<Void> task = expandTreeAt(eleDTO, threadId);
+                    es.submit(task);
                 });
+
+        es.shutdown();
     }
 
     public void jumpTo(String cellId, String threadId, int collapsed) {
@@ -886,9 +568,11 @@ public class EventHandlers {
             expandParentTreeChain(elementDTO, threadId);
         }
 
+        // Switch thread
         ControllerLoader.centerLayoutController.switchCurrentThread(threadId);
 
-        try (ResultSet rs = ElementDAOImpl.selectWhere("ID = " + cellId)){
+        // move scroll pane to coordinates
+        try (ResultSet rs = ElementDAOImpl.selectWhere("ID = " + cellId)) {
             if (rs.next()) {
                 double xCord = rs.getDouble("BOUND_BOX_X_COORDINATE");
                 double yCord = rs.getDouble("BOUND_BOX_Y_COORDINATE");
@@ -898,12 +582,10 @@ public class EventHandlers {
             e.printStackTrace();
         }
 
-        System.out.println("EventHandlers.jumpTo about to blink");
+        // blink node
         Platform.runLater(() -> {
             if (ControllerLoader.canvasController.nodeCellsOnUI.containsKey(cellId)) {
-                System.out.println("EventHandlers.jumpTo calling blink now");
                 ControllerLoader.canvasController.nodeCellsOnUI.get(cellId).blink();
-                System.out.println("EventHandlers.jumpTo finished blinking");
             }
         });
     }
@@ -928,7 +610,7 @@ public class EventHandlers {
         }
     }
 
-    private void updateDBInBackgroundThread(ElementDTO clickedEleDTO, boolean isCollapsed, int nextCellId, int threadId, int lastCellId) {
+    private Task<Void> updateDBInBackgroundThread(ElementDTO clickedEleDTO, boolean isCollapsing, int nextCellId, int threadId, int lastCellId) {
         double topY = clickedEleDTO.getBoundBoxYTopLeft();
         double deltaY = clickedEleDTO.getDeltaY();
 
@@ -937,8 +619,10 @@ public class EventHandlers {
         Task<Void> task = new Task<Void>() {
             @Override
             protected Void call() {
-                // get queries to update collapse values for cells, edges and highlights.
-                queryList.addAll(getSubTreeUpdateQueries(clickedEleDTO, isCollapsed, nextCellId, threadId));
+                int nextCellIdNew = ElementDAOImpl.getNextLowerSiblingOrAncestorNode(clickedEleDTO, String.valueOf(threadId));
+                int lastCellIdNew = ElementDAOImpl.getLowestCellInThread(String.valueOf(threadId));
+
+                queryList.addAll(getSubTreeUpdateQueries(clickedEleDTO, isCollapsing, nextCellIdNew, threadId));
 
                 // No update required for single line children
                 if (deltaY == 0) {
@@ -952,12 +636,12 @@ public class EventHandlers {
                 addParentChainUpdateQueryRecursive(clickedEleDTO, deltaY, queryList);
 
                 // if there is a lower sibling node, update the tree below.
-                if (nextCellId != Integer.MAX_VALUE) {
-                    getLowerTreeeUpdateQueries(topY + BoundBox.unitHeightFactor, deltaY, queryList, nextCellId, lastCellId, threadId);
+                if (nextCellIdNew != Integer.MAX_VALUE) {
+                    getLowerTreeeUpdateQueries(topY + BoundBox.unitHeightFactor, deltaY, queryList, nextCellIdNew, lastCellIdNew, threadId);
                 }
 
                 addParentHighlightResizeQueries(clickedEleDTO, queryList, threadId);
-                addChildrenHighlightResizeQueries(clickedEleDTO, isCollapsed, queryList, nextCellId, threadId);
+                addChildrenHighlightResizeQueries(clickedEleDTO, isCollapsing, queryList, nextCellIdNew, threadId);
 
                 // >> Uncomment to print all the queries in the query list
                 // System.out.println("EventHandlers.call: printing queries");
@@ -992,10 +676,11 @@ public class EventHandlers {
 
         task.setOnFailed(event -> task.getException().printStackTrace());
 
-        new Thread(task).start();
+        // new Thread(task).start();
+        return task;
     }
 
-    private List<String> getSubTreeUpdateQueries(ElementDTO elementDTO, boolean isMinimized, int endCellId, int threadId) {
+    private List<String> getSubTreeUpdateQueries(ElementDTO elementDTO, boolean isCollapsing, int endCellId, int threadId) {
 
         // Collapsed value -> description
         // 0               -> visible     AND  uncollapsed
@@ -1014,7 +699,7 @@ public class EventHandlers {
         String updateEdgeQuery;
         String updateHighlightsQuery;
 
-        if (isMinimized) {
+        if (isCollapsing) {
             // Update the collapse value in the subtree rooted at the clicked cell.
             updateCellQuery = "UPDATE " + TableNames.ELEMENT_TABLE + " AS E " +
                     "SET E.COLLAPSED = " +
@@ -1167,14 +852,14 @@ public class EventHandlers {
         });
     }
 
-    private void addChildrenHighlightResizeQueries(ElementDTO clickedEleDTO, boolean isCollapsed, List<String> queryList, int nextCellId, int threadId) {
+    private void addChildrenHighlightResizeQueries(ElementDTO clickedEleDTO, boolean isCollapsing, List<String> queryList, int nextCellId, int threadId) {
         int cellId = Integer.valueOf(clickedEleDTO.getId());
 
         if (cellId <= 1) {
             return;
         }
 
-        queryList.addAll(HighlightDAOImpl.getChildrenHighlightResizeQueries(clickedEleDTO, isCollapsed, nextCellId, threadId));
+        queryList.addAll(HighlightDAOImpl.getChildrenHighlightResizeQueries(clickedEleDTO, isCollapsing, nextCellId, threadId));
     }
 
     private void addParentHighlightResizeQueries(ElementDTO clickedEleDTO, List<String> queryList, int threadId){

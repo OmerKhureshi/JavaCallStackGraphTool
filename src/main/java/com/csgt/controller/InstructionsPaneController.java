@@ -147,7 +147,7 @@ public class InstructionsPaneController {
 
         } else {
             methodDefInfoGlyph.setIcon(FontAwesome.Glyph.ARROW_RIGHT);
-            methodDefInfoGlyph.setColor(ColorProp.RED);
+            methodDefInfoGlyph.setColor(ColorProp.GREY);
         }
     }
 

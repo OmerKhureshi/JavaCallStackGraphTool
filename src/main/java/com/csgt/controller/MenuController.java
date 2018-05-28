@@ -125,7 +125,6 @@ public class MenuController {
 
     @FXML
     private void initialize() {
-        // autoRun();
         setUpFileMenu();
         setUpRunMenu();
         setUpBookmarksMenu();
@@ -133,8 +132,8 @@ public class MenuController {
         setUpViewMenu();
         setUpSettingMenu();
         setUpDebugMenu();
-
         initMenuGraphics();
+        // autoRun();
         setRemainingMenuGraphics(false);
 
         ControllerLoader.register(this);
@@ -146,6 +145,7 @@ public class MenuController {
 
     private void autoRun() {
         setFiles();
+        onRun();
     }
 
     private void setFiles() {
@@ -155,7 +155,6 @@ public class MenuController {
         File callTraceLogFile = new File("/Users/skhureshi/Documents/Logs/CT1.txt");
         LoadedFiles.setFile(FileNames.Call_Trace.getFileName(), callTraceLogFile);
 
-        onRun();
     }
 
     private void setUpFileMenu() {
@@ -923,7 +922,7 @@ public class MenuController {
     private void setResetMenuItemGraphics(boolean enabled) {
         if (enabled) {
             resetMenuItem.setDisable(false);
-            resetGlyph.setColor(ColorProp.RED);
+            resetGlyph.setColor(ColorProp.GREY);
         } else {
             resetMenuItem.setDisable(true);
             resetGlyph.setColor(ColorProp.GREY);
