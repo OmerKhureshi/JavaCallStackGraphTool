@@ -490,7 +490,7 @@ public class ElementDAOImpl {
                 "WHERE CT.ID = E.ID_ENTER_CALL_TRACE AND " +
                 "CT.THREAD_ID = " + threadId + ")" +
                 "AND E.PARENT_ID > 1 " +
-                "AND E.COLLAPSED <> 0 " +
+                "AND E.COLLAPSED > 0 " +
                 "GROUP BY E.BOUND_BOX_X_COORDINATE " +
                 "ORDER BY ID ASC ";
 

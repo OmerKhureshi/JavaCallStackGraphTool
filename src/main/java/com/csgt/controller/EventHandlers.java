@@ -480,7 +480,7 @@ public class EventHandlers {
             // visible and un-collapsed --> visible and collapsed
             // this cell only: 0 ->   2
             // all other cells: >2 -> ++1
-            // all other cells: <0 -> --1
+            // all other cells: <=0 -> --1
 
             int nextCellId = ElementDAOImpl.getNextLowerSiblingOrAncestorNode(clickedElementDTO, threadId);
             int lastCellId = ElementDAOImpl.getLowestCellInThread(threadId);
