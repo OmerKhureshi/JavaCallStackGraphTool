@@ -87,7 +87,6 @@ public class CanvasController {
      */
     public void updateIfNeeded() {
         if (isUIDrawingRequired()) {
-        System.out.println(Thread.currentThread().getId() + ": CanvasController.updateIfNeeded: ");
             DBFetchTask.initiateTask(true);
         }
     }
@@ -96,7 +95,6 @@ public class CanvasController {
      * This methods creates and draws circle cells and Edges on the active region of the viewport.
      */
     private void addCanvasComponentsFromDB() {
-        System.out.println(Thread.currentThread().getId() + ": CanvasController.addCanvasComponentsFromDB");
         DBFetchTask.initiateTask(false);
     }
 
@@ -174,7 +172,6 @@ public class CanvasController {
             canvas.getChildren().add(nodeCell);
             nodeCell.toFront();
             ControllerLoader.getEventHandlers().setCustomMouseEventHandlers(nodeCell);
-            System.out.println("CanvasController.addNewCellToUI added nodeCell = " + nodeCell);
         }
     }
 
@@ -190,7 +187,6 @@ public class CanvasController {
         if (nodeCell != null && nodeCellsOnUI.containsKey(nodeCell.getCellId())) {
             nodeCellsOnUI.remove(nodeCell.getCellId());
             canvas.getChildren().remove(nodeCell);
-            System.out.println("CanvasController.removeCellFromUI removed nodeCell = " + nodeCell);
         }
     }
 
@@ -269,7 +265,6 @@ public class CanvasController {
         edgesOnUI.forEach((id, edge) -> {
             int intId = Integer.parseInt(id);
             if (intId > startCellId && intId < endCellId) {
-                // System.out.print(" .--" + id);
                 removeEdges.add(edge);
             }
 
@@ -283,7 +278,6 @@ public class CanvasController {
                     && thisLineEndY <= clickedCellBoundBottomY
                     && thisLineStartY >= clickedCellTopY
                     && thisLineStartX >= (clickedCellTopRightX - BoundBox.unitWidthFactor)) {
-                // System.out.print(" --" + id);
                 removeEdges.add(edge);
             }
         });
@@ -309,14 +303,12 @@ public class CanvasController {
     public void moveLowerTreeByDelta(ElementDTO elementDTO) {
         float clickedCellBottomY = elementDTO.getBoundBoxYTopLeft() + BoundBox.unitHeightFactor;
         double delta = elementDTO.getDeltaY();
-        System.out.println("CanvasController.moveLowerTreeByDelta for cell : " + elementDTO.getId() + " by : " + delta);
-        System.out.println("moving cells down:");
+
         // For each circle cell on UI that is below the clicked cell, move up by delta
         nodeCellsOnUI.forEach((thisCellID, thisNodeCell) -> {
             double thisCellTopY = thisNodeCell.getLayoutY();
 
             if (thisCellTopY >= clickedCellBottomY) {
-                System.out.print(thisNodeCell.getCellId() + ", ");
                 thisNodeCell.relocate(thisNodeCell.getLayoutX(), thisCellTopY - delta);
             }
 
@@ -446,7 +438,6 @@ public class CanvasController {
     }
 
     public void clearAndUpdate() {
-        System.out.println(Thread.currentThread().getId() + ": CanvasController.clearAndUpdate");
         clear();
         addCanvasComponentsFromDB();
     }
@@ -503,39 +494,31 @@ public class CanvasController {
 
     private boolean isUIDrawingRequired() {
         if (triggerRegion == null || activeRegion == null) {
-            System.out.println("one of region is null");
             setRegions();
         }
 
         if (!triggerRegion.contains(getViewPortDims())) {
-            System.out.println("trigger region doesnot contain viewport");
-            System.out.println("triggerRegion = " + triggerRegion);
-            System.out.println("getViewPortDims() = " + getViewPortDims());
             setRegions();
-            System.out.println("after setting regions");
-            System.out.println("triggerRegion = " + triggerRegion);
-            System.out.println("getViewPortDims() = " + getViewPortDims());
             return true;
         }
 
         return false;
     }
 
+    private double activeRegionFactor = 7;
+    private double triggerRegionFactor = 5;
+
     private void setActiveRegion() {
         BoundingBox viewPort = getViewPortDims();
 
+        double minFactor = (activeRegionFactor - 1)/2;
+
         activeRegion = new BoundingBox(
-                viewPort.getMinX() - viewPort.getWidth() * 2,
-                viewPort.getMinY() - viewPort.getHeight() * 2,
-                viewPort.getWidth() * 5,
-                viewPort.getHeight() * 5
+                viewPort.getMinX() - viewPort.getWidth() * minFactor,
+                viewPort.getMinY() - viewPort.getHeight() * minFactor,
+                viewPort.getWidth() * activeRegionFactor,
+                viewPort.getHeight() * activeRegionFactor
         );
-        //        activeRegion = new BoundingBox(
-        //         viewPort.getMinX() - viewPort.getWidth() * 3,
-        //         viewPort.getMinY() - viewPort.getHeight() * 3,
-        //         viewPort.getWidth() * 7,
-        //         viewPort.getHeight() * 7
-        // );
     }
 
     public static BoundingBox getActiveRegion() {
@@ -545,17 +528,11 @@ public class CanvasController {
     private void setTriggerRegion() {
         BoundingBox viewPort = getViewPortDims();
 
-        // triggerRegion = new BoundingBox(
-        //         activeRegion.getMinX() + viewPort.getWidth(),
-        //         activeRegion.getMinY() + viewPort.getHeight(),
-        //         viewPort.getWidth() * 5,
-        //         viewPort.getHeight() * 5
-        // );
         triggerRegion = new BoundingBox(
                 activeRegion.getMinX() + viewPort.getWidth(),
                 activeRegion.getMinY() + viewPort.getHeight(),
-                viewPort.getWidth() * 3,
-                viewPort.getHeight() * 3
+                viewPort.getWidth() * triggerRegionFactor,
+                viewPort.getHeight() * triggerRegionFactor
         );
     }
 
@@ -565,27 +542,17 @@ public class CanvasController {
         scrollPane.viewportBoundsProperty().addListener(viewportChangeListener);
         // scrollPane.widthProperty().addListener(viewportChangeListener);
         // scrollPane.heightProperty().addListener(viewportChangeListener);
-
-        // scrollPane.viewportBoundsProperty().addListener((observable, oldValue, newValue) -> {
-        //     System.out.println("scrollPane.viewportBoundsProperty()");
-        //     System.out.println("oldValue = " + oldValue);
-        //     System.out.println("newValue = " + newValue);
-        //     System.out.println();
-        // });
     }
 
     private ChangeListener valuePropListener = (observable, oldValue, newValue) -> {
-        System.out.println(Thread.currentThread().getId() + ": CanvasController.valuePropListener");
         updateIfNeeded();
     };
 
     private ChangeListener viewportChangeListener = (observable, oldValue, newValue) -> {
-        System.out.println(Thread.currentThread().getId() + ": CanvasController.viewportChangeListener");
         addCanvasComponentsFromDB();
     };
 
     private void setScrollBarPos(double hVal, double vVal) {
-        // System.out.println(Thread.currentThread().getId() + ": CanvasController.setScrollBarPos");
         removeListeners();
         scrollPane.setHvalue(hVal);
         scrollPane.setVvalue(vVal);

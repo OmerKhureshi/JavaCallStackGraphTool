@@ -256,6 +256,7 @@ public class MenuController {
     private void setUpViewMenu() {
         saveImageMenuItem.setOnAction(event -> saveUIImage());
 
+        refreshMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.R, KeyCombination.ALT_DOWN, KeyCombination.CONTROL_DOWN));
         refreshMenuItem.setOnAction(event -> ControllerLoader.canvasController.clearAndUpdate());
     }
 

@@ -55,11 +55,9 @@ public class EventHandlers {
 
         // *****************
         // Make elements draggable.
-        node.setOnMousePressed(onMousePressedEventHandler);
-        node.setOnMouseDragged(onMouseDraggedEventHandler);
-        node.setOnMouseReleased(onMouseReleasedEventHandler);
-
-
+        // node.setOnMousePressed(onMousePressedEventHandler);
+        // node.setOnMouseDragged(onMouseDraggedEventHandler);
+        // node.setOnMouseReleased(onMouseReleasedEventHandler);
     }
 
     private EventHandler<MouseEvent> infoButtonOnClickEventHandler = event -> {
@@ -279,7 +277,6 @@ public class EventHandlers {
                             // go to location.
                             Button jumpToButton = new Button();
                             jumpToButton.setOnMouseClicked(event1 -> {
-                                System.out.println("EventHandlers.handle: jumpToButton Clicked. for eleId: " + eId);
                                 jumpTo(String.valueOf(eId), targetThreadId, targetElementCollapsed);
                             });
                             buttonList.add(jumpToButton);
@@ -529,7 +526,6 @@ public class EventHandlers {
 
 
     private Task<Void> expandTreeAt(ElementDTO clickedEleDTO, String threadId, boolean isUIUpdateRequired) {
-        System.out.println(Thread.currentThread().getId() + ": EventHandlers.expandTreeAt start for: " + clickedEleDTO.getId());
         float deltaY = clickedEleDTO.getDeltaY();
         float deltaX = clickedEleDTO.getDeltaX();
 
@@ -563,8 +559,6 @@ public class EventHandlers {
     }
 
     public void jumpTo(String cellId, String threadId, int collapsed) {
-        // ControllerLoader.canvasController.removeListeners();
-        // make changes in DB if needed
         if (collapsed != 0) {
             ElementDTO elementDTO = ElementDAOImpl.getElementDTO(cellId);
             expandParentTreeChain(elementDTO, threadId);
@@ -587,7 +581,6 @@ public class EventHandlers {
         Platform.runLater(() -> {
             ControllerLoader.canvasController.clearAndUpdate();
 
-            // ControllerLoader.canvasController.setListeners();
             // blink node
             if (ControllerLoader.canvasController.nodeCellsOnUI.containsKey(cellId)) {
                 ControllerLoader.canvasController.nodeCellsOnUI.get(cellId).blink();
@@ -616,7 +609,6 @@ public class EventHandlers {
     }
 
     private Task<Void> updateDBInBackgroundThread(ElementDTO clickedEleDTO, boolean isCollapsing, int nextCellId, int threadId, int lastCellId, boolean isUIUpdateRequired) {
-        System.out.println(Thread.currentThread().getId() + ": EventHandlers.updateDBInBackgroundThread start for: " + clickedEleDTO.getId());
         double topY = clickedEleDTO.getBoundBoxYTopLeft();
         double deltaY = clickedEleDTO.getDeltaY();
 
@@ -625,7 +617,6 @@ public class EventHandlers {
         Task<Void> task = new Task<Void>() {
             @Override
             protected Void call() {
-                System.out.println(Thread.currentThread().getId() + ": EventHandlers.updateDBInBackgroundThread.call start for: " + clickedEleDTO.getId());
                 int nextCellIdNew = ElementDAOImpl.getNextLowerSiblingOrAncestorNode(clickedEleDTO, String.valueOf(threadId));
                 int lastCellIdNew = ElementDAOImpl.getLowestCellInThread(String.valueOf(threadId));
 
@@ -633,7 +624,6 @@ public class EventHandlers {
 
                 // No update required for single line children
                 if (deltaY == 0) {
-                    System.out.println("Optimized for single line children collapses.");
                     addParentHighlightResizeQueries(clickedEleDTO, queryList, threadId);
                     DatabaseUtil.executeQueryList(queryList);
 
@@ -657,25 +647,20 @@ public class EventHandlers {
 
                 DatabaseUtil.executeQueryList(queryList);
 
-                System.out.println(Thread.currentThread().getId() + ": EventHandlers.updateDBInBackgroundThread.call ended for: " + clickedEleDTO.getId());
                 return null;
             }
 
             @Override
             protected void succeeded() {
-                System.out.println(Thread.currentThread().getId() + ": EventHandlers.updateDBInBackgroundThread.succeeded start for: " + clickedEleDTO.getId() + " : " + isUIUpdateRequired);
-
                 super.succeeded();
 
                 enableClicks();
 
                 if (isUIUpdateRequired) {
-                    System.out.println(Thread.currentThread().getId() + ": EventHandlers.succeeded before update");
-                    ControllerLoader.canvasController.clearAndUpdate();
-                    System.out.println(Thread.currentThread().getId() + ": EventHandlers.succeeded after update");
+                    Platform.runLater(() -> {
+                        ControllerLoader.canvasController.clearAndUpdate();
+                    });
                 }
-
-                System.out.println(Thread.currentThread().getId() + ": EventHandlers.updateDBInBackgroundThread.succeeded end for: " + clickedEleDTO.getId());
             }
 
             @Override
@@ -692,7 +677,6 @@ public class EventHandlers {
         task.setOnFailed(event -> task.getException().printStackTrace());
 
         // new Thread(task).start();
-        System.out.println(Thread.currentThread().getId() + ": EventHandlers.updateDBInBackgroundThread ended");
         return task;
     }
 
