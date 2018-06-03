@@ -12,13 +12,18 @@ public class CustomScrollPane extends ScrollPane {
     private static double scaleValue = 1.0;
 
     public CustomScrollPane(Node content) {
+        // Group contentGroup = new Group();
+        // Group containerGroup = new Group();
+        // contentGroup.getChildren().add(containerGroup);
+        // containerGroup.getChildren().add(content);
+        // setContent(contentGroup);
+        // Scale scaleTransform = new Scale(scaleValue, scaleValue, 0, 0);
+        // containerGroup.getTransforms().add(scaleTransform);
+
         Group contentGroup = new Group();
-        Group containerGroup = new Group();
-        contentGroup.getChildren().add(containerGroup);
-        containerGroup.getChildren().add(content);
+        contentGroup.getChildren().add(content);
         setContent(contentGroup);
-        Scale scaleTransform = new Scale(scaleValue, scaleValue, 0, 0);
-        containerGroup.getTransforms().add(scaleTransform);
+
 
         setHbarPolicy(ScrollBarPolicy.ALWAYS);
         setVbarPolicy(ScrollBarPolicy.ALWAYS);

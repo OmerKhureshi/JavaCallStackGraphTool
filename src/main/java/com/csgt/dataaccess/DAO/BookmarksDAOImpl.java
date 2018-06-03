@@ -29,7 +29,7 @@ public class BookmarksDAOImpl {
                         "FOREIGN KEY(element_id) REFERENCES " + TableNames.ELEMENT_TABLE + "(ID) " +
                         ")";
                 ps.execute(sql);
-                System.out.println("** Creating table " + TableNames.BOOKMARKS);
+                // System.out.println("** Creating table " + TableNames.BOOKMARKS);
             } catch (SQLException e) {
                 e.printStackTrace();
             }

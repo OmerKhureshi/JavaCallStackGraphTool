@@ -26,7 +26,7 @@ public class FilesDAOImpl {
                         "FILE_PATH VARCHAR(200) " +
                         ")";
                 ps.execute(sql);
-                System.out.println("** Creating table " + TableNames.FILES_TABLE);
+                // System.out.println("** Creating table " + TableNames.FILES_TABLE);
             } catch (SQLException e) {
                 e.printStackTrace();
             }

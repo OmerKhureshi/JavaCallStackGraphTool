@@ -7,6 +7,7 @@ import com.csgt.dataaccess.DTO.BookmarkDTO;
 import com.csgt.dataaccess.DatabaseUtil;
 import com.csgt.dataaccess.TableNames;
 import com.csgt.presentation.graph.ColorProp;
+import com.csgt.presentation.graph.NodeCell;
 import com.csgt.presentation.graph.SizeProp;
 import com.csgt.presentation.CustomProgressBar;
 import com.csgt.controller.files.FileNames;
@@ -104,6 +105,8 @@ public class MenuController {
     private Menu debugMenu;
     @FXML
     private MenuItem printViewPortDimsMenuItem;
+    @FXML
+    private  MenuItem printNodeCountMenuItem;
 
     // Bookmarks menu button
     private Glyph bookmarksGlyph;
@@ -160,7 +163,6 @@ public class MenuController {
     private void setUpFileMenu() {
         chooseMethodDefMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.M, KeyCombination.ALT_DOWN));
         chooseMethodDefMenuItem.setOnAction(event -> {
-            System.out.println("MenuController.setUpFileMenu choosing method def file.");
             try {
                 File methodDefLogFile = ControllerUtil.fileChooser("Choose method definition log fileMenu.", "Text Files", "*.txt");
                 if (methodDefLogFile == null) {
@@ -176,7 +178,6 @@ public class MenuController {
 
         chooseCallTraceMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.C, KeyCombination.ALT_DOWN));
         chooseCallTraceMenuItem.setOnAction(event -> {
-            System.out.println("MenuController.setUpFileMenu choosing call trace file");
             try {
                 File callTraceLogFile = ControllerUtil.fileChooser("Choose call trace log fileMenu.", "Text Files", "*.txt");
                 if (callTraceLogFile == null) {
@@ -192,7 +193,6 @@ public class MenuController {
 
         chooseDBMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.D, KeyCombination.ALT_DOWN));
         chooseDBMenuItem.setOnAction(event -> {
-            System.out.println("MenuController.setUpFileMenu choosing dataaccess.");
             try {
                 File dbFile = ControllerUtil.directoryChooser("Choose an existing database.");
                 if (dbFile == null) {
@@ -272,6 +272,16 @@ public class MenuController {
             System.out.println(ControllerLoader.canvasController.scrollPane.getViewportBounds());
             System.out.println(ControllerLoader.canvasController.getViewPortDims());
         });
+
+        printNodeCountMenuItem.setOnAction(event -> {
+            System.out.println("Count of nodes: " + ControllerLoader.canvasController.nodeCellsOnUI.size());
+            Map<String, NodeCell> map = new TreeMap<>(ControllerLoader.canvasController.nodeCellsOnUI);
+            System.out.println();
+            map.forEach((s, nodeCell) -> {
+                System.out.print(s + ", ");
+            });
+            System.out.println();
+        });
     }
 
     private void onRun() {
@@ -286,11 +296,9 @@ public class MenuController {
 
         // No need to parse log file and compute graph if loading from DB.
         if (LoadedFiles.isLoadedFromDB()) {
-            System.out.println("MenuController.onRun loading from dataaccess without parsing.");
             ControllerLoader.mainController.loadGraphPane();
             postGraphLoadProcess();
         } else {
-            System.out.println("MenuController.onRun loading from log file. parsing now");
             customProgressBar = new CustomProgressBar("", "");
 
             Task<Void> parseTask = new ParseFileTask();

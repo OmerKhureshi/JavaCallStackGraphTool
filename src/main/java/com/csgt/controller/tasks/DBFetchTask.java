@@ -22,24 +22,31 @@ public class DBFetchTask extends Task<Void> {
     private boolean isRemovalRequired = true;
 
     public static void initiateTask(boolean isRemovalRequired) {
+        System.out.println("DBFetchTask.initiateTask isRemovealReq: " + isRemovalRequired);
         DBFetchTask dbFetchTask = new DBFetchTask();
         dbFetchTask.isRemovalRequired = isRemovalRequired;
         dbFetchTask.run();
+
+        dbFetchTask.setOnFailed(event -> dbFetchTask.getException().printStackTrace());
+        System.out.println("DBFetchTask.initiateTask ended");
     }
 
     @Override
     protected Void call(){
+        System.out.println(Thread.currentThread().getId() + ": DBFetchTask.call start");
         fetchFromDB();
+        System.out.println(Thread.currentThread().getId() + ": DBFetchTask.call ended");
         return null;
     }
 
     @Override
     protected void succeeded() {
         super.succeeded();
-
+        System.out.println(Thread.currentThread().getId() + ": DBFetchTask.succeeded start");
         if (nodeCells != null && edges!= null && highlightRectList != null) {
             ControllerLoader.canvasController.processTaskResults(nodeCells, edges, highlightRectList, bookmarkDTOMap, isRemovalRequired);
         }
+        System.out.println(Thread.currentThread().getId() + ": DBFetchTask.succeeded end");
     }
 
     @Override

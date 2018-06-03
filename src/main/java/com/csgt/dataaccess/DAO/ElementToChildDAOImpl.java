@@ -25,7 +25,7 @@ public class ElementToChildDAOImpl {
                         // "CONSTRAINT foreignKeyTwo FOREIGN KEY(child_id) REFERENCES " + TableNames.ELEMENT_TABLE + "(ID)" +
                         ")";
                 ps.execute(sql);
-                System.out.println("** Creating table " + TableNames.ELEMENT_TO_CHILD_TABLE);
+                // System.out.println("** Creating table " + TableNames.ELEMENT_TO_CHILD_TABLE);
             } catch (SQLException e) {
                 System.out.println("ElementToChildDAOImpl.createTable exception caused by query: " + sql);
                 e.printStackTrace();

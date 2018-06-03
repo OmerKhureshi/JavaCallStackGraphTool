@@ -42,7 +42,7 @@ public class HighlightDAOImpl {
                         "FOREIGN KEY(method_id) REFERENCES " + TableNames.METHOD_DEFINITION_TABLE + "(ID)" +
                         ")";
                 ps.execute(sql);
-                System.out.println("** Creating table " + TableNames.HIGHLIGHT_ELEMENT);
+                // System.out.println("** Creating table " + TableNames.HIGHLIGHT_ELEMENT);
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -388,7 +388,7 @@ public class HighlightDAOImpl {
                     "FROM " + TableNames.HIGHLIGHT_ELEMENT + " " +
                     "WHERE  ELEMENT_ID > " + cellId + " " +
                     "AND ELEMENT_ID < " + nextCellId + " " +
-                    "AND COLLAPSED IN (0, 2) " +
+                    // "AND COLLAPSED IN (0, 2) " +
                     "AND HIGHLIGHT_TYPE = 'FULL' " +
                     "AND THREAD_ID = " + threadId;
 
@@ -406,13 +406,12 @@ public class HighlightDAOImpl {
                             "((SELECT MAX(E1.BOUND_BOX_X_TOP_RIGHT) FROM " + TableNames.ELEMENT_TABLE + " AS E1 " +
                             "JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT ON E1.ID_ENTER_CALL_TRACE = CT.ID " +
                             "WHERE E1.BOUND_BOX_Y_COORDINATE >= " + startY + " " +
-                            "AND E1.BOUND_BOX_Y_COORDINATE <= " + ( startY + height) + " " +
+                            "AND E1.BOUND_BOX_Y_COORDINATE <= " + (startY + height) + " " +
                             "AND E1.BOUND_BOX_X_COORDINATE >= " + startX + " " +
                             "AND CT.THREAD_ID = " + threadId + " " +
                             "AND E1.COLLAPSED IN (0, 2)" +
                             ") - H.START_X + " + widthOffset + ") " +
                             "WHERE H.ID = " + rs.getInt("ID");
-
                     queries.add(updatChildrenHighlightsQuery);
                 }
             } catch (SQLException e) {

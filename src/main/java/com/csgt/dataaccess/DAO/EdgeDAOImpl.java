@@ -39,7 +39,7 @@ public class EdgeDAOImpl {
                         "FOREIGN KEY(fk_target_element_id) REFERENCES " + TableNames.ELEMENT_TABLE + "(ID)" +
                         ")";
                 ps.execute(sql);
-                System.out.println("** Creating table " + TableNames.EDGE_TABLE);
+                // System.out.println("** Creating table " + TableNames.EDGE_TABLE);
             } catch (SQLException e) {
                 System.out.println("EdgeDAOImpl.createTable: exception caused by query: " + sql);
                 e.printStackTrace();

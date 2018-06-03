@@ -52,6 +52,14 @@ public class EventHandlers {
     public void setCustomMouseEventHandlers(final Node node) {
         ((NodeCell)node).getInfoStackPane().setOnMousePressed(infoButtonOnClickEventHandler);
         ((NodeCell)node).getMinMaxStackPane().setOnMousePressed(minMaxButtonOnClickEventHandler);
+
+        // *****************
+        // Make elements draggable.
+        node.setOnMousePressed(onMousePressedEventHandler);
+        node.setOnMouseDragged(onMouseDraggedEventHandler);
+        node.setOnMouseReleased(onMouseReleasedEventHandler);
+
+
     }
 
     private EventHandler<MouseEvent> infoButtonOnClickEventHandler = event -> {
@@ -475,8 +483,7 @@ public class EventHandlers {
         // <0              -> not visible AND  collapsed
 
         if (collapsed == 0) {
-            System.out.println();
-            System.out.println("EventHandlers.minMaxButtonOnClick: clicked on : " + clickedCellID + " collapsed == 0: collapsing now.");
+            System.out.println("Minimizing node: " + clickedCellID);
             // visible and un-collapsed --> visible and collapsed
             // this cell only: 0 ->   2
             // all other cells: >2 -> ++1
@@ -500,31 +507,31 @@ public class EventHandlers {
             ControllerLoader.canvasController.removeUIComponentsBetween(clickedElementDTO, nextCellId);
             ControllerLoader.canvasController.moveLowerTreeByDelta(clickedElementDTO);
 
-            Task<Void> task = updateDBInBackgroundThread(clickedElementDTO, true, nextCellId, Integer.valueOf(threadId), lastCellId);
+            Task<Void> task = updateDBInBackgroundThread(clickedElementDTO, true, nextCellId, Integer.valueOf(threadId), lastCellId, true);
             new Thread(task).start();
             // clickedCell.setCollapsed(2);
         } else if (collapsed == 2) {
-            System.out.println();
-            System.out.println("EventHandlers.minMaxButtonOnClick: clicked on : " + clickedCellID);
-            System.out.println("EventHandlers.minMaxButtonOnClick: collapsed == 2: expanding now.");
+            System.out.println("Maximizing node: " + clickedCellID);
             // visible and collapsed --> visible and un-collapsed
             // this cell only :  2 ->   0
             // all other cells: >2 -> --1
             // all other cells: <0 -> ++1
 
-            Task<Void> task = expandTreeAt(clickedElementDTO, threadId);
-            new Thread(task).start();
+            Task<Void> task = expandTreeAt(clickedElementDTO, threadId, true);
+            // new Thread(task).start();
             // clickedCell.setCollapsed(0);
+
+            ExecutorService es = Executors.newSingleThreadExecutor();
+            es.submit(task);
+            es.shutdown();
         }
     }
 
 
-    private Task<Void> expandTreeAt(ElementDTO clickedEleDTO, String threadId) {
-        System.out.println("EventHandlers.expandTreeAt clickedEleDTO = [" + clickedEleDTO + "], threadId = [" + threadId + "]");
+    private Task<Void> expandTreeAt(ElementDTO clickedEleDTO, String threadId, boolean isUIUpdateRequired) {
+        System.out.println(Thread.currentThread().getId() + ": EventHandlers.expandTreeAt start for: " + clickedEleDTO.getId());
         float deltaY = clickedEleDTO.getDeltaY();
-        System.out.println("deltaY = " + deltaY);
         float deltaX = clickedEleDTO.getDeltaX();
-        System.out.println("deltaX = " + deltaX);
 
         int nextCellId = ElementDAOImpl.getNextLowerSiblingOrAncestorNode(clickedEleDTO, threadId);
         int lastCellId = ElementDAOImpl.getLowestCellInThread(threadId);
@@ -539,7 +546,7 @@ public class EventHandlers {
         clickedEleDTO.setCollapsed(0);
         ElementDAOImpl.updateCollapse(clickedEleDTO);
 
-        return updateDBInBackgroundThread(clickedEleDTO, false, nextCellId, Integer.valueOf(threadId), lastCellId);
+        return updateDBInBackgroundThread(clickedEleDTO, false, nextCellId, Integer.valueOf(threadId), lastCellId, isUIUpdateRequired);
     }
 
 
@@ -547,21 +554,16 @@ public class EventHandlers {
         List<ElementDTO> parentElementDTOs = ElementDAOImpl.getAllParentElementDTOs(elementDTO, threadId);
 
         ExecutorService es = Executors.newSingleThreadExecutor();
-        parentElementDTOs.stream()
-                // .map(eleDTO -> {
-                //     eleDTO.setDeltaY(0);
-                //     eleDTO.setDeltaX(0);
-                //     return eleDTO;
-                // })
-                .forEach(eleDTO -> {
-                    Task<Void> task = expandTreeAt(eleDTO, threadId);
-                    es.submit(task);
-                });
+        parentElementDTOs.forEach(eleDTO -> {
+            Task<Void> task = expandTreeAt(eleDTO, threadId, true);
+            es.submit(task);
+        });
 
         es.shutdown();
     }
 
     public void jumpTo(String cellId, String threadId, int collapsed) {
+        // ControllerLoader.canvasController.removeListeners();
         // make changes in DB if needed
         if (collapsed != 0) {
             ElementDTO elementDTO = ElementDAOImpl.getElementDTO(cellId);
@@ -582,8 +584,11 @@ public class EventHandlers {
             e.printStackTrace();
         }
 
-        // blink node
         Platform.runLater(() -> {
+            ControllerLoader.canvasController.clearAndUpdate();
+
+            // ControllerLoader.canvasController.setListeners();
+            // blink node
             if (ControllerLoader.canvasController.nodeCellsOnUI.containsKey(cellId)) {
                 ControllerLoader.canvasController.nodeCellsOnUI.get(cellId).blink();
             }
@@ -610,7 +615,8 @@ public class EventHandlers {
         }
     }
 
-    private Task<Void> updateDBInBackgroundThread(ElementDTO clickedEleDTO, boolean isCollapsing, int nextCellId, int threadId, int lastCellId) {
+    private Task<Void> updateDBInBackgroundThread(ElementDTO clickedEleDTO, boolean isCollapsing, int nextCellId, int threadId, int lastCellId, boolean isUIUpdateRequired) {
+        System.out.println(Thread.currentThread().getId() + ": EventHandlers.updateDBInBackgroundThread start for: " + clickedEleDTO.getId());
         double topY = clickedEleDTO.getBoundBoxYTopLeft();
         double deltaY = clickedEleDTO.getDeltaY();
 
@@ -619,6 +625,7 @@ public class EventHandlers {
         Task<Void> task = new Task<Void>() {
             @Override
             protected Void call() {
+                System.out.println(Thread.currentThread().getId() + ": EventHandlers.updateDBInBackgroundThread.call start for: " + clickedEleDTO.getId());
                 int nextCellIdNew = ElementDAOImpl.getNextLowerSiblingOrAncestorNode(clickedEleDTO, String.valueOf(threadId));
                 int lastCellIdNew = ElementDAOImpl.getLowestCellInThread(String.valueOf(threadId));
 
@@ -650,17 +657,25 @@ public class EventHandlers {
 
                 DatabaseUtil.executeQueryList(queryList);
 
+                System.out.println(Thread.currentThread().getId() + ": EventHandlers.updateDBInBackgroundThread.call ended for: " + clickedEleDTO.getId());
                 return null;
             }
 
             @Override
             protected void succeeded() {
+                System.out.println(Thread.currentThread().getId() + ": EventHandlers.updateDBInBackgroundThread.succeeded start for: " + clickedEleDTO.getId() + " : " + isUIUpdateRequired);
+
                 super.succeeded();
 
                 enableClicks();
-                ControllerLoader.canvasController.clearAndUpdate();
 
-                System.out.println("==================== updateDBInBackgroundThread Successful. ====================");
+                if (isUIUpdateRequired) {
+                    System.out.println(Thread.currentThread().getId() + ": EventHandlers.succeeded before update");
+                    ControllerLoader.canvasController.clearAndUpdate();
+                    System.out.println(Thread.currentThread().getId() + ": EventHandlers.succeeded after update");
+                }
+
+                System.out.println(Thread.currentThread().getId() + ": EventHandlers.updateDBInBackgroundThread.succeeded end for: " + clickedEleDTO.getId());
             }
 
             @Override
@@ -677,6 +692,7 @@ public class EventHandlers {
         task.setOnFailed(event -> task.getException().printStackTrace());
 
         // new Thread(task).start();
+        System.out.println(Thread.currentThread().getId() + ": EventHandlers.updateDBInBackgroundThread ended");
         return task;
     }
 
@@ -873,31 +889,26 @@ public class EventHandlers {
 
 
     @SuppressWarnings("unused")
-    // EventHandler<MouseEvent> onMousePressedEventHandler = new EventHandler<MouseEvent>() {
-            //     @Override
-            //     public void handle(MouseEvent event) {
-            //         Node node = (Node) event.getSource();
-            //         double scale = graph.getScale();
-            //         dragContext.x = node.getBoundsInParent().getMinX() * scale - event.getScreenX();
-            //         dragContext.y = node.getBoundsInParent().getMinY() * scale - event.getScreenY();
-            //     }
-            // };
+    EventHandler<MouseEvent> onMousePressedEventHandler = new EventHandler<MouseEvent>() {
+        @Override
+        public void handle(MouseEvent event) {
+            Node node = (Node) event.getSource();
+            dragContext.x = node.getBoundsInParent().getMinX() - event.getScreenX();
+            dragContext.y = node.getBoundsInParent().getMinY() - event.getScreenY();
+        }
+    };
 
-            // EventHandler<MouseEvent> onMouseDraggedEventHandler = new EventHandler<MouseEvent>() {
-            //     @Override
-            //     public void handle(MouseEvent event) {
-            //         Node node = (Node) event.getSource();
-            //         double offsetX = event.getScreenX() + dragContext.x;
-            //         double offsetY = event.getScreenY() + dragContext.y;
-            //         // adjust the offset in case we are zoomed
-            //         double scale = graph.getScale();
-            //         offsetX /= scale;
-            //         offsetY /= scale;
-            //         node.relocate(offsetX, offsetY);
-            //     }
-            // };
+    EventHandler<MouseEvent> onMouseDraggedEventHandler = new EventHandler<MouseEvent>() {
+        @Override
+        public void handle(MouseEvent event) {
+            Node node = (Node) event.getSource();
+            double offsetX = event.getScreenX() + dragContext.x;
+            double offsetY = event.getScreenY() + dragContext.y;
+            node.relocate(offsetX, offsetY);
+        }
+    };
 
-            EventHandler<MouseEvent> onMouseReleasedEventHandler = event -> {
+    EventHandler<MouseEvent> onMouseReleasedEventHandler = event -> {
     };
 
     class DragContext {

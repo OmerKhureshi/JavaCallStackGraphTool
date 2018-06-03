@@ -133,8 +133,6 @@ public class InstructionsPaneController {
     }
 
     public void setMethodDefGraphics(boolean enabled) {
-        System.out.println("InstructionsPaneController.setMethodDefGraphics");
-        System.out.println("enabled = [" + enabled + "]");
         if (enabled) {
             // methodDefInfoLabel.setWrapText(true);
             // methodDefInfoLabel.setTextOverrun(OverrunStyle.CENTER_ELLIPSIS);

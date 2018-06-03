@@ -92,7 +92,7 @@ public class DatabaseUtil {
         } catch (SQLException e) {
             String sqlError = e.getSQLState();
             if (sqlError.equals("XJ015")) {
-                System.out.println("Derby database shutdown successful.");
+                // System.out.println("Derby database shutdown successful.");
             }
         }
     }
@@ -414,7 +414,6 @@ public class DatabaseUtil {
     }
 
     public static void resetDB() {
-        System.out.println("DatabaseUtil.resetDB");
         shutdownDatabase();
         CallTraceDAOImpl.dropTable();
         MethodDefDAOImpl.dropTable();

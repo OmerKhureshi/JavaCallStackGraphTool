@@ -32,7 +32,7 @@ public class CallTraceDAOImpl {
                         // "FOREIGN KEY(method_id) REFERENCES " + TableNames.METHOD_DEFINITION_TABLE + "(ID)" +
                         ")";
                 ps.execute(sql);
-                System.out.println("** Creating table " + TableNames.CALL_TRACE_TABLE);
+                // System.out.println("** Creating table " + TableNames.CALL_TRACE_TABLE);
             } catch (SQLException e) {
                 e.printStackTrace();
             }
