@@ -428,6 +428,10 @@ public class MenuController {
         colorsMap = new HashMap<>();
         anyColorChange = false;
 
+        int subtreeCheckBoxColInd = 0;
+        int methodNameColInd = 1;
+        int colorPickerColInd = 2;
+
         GridPane gridPane = new GridPane();
         gridPane.setPadding(SizeProp.INSETS);
         gridPane.setHgap(10);
@@ -438,31 +442,30 @@ public class MenuController {
         Label headingCol1 = new Label("Package and method name");
         headingCol1.setWrapText(true);
         headingCol1.setFont(Font.font("Verdana", FontWeight.BOLD, headingCol1.getFont().getSize() * 1.1));
-        GridPane.setConstraints(headingCol1, 0, 0);
+        GridPane.setConstraints(headingCol1, methodNameColInd, 0);
         GridPane.setHalignment(headingCol1, HPos.CENTER);
 
-        Label headingCol2 = new Label("Highlight node only");
-        headingCol2.setWrapText(true);
-        headingCol2.setFont(Font.font("Verdana", FontWeight.BOLD, headingCol2.getFont().getSize() * 1.1));
-        GridPane.setConstraints(headingCol2, 1, 0);
-        GridPane.setHalignment(headingCol2, HPos.CENTER);
+        // Label headingCol2 = new Label("Highlight node only");
+        // headingCol2.setWrapText(true);
+        // headingCol2.setFont(Font.font("Verdana", FontWeight.BOLD, headingCol2.getFont().getSize() * 1.1));
+        // GridPane.setConstraints(headingCol2, 1, 0);
+        // GridPane.setHalignment(headingCol2, HPos.CENTER);
 
         Label headingCol3 = new Label("Highlight node subtree");
         headingCol3.setWrapText(true);
         headingCol3.setFont(Font.font("Verdana", FontWeight.BOLD, headingCol3.getFont().getSize() * 1.1));
-        GridPane.setConstraints(headingCol3, 2, 0);
+        GridPane.setConstraints(headingCol3, subtreeCheckBoxColInd, 0);
         GridPane.setHalignment(headingCol3, HPos.CENTER);
 
 
         Label headingCol4 = new Label("Choose color");
         headingCol4.setWrapText(true);
         headingCol4.setFont(Font.font("Verdana", FontWeight.BOLD, headingCol4.getFont().getSize() * 1.1));
-        GridPane.setConstraints(headingCol4, 3, 0);
+        GridPane.setConstraints(headingCol4, colorPickerColInd, 0);
         GridPane.setHalignment(headingCol4, HPos.CENTER);
 
-
         gridPane.getChildren().addAll(
-                headingCol1, headingCol2, headingCol3, headingCol4
+                headingCol3, headingCol1, headingCol4
         );
 
         applyButton = new Button("Apply");
@@ -532,30 +535,30 @@ public class MenuController {
                     Label name = new Label(fullName);
                     name.setWrapText(true);
                     // name.setMaxWidth(250);
-                    GridPane.setConstraints(name, 0, rowInd.get());
-                    GridPane.setHalignment(name, HPos.CENTER);
+                    GridPane.setConstraints(name, methodNameColInd, rowInd.get());
+                    GridPane.setHalignment(name, HPos.LEFT);
                     GridPane.setHgrow(name, Priority.ALWAYS);
 
 
                     // First checkbox
-                    CheckBox firstCB = new CheckBox();
-                    GridPane.setConstraints(firstCB, 1, rowInd.get());
-                    GridPane.setHalignment(firstCB, HPos.CENTER);
-                    GridPane.setValignment(firstCB, VPos.CENTER);
-                    GridPane.setHgrow(firstCB, Priority.ALWAYS);
-                    firstCB.selectedProperty().addListener((observable, oldValue, newValue) -> {
-                        if (newValue) {
-                            firstCBMap.put(fullName, firstCB);
-                        } else {
-                            firstCBMap.remove(fullName);
-                        }
-                    });
+                    // CheckBox firstCB = new CheckBox();
+                    // GridPane.setConstraints(firstCB, 1, rowInd.get());
+                    // GridPane.setHalignment(firstCB, HPos.CENTER);
+                    // GridPane.setValignment(firstCB, VPos.CENTER);
+                    // GridPane.setHgrow(firstCB, Priority.ALWAYS);
+                    // firstCB.selectedProperty().addListener((observable, oldValue, newValue) -> {
+                    //     if (newValue) {
+                    //         firstCBMap.put(fullName, firstCB);
+                    //     } else {
+                    //         firstCBMap.remove(fullName);
+                    //     }
+                    // });
 
 
                     // Second checkbox
                     CheckBox secondCB = new CheckBox();
                     // secondCB.setAlignment(Pos.CENTER);
-                    GridPane.setConstraints(secondCB, 2, rowInd.get());
+                    GridPane.setConstraints(secondCB, subtreeCheckBoxColInd, rowInd.get());
                     GridPane.setHalignment(secondCB, HPos.CENTER);
                     GridPane.setValignment(secondCB, VPos.CENTER);
                     GridPane.setHgrow(secondCB, Priority.ALWAYS);
@@ -575,7 +578,7 @@ public class MenuController {
                     colorPicker.setStyle(
                             "-fx-color-label-visible: false; " +
                                     "-fx-background-radius: 15 15 15 15;");
-                    GridPane.setConstraints(colorPicker, 3, rowInd.get());
+                    GridPane.setConstraints(colorPicker, colorPickerColInd, rowInd.get());
                     GridPane.setHalignment(colorPicker, HPos.CENTER);
                     GridPane.setValignment(colorPicker, VPos.CENTER);
                     GridPane.setHgrow(colorPicker, Priority.ALWAYS);
@@ -592,7 +595,7 @@ public class MenuController {
                     rowInd.incrementAndGet();
 
                     // Put every thing together
-                    gridPane.getChildren().addAll(name, firstCB, secondCB, colorPicker);
+                    gridPane.getChildren().addAll(name, secondCB, colorPicker);
 
                 });
             }

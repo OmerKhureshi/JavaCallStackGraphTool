@@ -24,7 +24,7 @@ public class CallTraceDAOImpl {
                         "process_id INTEGER not null, " +
                         "thread_id INTEGER, " +
                         "method_id INTEGER, " +
-                        "message VARCHAR(20), " +
+                        "event_type VARCHAR(20), " +
                         "parameters VARCHAR(800), " +
                         "lockObjId VARCHAR(50), " +
                         // "time_instant VARCHAR(24)" +
@@ -69,7 +69,7 @@ public class CallTraceDAOImpl {
                     "process_id, " +
                     "thread_id, " +
                     "method_id, " +
-                    "message, " +
+                    "event_type, " +
                     "parameters, " +
                     "lockObjId, " +
                     "time_instant" +

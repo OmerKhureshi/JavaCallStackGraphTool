@@ -303,9 +303,9 @@ public class ElementDAOImpl {
         // Get element properties for those elements that are inside the expanded region calculated above.
         String sql = "SELECT E.ID AS EID, parent_id, collapsed, " +
                 "bound_box_x_coordinate, bound_box_y_coordinate, " +
-                "message, id_enter_call_trace, method_id, " +
+                "EVENT_TYPE, id_enter_call_trace, method_id, " +
                 "(CASE " +
-                "   WHEN M.METHOD_NAME IS null THEN MESSAGE " +
+                "   WHEN M.METHOD_NAME IS null THEN EVENT_TYPE " +
                 "   ELSE M.METHOD_NAME " +
                 "END) AS method_name " +
                 "FROM " + TableNames.CALL_TRACE_TABLE + " AS CT " +
@@ -319,6 +319,8 @@ public class ElementDAOImpl {
                 " AND E.LEVEL_COUNT > 1" +
                 " AND (E.COLLAPSED = 0" +
                 " OR E.COLLAPSED = 2)";
+
+        System.out.println("sql = " + sql);
 
         try (ResultSet rs = DatabaseUtil.select(sql)) {
             while (rs != null && rs.next()) {
@@ -356,6 +358,8 @@ public class ElementDAOImpl {
         String SQLMaxLevelCount= "select MAX(LEVEL_COUNT) from " + TableNames.ELEMENT_TABLE + " E " +
                 "join " + TableNames.CALL_TRACE_TABLE + " CT on E.ID_ENTER_CALL_TRACE = CT.ID " +
                 "where CT.THREAD_ID = " + threadId;
+
+        System.out.println("SQLMaxLevelCount = " + SQLMaxLevelCount);
 
         int levelCount = DatabaseUtil.executeSelectForInt(SQLMaxLevelCount);
         return levelCount;

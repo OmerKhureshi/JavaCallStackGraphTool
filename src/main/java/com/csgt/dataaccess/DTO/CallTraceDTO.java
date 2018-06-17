@@ -6,7 +6,7 @@ public class CallTraceDTO extends BaseDTO{
     private int processId;
     private int threadId;
     private int methodId;
-    private String message;
+    private String eventType;
     private String params;
     private String lockObjId;
     private Date timeStamp;
@@ -14,11 +14,11 @@ public class CallTraceDTO extends BaseDTO{
     public CallTraceDTO() {
     }
 
-    public CallTraceDTO(int processId, int threadId, int methodId, String message, String params, String lockObjId, Date timeStamp) {
+    public CallTraceDTO(int processId, int threadId, int methodId, String eventType, String params, String lockObjId, Date timeStamp) {
         this.processId = processId;
         this.threadId = threadId;
         this.methodId = methodId;
-        this.message = message;
+        this.eventType = eventType;
         this.params = params;
         this.lockObjId = lockObjId;
         this.timeStamp = timeStamp;
@@ -48,12 +48,12 @@ public class CallTraceDTO extends BaseDTO{
         this.methodId = methodId;
     }
 
-    public String getMessage() {
-        return message;
+    public String getEventType() {
+        return eventType;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
+    public void setEventType(String eventType) {
+        this.eventType = eventType;
     }
 
     public String getParams() {

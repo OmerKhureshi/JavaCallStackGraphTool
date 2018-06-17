@@ -299,7 +299,7 @@ public class HighlightDAOImpl {
         List<String> queries = new ArrayList<>();
 
         double startXOffset = 30;
-        double widthOffset = 35;
+        double widthOffset = 50;
         double startYOffset = -10;
         double heightOffset = -20;
 
@@ -341,25 +341,25 @@ public class HighlightDAOImpl {
 
                 // For all the highlights obtained above, adjust their width and height
                 // so that the highlights cover only the visible cells.
-                queries.add(
-                        "UPDATE " + TableNames.HIGHLIGHT_ELEMENT + " AS H " +
-                        "SET H.HEIGHT = HEIGHT - " + deltaY + " " +
-                        "WHERE H.ID = " + rs.getInt("ID"));
+                String updateHighlightHeight = "UPDATE " + TableNames.HIGHLIGHT_ELEMENT + " AS H " +
+                                "SET H.HEIGHT = HEIGHT - " + deltaY + " " +
+                                "WHERE H.ID = " + rs.getInt("ID");
+                queries.add(updateHighlightHeight);
 
-                queries.add(
-                        "UPDATE " + TableNames.HIGHLIGHT_ELEMENT + " AS H " +
-                                "SET " +
-                                // "H.HEIGHT = HEIGHT - " + delta + ", " +
-                                "H.WIDTH = " +
-                                "((SELECT MAX(E1.BOUND_BOX_X_TOP_RIGHT) FROM " + TableNames.ELEMENT_TABLE + " AS E1 " +
-                                "JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT ON E1.ID_ENTER_CALL_TRACE = CT.ID " +
-                                "WHERE E1.BOUND_BOX_Y_COORDINATE >= H.START_Y " +
-                                "AND E1.BOUND_BOX_Y_COORDINATE <= (H.START_Y + H.HEIGHT) " +
-                                "AND E1.BOUND_BOX_X_COORDINATE >= H.START_X " +
-                                "AND CT.THREAD_ID = " + threadId + " " +
-                                "AND (E1.COLLAPSED = 0 OR E1.COLLAPSED = 2)" +
-                                ") - H.START_X + " + widthOffset + ") " +
-                                "WHERE H.ID = " + rs.getInt("ID"));
+                String updateHighlightWidth = "UPDATE " + TableNames.HIGHLIGHT_ELEMENT + " AS H " +
+                        "SET " +
+                        // "H.HEIGHT = HEIGHT - " + delta + ", " +
+                        "H.WIDTH = " +
+                        "((SELECT MAX(E1.BOUND_BOX_X_TOP_RIGHT) FROM " + TableNames.ELEMENT_TABLE + " AS E1 " +
+                        "JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT ON E1.ID_ENTER_CALL_TRACE = CT.ID " +
+                        "WHERE E1.BOUND_BOX_Y_COORDINATE >= H.START_Y " +
+                        "AND E1.BOUND_BOX_Y_COORDINATE <= (H.START_Y + H.HEIGHT) " +
+                        "AND E1.BOUND_BOX_X_COORDINATE >= H.START_X " +
+                        "AND CT.THREAD_ID = " + threadId + " " +
+                        "AND (E1.COLLAPSED = 0 OR E1.COLLAPSED = 2)" +
+                        ") - H.START_X + " + widthOffset + ") " +
+                        "WHERE H.ID = " + rs.getInt("ID");
+                queries.add(updateHighlightWidth);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -378,7 +378,7 @@ public class HighlightDAOImpl {
         double startX = 0, startY = 0, width = 0, height = 0;
 
         double startXOffset = 30;
-        double widthOffset = 30;
+        double widthOffset = 50;
         double startYOffset = -10;
         double heightOffset = -20;
 

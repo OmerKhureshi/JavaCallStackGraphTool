@@ -75,7 +75,7 @@ public class EventHandlers {
 
 
         String sql = "Select E.ID as EID, TIME_INSTANT, METHOD_ID, PROCESS_ID, THREAD_ID, PARAMETERS, COLLAPSED, " +
-                "MESSAGE, LOCKOBJID, BOUND_BOX_X_COORDINATE, BOUND_BOX_Y_COORDINATE from " + TableNames.ELEMENT_TABLE + " AS E " +
+                "event_type, LOCKOBJID, BOUND_BOX_X_COORDINATE, BOUND_BOX_Y_COORDINATE from " + TableNames.ELEMENT_TABLE + " AS E " +
                 "JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT ON CT.id = E.ID_ENTER_CALL_TRACE " +
                 "WHERE E.ID = " + cell.getCellId();
 
@@ -87,7 +87,7 @@ public class EventHandlers {
                 processId = callTraceRS.getInt("process_id");
                 threadId = callTraceRS.getInt("thread_id");
                 parameters = callTraceRS.getString("parameters");
-                eventType = callTraceRS.getString("message");
+                eventType = callTraceRS.getString("EVENT_TYPE");
                 lockObjectId = callTraceRS.getString("lockobjid");
                 xCord = callTraceRS.getFloat("bound_box_x_coordinate");
                 yCord = callTraceRS.getFloat("bound_box_y_coordinate");
@@ -165,7 +165,7 @@ public class EventHandlers {
                 if (eventType.equalsIgnoreCase("WAIT-ENTER")) {
                     int ctId = -2;  // Will throw exception if value not changed. Which is what we want.
                     sql = "lockobjid = '" + lockObjectId + "'" +
-                            " AND (message = 'NOTIFY-ENTER' OR message = 'NOTIFYALL-ENTER')" +
+                            " AND (EVENT_TYPE = 'NOTIFY-ENTER' OR EVENT_TYPE = 'NOTIFYALL-ENTER')" +
                             " AND time_instant >= " + "'" + timeStamp + "'";
 
                     // // get thread ids of nodes that may acquire the lock that was just released.
@@ -191,12 +191,12 @@ public class EventHandlers {
 
                     try (Connection conn = DatabaseUtil.getConnection(); Statement ps = conn.createStatement()) {
                         sql = "SELECT * FROM " + TableNames.CALL_TRACE_TABLE + " AS parent\n" +
-                                "WHERE MESSAGE = 'WAIT-EXIT' \n" +
+                                "WHERE event_type = 'WAIT-EXIT' \n" +
                                 "AND LOCKOBJID = '" + lockObjectId + "' " +
                                 "AND TIME_INSTANT >= '" + timeStamp + "' \n" +
                                 "AND (SELECT count(*) \n" +
                                 "FROM " + TableNames.CALL_TRACE_TABLE + " AS child \n" +
-                                "WHERE child.message = 'WAIT-ENTER' \n" +
+                                "WHERE child.event_type = 'WAIT-ENTER' \n" +
                                 "AND LOCKOBJID = '" + lockObjectId + "' " +
                                 "AND child.TIME_INSTANT >=  '" + timeStamp + "' \n" +
                                 "AND child.TIME_INSTANT <= parent.time_instant\n" +
@@ -226,11 +226,11 @@ public class EventHandlers {
                          Statement ps = conn.createStatement()) {
 
 
-                        sql = "SELECT * FROM " + TableNames.CALL_TRACE_TABLE + " AS parent WHERE MESSAGE = 'WAIT-EXIT' " +
+                        sql = "SELECT * FROM " + TableNames.CALL_TRACE_TABLE + " AS parent WHERE event_type = 'WAIT-EXIT' " +
                                 "AND LOCKOBJID = '" + lockObjectId + "' " +
                                 "AND TIME_INSTANT >= '" + timeStamp + "' " +
                                 "AND (SELECT count(*) FROM " + TableNames.CALL_TRACE_TABLE + " AS child " +
-                                "WHERE child.message = 'WAIT-ENTER' " +
+                                "WHERE child.event_type = 'WAIT-ENTER' " +
                                 "AND LOCKOBJID = '" + lockObjectId + "' " +
                                 "AND child.TIME_INSTANT >= '" + timeStamp + "' " +
                                 "AND child.TIME_INSTANT <= parent.time_instant ) = 0";

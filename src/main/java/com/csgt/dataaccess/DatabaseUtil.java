@@ -122,7 +122,7 @@ public class DatabaseUtil {
                     "   \"processID\" INTEGER not null,\n" +
                     "    \"threadID\" INTEGER,\n" +
                     "    \"methodID\" INTEGER,\n" +
-                    "    \"message\" VARCHAR(20),\n" +
+                    "    \"EVENT_TYPE\" VARCHAR(20),\n" +
                     "    \"parameter\" VARCHAR(200)\n" +
                         /*"   FOREIGN KEY(\"methodID\") REFERENCES METHOD(\"methdID\")"+ */
                     ")";
