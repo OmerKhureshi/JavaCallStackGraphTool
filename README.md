@@ -6,11 +6,15 @@
 3. Ensure that this project is recognized as a Maven project inside IntelliJ.
 6. Run the Main java class in `/src/main/java/com/application/Main.java`.
 
+### Instruction to run tool using Maven.
+Since this is a Maven project, use the command below to run the tool from root folder of the repo.
+`mvn exec:java -Dexec.mainClass=com.csgt.Main`
+
 
 ### How to use the tool?
 1. Click File -> Select Method Definition log file.
 2. Click File -> Select Call Trace file.
-3. Click Run -> Run.
+3. Click Render -> Run.
 4. If you want to start over, click Run -> Reset and redo steps 1 through 3 above.
 
 ### Generate Log files.
