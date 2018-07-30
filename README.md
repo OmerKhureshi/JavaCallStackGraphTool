@@ -1,4 +1,5 @@
-# CSVFull
+# Java Call Stack Graph Tool
+#### A tool to generate a graphical representation of the Java call stack.
 
 ### Instruction to run tool using intelliJ.
 1. Download or clone the repository.
@@ -8,6 +9,7 @@
 
 ### Instruction to run tool using Maven.
 Since this is a Maven project, use the command below to run the tool from root folder of the repo.
+
 `mvn exec:java -Dexec.mainClass=com.csgt.Main`
 
 
