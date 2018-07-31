@@ -573,15 +573,19 @@ public class CanvasController {
             System.out.println("CanvasController.drawPlaceHolderLines. currentThreadId is null. Returning without loading.");
             return;
         }
-        int height = ElementDAOImpl.getMaxLeafCount(currentThreadId);
+//        int height = ElementDAOImpl.getMaxLeafCount(currentThreadId);
+        double height = ElementDAOImpl.getMaxHeight(currentThreadId);
         int width = ElementDAOImpl.getMaxLevelCount(currentThreadId);
 
         Line hPlaceHolderLine = new Line(0, 0, (width + 2) * BoundBox.unitWidthFactor, 0);
-        hPlaceHolderLine.setStrokeWidth(.0005);
+//        hPlaceHolderLine.setStrokeWidth(5.0005);
+        hPlaceHolderLine.setStrokeWidth(0.0005);
         canvas.getChildren().add(hPlaceHolderLine);
 
-        Line vPlaceHolderLine = new Line(0, 0, 0, height * BoundBox.unitHeightFactor);
-        vPlaceHolderLine.setStrokeWidth(.0005);
+//        Line vPlaceHolderLine = new Line(0, 0, 0, height * BoundBox.unitHeightFactor);
+        Line vPlaceHolderLine = new Line(0, 0, 0, height);
+//        vPlaceHolderLine.setStrokeWidth(5.0005);
+        vPlaceHolderLine.setStrokeWidth(0.0005);
         canvas.getChildren().add(vPlaceHolderLine);
     }
 
@@ -622,7 +626,6 @@ public class CanvasController {
     }
 
     public void stackRectangles() {
-
         List<HighlightCell> list = new ArrayList<>(highlightsOnUI.values());
 
         // Sort the list of rectangles according to area.

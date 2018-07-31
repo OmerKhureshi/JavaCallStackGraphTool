@@ -224,21 +224,38 @@ public class EdgeDAOImpl {
         }
     }
 
-    public static String getUpdateEdgeStartPointQuery(double y, double delta, int nextCellId, int lastCellId) {
+    public static String getUpdateEdgeStartPointQuery(double y, double delta, int nextCellId, int lastCellId, int threadId) {
         return "UPDATE " + TableNames.EDGE_TABLE + " " +
                 "SET START_Y =  START_Y - " + delta + " " +
                 "WHERE START_Y >= " + y + " " +
                 "AND FK_SOURCE_ELEMENT_ID >= " + nextCellId + " " +
-                "AND FK_SOURCE_ELEMENT_ID <= " + lastCellId;
+//                "AND FK_SOURCE_ELEMENT_ID <= " + lastCellId;
+                "AND FK_SOURCE_ELEMENT_ID <= " + lastCellId + " " +
+                "and " +
+                "(Exists (select * from " + TableNames.ELEMENT_TABLE + " as E " +
+                "join " + TableNames.CALL_TRACE_TABLE + " as CT on E.ID_ENTER_CALL_TRACE = CT.ID " +
+                "where (E.ID = FK_TARGET_ELEMENT_ID OR E.ID = FK_TARGET_ELEMENT_ID) and CT.THREAD_ID = " + threadId + "))";
+//                "Exists (select * from " + TableNames.ELEMENT_TABLE + " as E " +
+//                "join " + TableNames.CALL_TRACE_TABLE + " as CT on E.ID_ENTER_CALL_TRACE = CT.ID " +
+//                "where E.ID = " + lastCellId + " and CT.THREAD_ID = " + threadId + "))";
 
     }
 
-    public static String getUpdateEdgeEndPointQuery(double y, double delta, int nextCellId, int lastCellId) {
+    public static String getUpdateEdgeEndPointQuery(double y, double delta, int nextCellId, int lastCellId, int threadId) {
         return "UPDATE " + TableNames.EDGE_TABLE + " " +
                 "SET END_Y =  END_Y - " + delta + " " +
                 "WHERE END_Y >= " + y + " " +
                 "AND FK_TARGET_ELEMENT_ID >= " + nextCellId + " " +
-                "AND FK_TARGET_ELEMENT_ID <= " + lastCellId;
+//                "AND FK_TARGET_ELEMENT_ID <= " + lastCellId;
+                "AND FK_TARGET_ELEMENT_ID <= " + lastCellId + " " +
+                "and " +
+                "(Exists (select * from " + TableNames.ELEMENT_TABLE + " as E " +
+                "join " + TableNames.CALL_TRACE_TABLE + " as CT on E.ID_ENTER_CALL_TRACE = CT.ID " +
+                "where (E.ID = FK_TARGET_ELEMENT_ID OR E.ID = FK_TARGET_ELEMENT_ID) and CT.THREAD_ID = " + threadId + "))";
+//                "OR " +
+//                "Exists (select * from " + TableNames.ELEMENT_TABLE + " as E " +
+//                "join " + TableNames.CALL_TRACE_TABLE + " as CT on E.ID_ENTER_CALL_TRACE = CT.ID " +
+//                "where E.ID = " + lastCellId + " and CT.THREAD_ID = " + threadId + "))";
 
     }
 

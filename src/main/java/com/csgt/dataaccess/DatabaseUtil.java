@@ -372,6 +372,21 @@ public class DatabaseUtil {
         return res;
     }
 
+    public static double executeSelectForDouble(String query) {
+        double res = 0;
+        try(ResultSet rs = DatabaseUtil.select(query)) {
+            if (rs != null && rs.next()) {
+                res = rs.getDouble(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DatabaseUtil.close();
+        }
+        // System.out.println("DatabaseUtil.executeSelectForInt: executing query: " + query);
+        return res;
+    }
+
     public static void executeUpdate(String query ) {
         try (Connection connection = getConnection(); Statement statement = connection.createStatement()) {
             statement.executeUpdate(query);

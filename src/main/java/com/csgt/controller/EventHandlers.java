@@ -130,7 +130,7 @@ public class EventHandlers {
                 gridPane.add(new Label("Method Name: "), 0, 0);
                 gridPane.add(lMethodName, 1, 0);
 
-                gridPane.add(new Label("Package Name: "), 0, 1);
+                gridPane.add(new Label("Class Name: "), 0, 1);
                 gridPane.add(lPackageName, 1, 1);
 
                 gridPane.add(new Label("Parameter Types: "), 0, 2);
@@ -371,6 +371,56 @@ public class EventHandlers {
                 // gridPane.add(addBookmarkButton, 1, rowIndex++);
                 // gridPane.add(removeBookmarkButton, 1, rowIndex++);
 
+                Button goUpperSiblingButton = new Button("Go to upper sibling");
+                goUpperSiblingButton.setOnAction(e -> {
+                    ElementDTO elementDTO = ElementDAOImpl.getUpperSiblingElementDTO(String.valueOf(elementId));
+                    if (elementDTO.getId() != null) {
+                        ControllerLoader.eventHandlers.jumpTo(elementDTO.getId(),
+                                String.valueOf(threadId),
+                                elementDTO.getCollapsed());
+                    } else {
+                        ControllerLoader.statusBarController.setTimedStatusText(
+                                "Unable to find the upper sibling node",
+                                "Done.",
+                                3 * 1000);
+                    }
+                });
+
+                Button goLowerSiblingButton = new Button("Go to lower sibling");
+                goLowerSiblingButton.setOnAction(e -> {
+                    ElementDTO elementDTO = ElementDAOImpl.getLowerSiblingElementDTO(String.valueOf(elementId));
+                    if (elementDTO.getId() != null) {
+                        ControllerLoader.eventHandlers.jumpTo(elementDTO.getId(),
+                                String.valueOf(threadId),
+                                elementDTO.getCollapsed());
+                    } else {
+                        ControllerLoader.statusBarController.setTimedStatusText(
+                                "Unable to find the lower sibling node",
+                                "Done.",
+                                3 * 1000);
+                    }
+                });
+
+                Button goParentButton = new Button("Go to parent");
+                goParentButton.setOnAction(e -> {
+                    ElementDTO elementDTO = ElementDAOImpl.getParentElementDTO(String.valueOf(elementId));
+                    if (elementDTO.getId() != null) {
+                        ControllerLoader.eventHandlers.jumpTo(elementDTO.getId(),
+                                String.valueOf(threadId),
+                                elementDTO.getCollapsed());
+                    } else {
+                        ControllerLoader.statusBarController.setTimedStatusText(
+                                "Unable to find the parent node",
+                                "Done.",
+                                3 * 1000);
+                    }
+                });
+
+
+//                gridPane.add(goUpperSiblingButton, 0, rowIndex++);
+//                gridPane.add(goLowerSiblingButton, 0, rowIndex++);
+//                gridPane.add(goParentButton, 0, rowIndex++);
+
                 popOver = new PopOver(gridPane);
                 popOver.setAnimated(true);
                 // popOver.detach();
@@ -559,6 +609,7 @@ public class EventHandlers {
     }
 
     public void jumpTo(String cellId, String threadId, int collapsed) {
+        System.out.println("EventHandlers.jumpTo");
         if (collapsed != 0) {
             ElementDTO elementDTO = ElementDAOImpl.getElementDTO(cellId);
             expandParentTreeChain(elementDTO, threadId);
@@ -581,8 +632,10 @@ public class EventHandlers {
         Platform.runLater(() -> {
             ControllerLoader.canvasController.clearAndUpdate();
 
+            System.out.println("EventHandlers.jumpTo here.");
             // blink node
             if (ControllerLoader.canvasController.nodeCellsOnUI.containsKey(cellId)) {
+                System.out.println("EventHandlers.jumpTo going to blink.");
                 ControllerLoader.canvasController.nodeCellsOnUI.get(cellId).blink();
             }
         });
@@ -634,16 +687,16 @@ public class EventHandlers {
 
                 // if there is a lower sibling node, update the tree below.
                 if (nextCellIdNew != Integer.MAX_VALUE) {
-                    getLowerTreeeUpdateQueries(topY + BoundBox.unitHeightFactor, deltaY, queryList, nextCellIdNew, lastCellIdNew, threadId);
+                    getLowerTreeUpdateQueries(topY + BoundBox.unitHeightFactor, deltaY, queryList, nextCellIdNew, lastCellIdNew, threadId);
                 }
 
                 addParentHighlightResizeQueries(clickedEleDTO, queryList, threadId);
                 addChildrenHighlightResizeQueries(clickedEleDTO, isCollapsing, queryList, nextCellIdNew, threadId);
 
                 // >> Uncomment to print all the queries in the query list
-                // System.out.println("EventHandlers.call: printing queries");
-                // queryList.forEach(query -> System.out.println(query));
-                // System.out.println();
+                 System.out.println("EventHandlers.call: printing queries");
+                 queryList.forEach(query -> System.out.println(query));
+                 System.out.println();
 
                 DatabaseUtil.executeQueryList(queryList);
 
@@ -658,7 +711,8 @@ public class EventHandlers {
 
                 if (isUIUpdateRequired) {
                     Platform.runLater(() -> {
-                        ControllerLoader.canvasController.clearAndUpdate();
+//                        ControllerLoader.canvasController.clearAndUpdate();
+                        ControllerLoader.canvasController.onThreadSelect();
                     });
                 }
             }
@@ -781,10 +835,10 @@ public class EventHandlers {
         return queryList;
     }
 
-    private void getLowerTreeeUpdateQueries(double y, double delta, List<String> queryList, int nextCellId, int lastCellId, int threadId) {
-        queryList.add(ElementDAOImpl.getUpdateElementQueryAfterCollapse(y, delta, nextCellId, lastCellId));
-        queryList.add(EdgeDAOImpl.getUpdateEdgeStartPointQuery(y, delta, nextCellId, lastCellId));
-        queryList.add(EdgeDAOImpl.getUpdateEdgeEndPointQuery(y, delta, nextCellId, lastCellId));
+    private void getLowerTreeUpdateQueries(double y, double delta, List<String> queryList, int nextCellId, int lastCellId, int threadId) {
+        queryList.add(ElementDAOImpl.getUpdateElementQueryAfterCollapse(y, delta, nextCellId, lastCellId, threadId));
+        queryList.add(EdgeDAOImpl.getUpdateEdgeStartPointQuery(y, delta, nextCellId, lastCellId, threadId));
+        queryList.add(EdgeDAOImpl.getUpdateEdgeEndPointQuery(y, delta, nextCellId, lastCellId, threadId));
         queryList.add(HighlightDAOImpl.getUpdateHighlightQuery(y, delta, nextCellId, lastCellId, threadId));
     }
 

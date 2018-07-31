@@ -16,7 +16,7 @@
         <MenuItem fx:id="chooseDBMenuItem" text="_Load existing database"/>
     </Menu>
 
-    <Menu fx:id="runMenu" text="_Run">
+    <Menu fx:id="runMenu" text="_Render">
         <MenuItem fx:id="runAnalysisMenuItem" text="_Run"/>
         <MenuItem fx:id="resetMenuItem" text="_Reset"/>
     </Menu>

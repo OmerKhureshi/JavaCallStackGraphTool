@@ -430,5 +430,9 @@ public class HighlightDAOImpl {
                 "SET START_Y = START_Y - " + delta + " " +
                 "WHERE ELEMENT_ID >= " + nextCellId + " " +
                 "AND THREAD_ID = " + threadId;
+//                + " " +
+//                "and Exists (select * from + " + TableNames.ELEMENT_TABLE + " as E " +
+//                "join " + TableNames.CALL_TRACE_TABLE + " as CT on E.ID_ENTER_CALL_TRACE = CT.ID " +
+//                "where E.ID = " + nextCellId + " and CT.THREAD_ID = " + threadId + ")";
     }
 }

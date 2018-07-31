@@ -320,8 +320,6 @@ public class ElementDAOImpl {
                 " AND (E.COLLAPSED = 0" +
                 " OR E.COLLAPSED = 2)";
 
-        System.out.println("sql = " + sql);
-
         try (ResultSet rs = DatabaseUtil.select(sql)) {
             while (rs != null && rs.next()) {
                 ElementDTO elementDTO = new ElementDTO();
@@ -336,6 +334,9 @@ public class ElementDAOImpl {
 
                 elementDTOList.add(elementDTO);
             }
+
+//            System.out.println("ElementDAOImpl.getElementDTOsInViewport copy the below query: >>>>>>>>>>>>");
+//            System.out.println("sql = " + sql);
         } catch (Exception e) {
             System.out.println("ElementDAOImpl.getElementDTOsInViewport Exception in this method....");
             e.printStackTrace();
@@ -358,8 +359,6 @@ public class ElementDAOImpl {
         String SQLMaxLevelCount= "select MAX(LEVEL_COUNT) from " + TableNames.ELEMENT_TABLE + " E " +
                 "join " + TableNames.CALL_TRACE_TABLE + " CT on E.ID_ENTER_CALL_TRACE = CT.ID " +
                 "where CT.THREAD_ID = " + threadId;
-
-        System.out.println("SQLMaxLevelCount = " + SQLMaxLevelCount);
 
         int levelCount = DatabaseUtil.executeSelectForInt(SQLMaxLevelCount);
         return levelCount;
@@ -385,32 +384,77 @@ public class ElementDAOImpl {
         String SQLMaxLeafCount = "select LEAF_COUNT " +
                 "from " + TableNames.ELEMENT_TABLE + " " +
                 "where LEVEL_COUNT = 1 AND ID = (SELECT PARENT_ID" +
-                "                                from " + TableNames.ELEMENT_TO_CHILD_TABLE + " " +
-                "                                where CHILD_ID = (SELECT id" +
-                "                                                  from " + TableNames.ELEMENT_TABLE + " " +
-                "                                                  where ID_ENTER_CALL_TRACE = (SELECT min(CALL_TRACE.ID)" +
-                "                                                                               from " + TableNames.CALL_TRACE_TABLE + " " +
-                "                                                                               where THREAD_ID = " + threadId + ")))";
+                "    from " + TableNames.ELEMENT_TO_CHILD_TABLE + " " +
+                "    where CHILD_ID = (SELECT id" +
+                "        from " + TableNames.ELEMENT_TABLE + " " +
+                "        where ID_ENTER_CALL_TRACE = (SELECT min(CALL_TRACE.ID)" +
+                "            from " + TableNames.CALL_TRACE_TABLE + " " +
+                "            where THREAD_ID = " + threadId + ")))";
 
-
+        System.out.println(">>> " + SQLMaxLeafCount);
         int leafCount = DatabaseUtil.executeSelectForInt(SQLMaxLeafCount);
         return leafCount;
     }
 
-    public static int getLowestCellInThread(String threadId) {
-        if (lowestCellInThreadMap.containsKey(threadId)) {
-            return lowestCellInThreadMap.get(threadId);
+    public static double getMaxHeight(String threadId) {
+        if (!ElementDAOImpl.isTableCreated()) {
+            ElementDAOImpl.createTable();
         }
 
+        if (!CallTraceDAOImpl.isTableCreated()) {
+            CallTraceDAOImpl.createTable();
+        }
+
+        if (!ElementToChildDAOImpl.isTableCreated()) {
+            ElementToChildDAOImpl.createTable();
+        }
+
+        // String SQLMaxLeafCount = "select MAX(LEAF_COUNT) from " + TableNames.ELEMENT_TABLE + " E " +
+        //         "join " + TableNames.CALL_TRACE_TABLE + " CT on E.ID_ENTER_CALL_TRACE = CT.ID " +
+        //         "where CT.THREAD_ID = " + threadId;
+
+        String SQLMaxLeafCount1 = "select LEAF_COUNT " +
+                "from " + TableNames.ELEMENT_TABLE + " " +
+                "where LEVEL_COUNT = 1 AND ID = (SELECT PARENT_ID" +
+                "    from " + TableNames.ELEMENT_TO_CHILD_TABLE + " " +
+                "    where CHILD_ID = (SELECT id" +
+                "        from " + TableNames.ELEMENT_TABLE + " " +
+                "        where ID_ENTER_CALL_TRACE = (SELECT min(CALL_TRACE.ID)" +
+                "            from " + TableNames.CALL_TRACE_TABLE + " " +
+                "            where THREAD_ID = " + threadId + ")))";
+
+        String SQLMaxLeafCount = "select BOUND_BOX_Y_BOTTOM_LEFT " +
+                "from " + TableNames.ELEMENT_TABLE + " AS E1 " +
+                "where E1.ID_ENTER_CALL_TRACE = -1 " +
+                "AND EXISTS (SELECT * " +
+                "from " + TableNames.CALL_TRACE_TABLE + " AS CT " +
+                "JOIN " + TableNames.ELEMENT_TABLE + " AS E2 " +
+                "ON CT.ID = E2.ID_ENTER_CALL_TRACE " +
+                "where E2.PARENT_ID = E1.ID and CT.THREAD_ID = " + threadId + ")";
+
+        System.out.println(">>> " + SQLMaxLeafCount);
+        double height = DatabaseUtil.executeSelectForDouble(SQLMaxLeafCount);
+        return height;
+    }
+
+    public static int getLowestCellInThread(String threadId) {
+        if (lowestCellInThreadMap.containsKey(threadId)) {
+            System.out.println("ElementDAOImpl.getLowestCellInThread: in if loop");
+            return lowestCellInThreadMap.get(threadId);
+        }
+        System.out.println("ElementDAOImpl.getLowestCellInThread: outside if loop");
         String maxEleIdQuery = "SELECT MAX(E.ID) AS MAXID " +
                 "FROM " + TableNames.ELEMENT_TABLE + " AS E JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT " +
                 "ON E.ID_ENTER_CALL_TRACE = CT.ID " +
                 "WHERE CT.THREAD_ID = " + threadId;
 
+        System.out.println("ElementDAOImpl.getLowestCellInThread: maxEleIdQuery: " + maxEleIdQuery);
         try (ResultSet eleIdRS = DatabaseUtil.select(maxEleIdQuery)){
             if (eleIdRS.next()) {
                 int eleId = eleIdRS.getInt("MAXID");
+                System.out.println("ElementDAOImpl.getLowestCellInThread: put lowestCellInThreadMap:  " +threadId + " : " + eleId);
                 lowestCellInThreadMap.put(threadId, eleId);
+                System.out.println("ElementDAOImpl.getLowestCellInThread: eleId = " + eleId);
                 return eleId;
             }
         } catch (SQLException e) {
@@ -514,7 +558,7 @@ public class ElementDAOImpl {
     }
 
 
-    public static String getUpdateElementQueryAfterCollapse(double y, double delta, int nextCellId, int lastCellId) {
+    public static String getUpdateElementQueryAfterCollapse(double y, double delta, int nextCellId, int lastCellId, int threadId) {
         return "UPDATE " + TableNames.ELEMENT_TABLE + " " +
                 "SET bound_box_y_top_left = bound_box_y_top_left - " + delta + ", " +
                 "bound_box_y_top_right = bound_box_y_top_right - " + delta + ", " +
@@ -523,6 +567,86 @@ public class ElementDAOImpl {
                 "bound_box_y_coordinate = bound_box_y_coordinate - " + delta + " " +
                 "WHERE bound_box_y_coordinate >= " + y + " " +
                 "AND ID >= " + nextCellId + " " +
-                "AND ID <= " + lastCellId;
+//                "AND ID <= " + lastCellId;
+                "AND ID <= " + lastCellId + " " +
+                "AND EXISTS (SELECT * FROM " + TableNames.CALL_TRACE_TABLE + " AS CT " +
+                "WHERE CT.THREAD_ID = " + threadId + " AND  CT.ID = "+ TableNames.ELEMENT_TABLE + ".ID_ENTER_CALL_TRACE)";
+    }
+
+    public static ElementDTO getUpperSiblingElementDTO(String elementId) {
+        ElementDTO elementDTO = new ElementDTO();
+
+        String query = "select * " +
+                "from ELEMENT AS E1 " +
+                "join ELEMENT AS E2 " +
+                "ON E1.PARENT_ID = E2.PARENT_ID " +
+                "and E1.ID < E2.ID " +
+                "and E2.ID = " + elementId + " " +
+                "and E1.ID_ENTER_CALL_TRACE > 0 " +
+                "order by E1.ID DESC " +
+                "fetch FIRST 1 rows only";
+
+        try (ResultSet rs = DatabaseUtil.select(query)) {
+            if (rs.next()) {
+                elementDTO.setId(String.valueOf(rs.getInt("ID")));
+                elementDTO.setCollapsed(rs.getInt("COLLAPSED"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DatabaseUtil.close();
+        }
+
+        return elementDTO;
+    }
+
+    public static ElementDTO getLowerSiblingElementDTO(String elementId) {
+        ElementDTO elementDTO = new ElementDTO();
+
+        String query = "select * " +
+                "from ELEMENT AS E1 " +
+                "join ELEMENT AS E2 " +
+                "ON E1.PARENT_ID = E2.PARENT_ID " +
+                "and E1.ID > E2.ID " +
+                "and E2.ID = " + elementId + " " +
+                "and E1.ID_ENTER_CALL_TRACE > 0 " +
+                "order by E1.ID asc " +
+                "fetch FIRST 1 rows only";
+
+        try (ResultSet rs = DatabaseUtil.select(query)) {
+            if (rs.next()) {
+                elementDTO.setId(String.valueOf(rs.getInt("ID")));
+                elementDTO.setCollapsed(rs.getInt("COLLAPSED"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DatabaseUtil.close();
+        }
+
+        return elementDTO;
+    }
+
+    public static ElementDTO getParentElementDTO(String elementId) {
+        ElementDTO elementDTO = new ElementDTO();
+
+        String query = "SELECT * " +
+                "FROM ELEMENT " +
+                "WHERE ID = (SELECT PARENT_ID FROM ELEMENT AS E1 WHERE E1.ID = " + elementId + ") " +
+                "AND ID_ENTER_CALL_TRACE > 0";
+
+        System.out.println("ElementDAOImpl.getParentElementDTO query: " + query);
+        try (ResultSet rs = DatabaseUtil.select(query)) {
+            if (rs.next()) {
+                elementDTO.setId(String.valueOf(rs.getInt("ID")));
+                elementDTO.setCollapsed(rs.getInt("COLLAPSED"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DatabaseUtil.close();
+        }
+
+        return elementDTO;
     }
 }

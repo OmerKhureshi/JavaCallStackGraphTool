@@ -2,6 +2,7 @@ package com.csgt.dataaccess.DAO;
 
 import com.csgt.dataaccess.DatabaseUtil;
 import com.csgt.dataaccess.TableNames;
+import org.apache.commons.lang.StringUtils;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -25,7 +26,7 @@ public class CallTraceDAOImpl {
                         "thread_id INTEGER, " +
                         "method_id INTEGER, " +
                         "event_type VARCHAR(20), " +
-                        "parameters VARCHAR(800), " +
+                        "parameters VARCHAR(1600), " +
                         "lockObjId VARCHAR(50), " +
                         // "time_instant VARCHAR(24)" +
                         "time_instant TIMESTAMP" +
@@ -53,7 +54,10 @@ public class CallTraceDAOImpl {
 
         if (eventType.equalsIgnoreCase("ENTER")) {
             methodID = Integer.parseInt(val.get(4));
-            parameters = val.get(5);
+            String params = val.get(5);
+            if (params.length() > 1600)
+                parameters = StringUtils.abbreviate(parameters, 1550);
+//            parameters = val.get(5);
         } else if (eventType.equalsIgnoreCase("WAIT-ENTER") || eventType.equalsIgnoreCase("WAIT-EXIT") ||
                 eventType.equalsIgnoreCase("NOTIFY-ENTER") || eventType.equalsIgnoreCase("NOTIFY-EXIT") ||
                 eventType.equalsIgnoreCase("NOTIFYALL-ENTER") || eventType.equalsIgnoreCase("NOTIFYALL-EXIT")) {
