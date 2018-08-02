@@ -1,5 +1,6 @@
 # Database
 /DB/
+/Databases/
 
 # Database logs
 *.log
@@ -12,3 +13,9 @@ target/
 
 # UI Images
 *.png
+
+# intelliJ files
+*.iml
+
+# screenshots folder
+/Screenshots/

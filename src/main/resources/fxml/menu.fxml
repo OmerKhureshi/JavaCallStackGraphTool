@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuItem?>
+
+<?import javafx.scene.control.SeparatorMenuItem?>
+<?import javafx.scene.control.CheckMenuItem?>
+<MenuBar fx:id="menuBar"
+         fx:controller="com.csgt.controller.MenuController"
+         xmlns:fx="http://javafx.com/fxml/1">
+
+    <Menu fx:id="fileMenu" text="_File">
+        <MenuItem fx:id="chooseMethodDefMenuItem" text="_Select Method Definition log file"/>
+        <MenuItem fx:id="chooseCallTraceMenuItem" text="_Select Call Trace log file"/>
+        <SeparatorMenuItem/>
+        <MenuItem fx:id="chooseDBMenuItem" text="_Load existing database"/>
+    </Menu>
+
+    <Menu fx:id="runMenu" text="_Render">
+        <MenuItem fx:id="runAnalysisMenuItem" text="_Run"/>
+        <MenuItem fx:id="resetMenuItem" text="_Reset"/>
+    </Menu>
+
+    <Menu fx:id="viewMenu" text="_View">
+        <MenuItem fx:id="saveImageMenuItem" text="_Save Image"/>
+        <MenuItem fx:id="refreshMenuItem" text="_Refresh"/>
+    </Menu>
+
+    <Menu fx:id="highlightMenu" text="_Highlights">
+        <MenuItem fx:id="addHighlightMenuItem" text="_Add method highlights"/>
+    </Menu>
+
+    <Menu fx:id="bookmarksMenu" text="_Bookmarks"> </Menu>
+
+    <Menu fx:id="debugMenu" text="_Debug">
+        <MenuItem fx:id="printViewPortDimsMenuItem" text="Print _viewport dimensions"/>
+        <MenuItem fx:id="printNodeCountMenuItem" text="Print _Node count"/>
+    </Menu>
+
+    <Menu fx:id="settingMenu" text="_Settings">
+        <CheckMenuItem fx:id="liteModeCheckMenuItem" text="Enable lite mode" selected="true"/>
+    </Menu>
+
+</MenuBar>

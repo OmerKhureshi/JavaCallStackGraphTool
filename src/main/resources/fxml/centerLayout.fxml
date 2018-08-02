@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane fx:id="centerBorderPane" prefHeight="200.0" prefWidth="200.0" xmlns="http://javafx.com/javafx/8.0.141"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.csgt.controller.CenterLayoutController">
+    <left>
+        <BorderPane fx:id="paneControlButtonPane" minWidth="14.0" prefHeight="902.0" prefWidth="30.0"
+                    BorderPane.alignment="CENTER">
+            <top>
+                <ToggleButton fx:id="threadsToggleButton"
+                              maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
+                              mnemonicParsing="false" rotate="-90.0"
+                              text="Threads" BorderPane.alignment="CENTER">
+                    <BorderPane.margin>
+                        <Insets top="25.0" />
+                    </BorderPane.margin>
+                </ToggleButton>
+            </top>
+
+            <!-- To add bookmark toggle -->
+            <!--
+                   <bottom>
+                        <ToggleButton fx:id="bookmarksToggleButton" minHeight="-Infinity" minWidth="-Infinity"
+                             mnemonicParsing="false" prefWidth="90.0" rotate="-90.0" text="Bookmarks" BorderPane.alignment="CENTER">
+                            <BorderPane.margin>
+                                <Insets bottom="40.0" />
+                            </BorderPane.margin>
+                        </ToggleButton>
+                    </bottom>
+            -->
+        </BorderPane>
+    </left>
+
+    <center>
+        <AnchorPane>
+            <SplitPane fx:id="verticalSplitPane" dividerPositions="0.23372781065088757" focusTraversable="true"
+                       minHeight="0.0" minWidth="0.0"
+                       AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+                <AnchorPane>
+
+                    <ListView fx:id="threadListView" prefHeight="200.0" prefWidth="200.0"
+                              AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"/>
+
+                    <!--
+                                        <SplitPane fx:id="horizontalSplitPane" dividerPositions="0.4960182025028441" focusTraversable="true"
+                                                   minHeight="0.0" minWidth="0.0" orientation="VERTICAL" prefHeight="879.0" prefWidth="238.0"
+                                                   AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+                                            &lt;!&ndash;<AnchorPane minHeight="0.0" minWidth="0.0" prefWidth="303.0">&ndash;&gt;
+                                            <AnchorPane minHeight="0">
+                                                <ListView fx:id="threadListView" prefHeight="200.0" prefWidth="200.0"
+                                                          AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"/>
+                                            </AnchorPane>
+
+                                            <AnchorPane minHeight="0">
+                                                <ListView fx:id="bookmarkListView" prefHeight="200.0" prefWidth="200.0"
+                                                          AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"/>
+                                            </AnchorPane>
+                                        </SplitPane>
+                    -->
+                </AnchorPane>
+
+                <AnchorPane>
+                    <fx:include fx:id="canvas" source="canvas.fxml"
+                                AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"/>
+                </AnchorPane>
+
+            </SplitPane>
+
+        </AnchorPane>
+    </center>
+</BorderPane>
