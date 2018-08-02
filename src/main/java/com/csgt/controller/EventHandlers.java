@@ -20,6 +20,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -116,9 +117,37 @@ public class EventHandlers {
 
 
                 Label lMethodName = new Label(methodName);
+                lMethodName.setMaxHeight(500);
+                lMethodName.setMaxWidth(600);
+                Tooltip tpMethodName = new Tooltip(methodName);
+                tpMethodName.setWrapText(true);
+                tpMethodName.setMaxWidth(600);
+                lMethodName.setTooltip(tpMethodName);
+
                 Label lPackageName = new Label(packageName);
+                lPackageName.setMaxHeight(500);
+                lPackageName.setMaxWidth(600);
+                Tooltip tpPackageName = new Tooltip(packageName);
+                tpPackageName.setWrapText(true);
+                tpPackageName.setMaxWidth(600);
+                lPackageName.setTooltip(tpPackageName);
+
                 Label lParameterTypes = new Label(parameterTypes);
+                lParameterTypes.setMaxHeight(500);
+                lParameterTypes.setMaxWidth(600);
+                Tooltip tpPackageTypes = new Tooltip(parameterTypes);
+                tpPackageTypes.setWrapText(true);
+                tpPackageTypes.setMaxWidth(600);
+                lParameterTypes.setTooltip(tpPackageTypes);
+
                 Label lParameters = new Label(parameters);
+                lParameters.setMaxHeight(500);
+                lParameters.setMaxWidth(600);
+                Tooltip tp = new Tooltip(parameters);
+                tp.setWrapText(true);
+                tp.setMaxWidth(600);
+                lParameters.setTooltip(tp);
+
                 Label lProcessId = new Label(String.valueOf(processId));
                 Label lThreadId = new Label(String.valueOf(threadId));
                 Label lTimeInstant = new Label(timeStamp);
@@ -711,8 +740,9 @@ public class EventHandlers {
 
                 if (isUIUpdateRequired) {
                     Platform.runLater(() -> {
-//                        ControllerLoader.canvasController.clearAndUpdate();
-                        ControllerLoader.canvasController.onThreadSelect();
+                        ControllerLoader.canvasController.clearAndUpdate();
+//                        ControllerLoader.canvasController.saveScrollBarPos();
+//                        ControllerLoader.canvasController.onThreadSelect();
                     });
                 }
             }

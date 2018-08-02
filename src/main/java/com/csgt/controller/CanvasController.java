@@ -47,6 +47,8 @@ public class CanvasController {
     private Map<String, Double> vScrollBarPos = new HashMap<>();
     private Map<String, Double> hScrollBarPos = new HashMap<>();
 
+    Line vPlaceHolderLine = new Line(0, 0, 0, 0);
+    Line hPlaceHolderLine = new Line(0, 0, 0, 0);
 
 
     @FXML
@@ -577,16 +579,36 @@ public class CanvasController {
         double height = ElementDAOImpl.getMaxHeight(currentThreadId);
         int width = ElementDAOImpl.getMaxLevelCount(currentThreadId);
 
-        Line hPlaceHolderLine = new Line(0, 0, (width + 2) * BoundBox.unitWidthFactor, 0);
+//        hPlaceHolderLine = new Line(0, 0, (width + 2) * BoundBox.unitWidthFactor, 0);
+        hPlaceHolderLine.setEndX((width + 2) * BoundBox.unitWidthFactor);
+
 //        hPlaceHolderLine.setStrokeWidth(5.0005);
         hPlaceHolderLine.setStrokeWidth(0.0005);
         canvas.getChildren().add(hPlaceHolderLine);
 
 //        Line vPlaceHolderLine = new Line(0, 0, 0, height * BoundBox.unitHeightFactor);
-        Line vPlaceHolderLine = new Line(0, 0, 0, height);
+        vPlaceHolderLine = new Line(0, 0, 0, height);
+        vPlaceHolderLine.setEndY(height);
 //        vPlaceHolderLine.setStrokeWidth(5.0005);
         vPlaceHolderLine.setStrokeWidth(0.0005);
         canvas.getChildren().add(vPlaceHolderLine);
+    }
+
+    public void updateScrollBarDims() {
+        String currentThreadId = ControllerLoader.centerLayoutController.getCurrentThreadId();
+        if (currentThreadId == null) {
+            System.out.println("CanvasController.updateScrollBarDims. currentThreadId is null. Returning without loading.");
+            return;
+        }
+
+        double height = ElementDAOImpl.getMaxHeight(currentThreadId);
+        int width = ElementDAOImpl.getMaxLevelCount(currentThreadId);
+
+        hPlaceHolderLine.setEndY(height);
+        hPlaceHolderLine.setStrokeWidth(0.0005);
+
+        vPlaceHolderLine.setEndX((width + 2) * BoundBox.unitWidthFactor);
+        vPlaceHolderLine.setStrokeWidth(0.0005);
     }
 
     public void saveScrollBarPos() {

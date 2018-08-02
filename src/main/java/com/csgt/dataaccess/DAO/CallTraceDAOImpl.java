@@ -55,9 +55,10 @@ public class CallTraceDAOImpl {
         if (eventType.equalsIgnoreCase("ENTER")) {
             methodID = Integer.parseInt(val.get(4));
             String params = val.get(5);
-            if (params.length() > 1600)
-                parameters = StringUtils.abbreviate(parameters, 1550);
-//            parameters = val.get(5);
+            parameters = val.get(5);
+            int maxLen = 1550;
+            if (params.length() > maxLen)
+                parameters = StringUtils.abbreviate(parameters, maxLen);
         } else if (eventType.equalsIgnoreCase("WAIT-ENTER") || eventType.equalsIgnoreCase("WAIT-EXIT") ||
                 eventType.equalsIgnoreCase("NOTIFY-ENTER") || eventType.equalsIgnoreCase("NOTIFY-EXIT") ||
                 eventType.equalsIgnoreCase("NOTIFYALL-ENTER") || eventType.equalsIgnoreCase("NOTIFYALL-EXIT")) {
