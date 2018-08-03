@@ -559,7 +559,7 @@ public class EventHandlers {
         // <0              -> not visible AND  collapsed
 
         if (collapsed == 0) {
-            System.out.println("Minimizing node: " + clickedCellID);
+            // System.out.println("Minimizing node: " + clickedCellID);
             // visible and un-collapsed --> visible and collapsed
             // this cell only: 0 ->   2
             // all other cells: >2 -> ++1
@@ -587,7 +587,7 @@ public class EventHandlers {
             new Thread(task).start();
             // clickedCell.setCollapsed(2);
         } else if (collapsed == 2) {
-            System.out.println("Maximizing node: " + clickedCellID);
+            // System.out.println("Maximizing node: " + clickedCellID);
             // visible and collapsed --> visible and un-collapsed
             // this cell only :  2 ->   0
             // all other cells: >2 -> --1
@@ -638,7 +638,7 @@ public class EventHandlers {
     }
 
     public void jumpTo(String cellId, String threadId, int collapsed) {
-        System.out.println("EventHandlers.jumpTo");
+        // System.out.println("EventHandlers.jumpTo");
         if (collapsed != 0) {
             ElementDTO elementDTO = ElementDAOImpl.getElementDTO(cellId);
             expandParentTreeChain(elementDTO, threadId);
@@ -661,10 +661,10 @@ public class EventHandlers {
         Platform.runLater(() -> {
             ControllerLoader.canvasController.clearAndUpdate();
 
-            System.out.println("EventHandlers.jumpTo here.");
+            // System.out.println("EventHandlers.jumpTo here.");
             // blink node
             if (ControllerLoader.canvasController.nodeCellsOnUI.containsKey(cellId)) {
-                System.out.println("EventHandlers.jumpTo going to blink.");
+                // System.out.println("EventHandlers.jumpTo going to blink.");
                 ControllerLoader.canvasController.nodeCellsOnUI.get(cellId).blink();
             }
         });
@@ -723,9 +723,9 @@ public class EventHandlers {
                 addChildrenHighlightResizeQueries(clickedEleDTO, isCollapsing, queryList, nextCellIdNew, threadId);
 
                 // >> Uncomment to print all the queries in the query list
-                 System.out.println("EventHandlers.call: printing queries");
-                 queryList.forEach(query -> System.out.println(query));
-                 System.out.println();
+                //  System.out.println("EventHandlers.call: printing queries");
+                //  queryList.forEach(query -> System.out.println(query));
+                //  System.out.println();
 
                 DatabaseUtil.executeQueryList(queryList);
 

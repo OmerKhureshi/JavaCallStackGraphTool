@@ -354,6 +354,8 @@ public class MenuController {
         ControllerLoader.instructionsPaneController.setErrorGraphics(false);
 
         ControllerLoader.mainController.alertShown = false;
+
+        firstTimeSetUpHighlightsWindowCall = true;
     }
 
     private void setUpBookmarksMenu() {
@@ -648,7 +650,7 @@ public class MenuController {
             @Override
             protected void succeeded() {
                 super.succeeded();
-                System.out.println("MenuController.showHighlightsWindow.succeeded: ");
+                // System.out.println("MenuController.showHighlightsWindow.succeeded: ");
                 ControllerLoader.canvasController.clearAndUpdate();
 
                 // Stack highlights so that the larger ones are behind smaller ones.

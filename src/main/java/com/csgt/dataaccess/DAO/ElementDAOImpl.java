@@ -391,7 +391,7 @@ public class ElementDAOImpl {
                 "            from " + TableNames.CALL_TRACE_TABLE + " " +
                 "            where THREAD_ID = " + threadId + ")))";
 
-        System.out.println(">>> " + SQLMaxLeafCount);
+        // System.out.println(">>> " + SQLMaxLeafCount);
         int leafCount = DatabaseUtil.executeSelectForInt(SQLMaxLeafCount);
         return leafCount;
     }
@@ -432,27 +432,25 @@ public class ElementDAOImpl {
                 "ON CT.ID = E2.ID_ENTER_CALL_TRACE " +
                 "where E2.PARENT_ID = E1.ID and CT.THREAD_ID = " + threadId + ")";
 
-        System.out.println(">>> " + SQLMaxLeafCount);
+        // System.out.println(">>> " + SQLMaxLeafCount);
         double height = DatabaseUtil.executeSelectForDouble(SQLMaxLeafCount);
         return height;
     }
 
     public static int getLowestCellInThread(String threadId) {
         if (lowestCellInThreadMap.containsKey(threadId)) {
-            System.out.println("ElementDAOImpl.getLowestCellInThread: in if loop");
             return lowestCellInThreadMap.get(threadId);
         }
-        System.out.println("ElementDAOImpl.getLowestCellInThread: outside if loop");
+
         String maxEleIdQuery = "SELECT MAX(E.ID) AS MAXID " +
                 "FROM " + TableNames.ELEMENT_TABLE + " AS E JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT " +
                 "ON E.ID_ENTER_CALL_TRACE = CT.ID " +
                 "WHERE CT.THREAD_ID = " + threadId;
 
-        System.out.println("ElementDAOImpl.getLowestCellInThread: maxEleIdQuery: " + maxEleIdQuery);
+        // System.out.println("ElementDAOImpl.getLowestCellInThread: maxEleIdQuery: " + maxEleIdQuery);
         try (ResultSet eleIdRS = DatabaseUtil.select(maxEleIdQuery)){
             if (eleIdRS.next()) {
                 int eleId = eleIdRS.getInt("MAXID");
-                System.out.println("ElementDAOImpl.getLowestCellInThread: put lowestCellInThreadMap:  " +threadId + " : " + eleId);
                 lowestCellInThreadMap.put(threadId, eleId);
                 System.out.println("ElementDAOImpl.getLowestCellInThread: eleId = " + eleId);
                 return eleId;

@@ -90,7 +90,7 @@ public class CallTraceDAOImpl {
                     "{ts '" + timestamp + "'}" +
                     ")";
 
-            //            System.out.println("Inserting into call trace the statement: " + sql);
+                       // System.out.println("Inserting into call trace the statement: " + sql);
             ps.execute(sql, Statement.RETURN_GENERATED_KEYS);
             ResultSet rs = ps.getGeneratedKeys();
             if (rs.next()) {

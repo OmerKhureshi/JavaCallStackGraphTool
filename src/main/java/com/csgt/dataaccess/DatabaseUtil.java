@@ -33,7 +33,7 @@ public class DatabaseUtil {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        System.out.println("DatabaseUtil.isTableCreated: table not created tableName: " + tableName);
+        // System.out.println("DatabaseUtil.isTableCreated: table not created tableName: " + tableName);
         return false;
     }
 
@@ -127,7 +127,7 @@ public class DatabaseUtil {
                         /*"   FOREIGN KEY(\"methodID\") REFERENCES METHOD(\"methdID\")"+ */
                     ")";
 
-            System.out.println("Created call trace table now. ");
+            // System.out.println("Created call trace table now. ");
             ps.executeUpdate(sql);
             ps.close();
             ps = null;
@@ -193,7 +193,7 @@ public class DatabaseUtil {
             ps = null;
             cn.close();
             cn = null;
-            System.out.println("Method defn table created.");
+            // System.out.println("Method defn table created.");
             methodDefnTableCreated = true;
         } catch (SQLException e) {
             String sqlError = e.getSQLState();
