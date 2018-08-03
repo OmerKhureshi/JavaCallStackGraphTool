@@ -117,7 +117,7 @@ public class MenuController {
     private Button applyButton;
     private Button cancelButton;
 
-    private Map<String, CheckBox> firstCBMap;
+    // private Map<String, CheckBox> firstCBMap;
     private Map<String, CheckBox> secondCBMap;
     private Map<String, Color> colorsMap;
     private boolean anyColorChange = false;
@@ -425,7 +425,7 @@ public class MenuController {
 
         firstTimeSetUpHighlightsWindowCall = false;
 
-        firstCBMap = new HashMap<>();
+        // firstCBMap = new HashMap<>();
         secondCBMap = new HashMap<>();
         colorsMap = new HashMap<>();
         anyColorChange = false;
@@ -627,14 +627,14 @@ public class MenuController {
 
                 // For each of the selected methods, insert the bound box properties into Highlights table if not already present.
                 Statement statement = DatabaseUtil.getConnection().createStatement();
-                firstCBMap.forEach((fullName, checkBox) -> addInsertQueryToStatement(fullName, statement, "SINGLE"));
+                // firstCBMap.forEach((fullName, checkBox) -> addInsertQueryToStatement(fullName, statement, "SINGLE"));
 
                 secondCBMap.forEach((fullName, checkBox) -> addInsertQueryToStatement(fullName, statement, "FULL"));
 
                 // Delete records from HIGHLIGHT_ELEMENT if that method is not checked in the stage.
                 StringJoiner firstSJ = new StringJoiner("','", "'", "'");
-                firstCBMap.forEach((fullName, checkBox) -> firstSJ.add(fullName));
-                addDeleteQueryToStatement(firstSJ.toString(), statement, "SINGLE");
+                // firstCBMap.forEach((fullName, checkBox) -> firstSJ.add(fullName));
+                // addDeleteQueryToStatement(firstSJ.toString(), statement, "SINGLE");
 
                 StringJoiner secondSJ = new StringJoiner("','", "'", "'");
                 secondCBMap.forEach((fullName, checkBox) -> secondSJ.add(fullName));
@@ -675,7 +675,6 @@ public class MenuController {
         String[] arr = fullName.split("\\.");
         String methodName = arr[arr.length - 1];
         String packageName = fullName.substring(0, fullName.length() - methodName.length() - 1);
-
         HighlightDAOImpl.insert(startXOffset, startYOffset, widthOffset, heightOffset, methodName, packageName, highlightType, colorsMap, fullName, statement);
     }
 

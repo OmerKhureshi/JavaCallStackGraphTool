@@ -628,6 +628,9 @@ public class EventHandlers {
     private void expandParentTreeChain(ElementDTO elementDTO , String threadId) {
         List<ElementDTO> parentElementDTOs = ElementDAOImpl.getAllParentElementDTOs(elementDTO, threadId);
 
+        if (parentElementDTOs == null) {
+            return;
+        }
         ExecutorService es = Executors.newSingleThreadExecutor();
         parentElementDTOs.forEach(eleDTO -> {
             Task<Void> task = expandTreeAt(eleDTO, threadId, true);
@@ -814,10 +817,14 @@ public class EventHandlers {
                     "AND ELE.COLLAPSED NOT IN (0, 2) " +
                     ")";
 
-            updateHighlightsQuery = "UPDATE " + TableNames.HIGHLIGHT_ELEMENT + " " +
-                    "SET COLLAPSED = 1 " +
-                    "WHERE ELEMENT_ID > " + startCellId + " " +
-                    "AND ELEMENT_ID < " + endCellId;
+            updateHighlightsQuery = "UPDATE " + TableNames.HIGHLIGHT_ELEMENT + " AS H " +
+                    "SET H.COLLAPSED = 1 " +
+                    "WHERE H.ELEMENT_ID > " + startCellId + " " +
+                    "AND H.ELEMENT_ID < " + endCellId + " " +
+                    "AND EXISTS (SELECT * FROM " + TableNames.CALL_TRACE_TABLE + " AS CT " +
+                    "JOIN " + TableNames.ELEMENT_TABLE + " AS E ON CT.ID = E.ID_ENTER_CALL_TRACE " +
+                    "WHERE H.ELEMENT_ID = E.ID AND " +
+                    "CT.THREAD_ID = " + threadId + ")";
         } else {
             updateCellQuery = "UPDATE " + TableNames.ELEMENT_TABLE + " AS E " +
                     "SET E.COLLAPSED = " +

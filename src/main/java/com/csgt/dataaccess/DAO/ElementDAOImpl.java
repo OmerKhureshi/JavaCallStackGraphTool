@@ -18,8 +18,6 @@ import static com.csgt.dataaccess.TableNames.ELEMENT_TABLE;
 
 public class ElementDAOImpl {
 
-    private  static Map<String, Integer> lowestCellInThreadMap = new HashMap<>();
-
     public static boolean isTableCreated() {
         return DatabaseUtil.isTableCreated(ELEMENT_TABLE);
     }
@@ -231,6 +229,9 @@ public class ElementDAOImpl {
     }
 
     public static List<ElementDTO> getElementDTOs(List<String> ids) {
+        if (ids == null || ids.size() == 0) {
+            return null;
+        }
         List<ElementDTO> elementDTOs = new ArrayList<>();
 
         StringJoiner stringJoiner = new StringJoiner(",", "(", ")");
@@ -438,21 +439,14 @@ public class ElementDAOImpl {
     }
 
     public static int getLowestCellInThread(String threadId) {
-        if (lowestCellInThreadMap.containsKey(threadId)) {
-            return lowestCellInThreadMap.get(threadId);
-        }
-
         String maxEleIdQuery = "SELECT MAX(E.ID) AS MAXID " +
                 "FROM " + TableNames.ELEMENT_TABLE + " AS E JOIN " + TableNames.CALL_TRACE_TABLE + " AS CT " +
                 "ON E.ID_ENTER_CALL_TRACE = CT.ID " +
                 "WHERE CT.THREAD_ID = " + threadId;
 
-        // System.out.println("ElementDAOImpl.getLowestCellInThread: maxEleIdQuery: " + maxEleIdQuery);
         try (ResultSet eleIdRS = DatabaseUtil.select(maxEleIdQuery)){
             if (eleIdRS.next()) {
                 int eleId = eleIdRS.getInt("MAXID");
-                lowestCellInThreadMap.put(threadId, eleId);
-                System.out.println("ElementDAOImpl.getLowestCellInThread: eleId = " + eleId);
                 return eleId;
             }
         } catch (SQLException e) {
